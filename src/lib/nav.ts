@@ -71,7 +71,7 @@ export const NAV: NavGroup[] = [
     label: 'System',
     items: [
       { to: '/files', label: 'Files', icon: FolderTree, stage: 5, roles: STAFF, area: 'files' },
-      { to: '/sync', label: 'Sync Center', icon: RefreshCcw, stage: 12, roles: ADMIN },
+      { to: '/sync', label: 'Sync Center', icon: RefreshCcw, stage: 6, roles: ADMIN },
       { to: '/users', label: 'Users', icon: UserCog, stage: 1, roles: ADMIN },
       { to: '/settings', label: 'Settings', icon: Settings, stage: 1, roles: ADMIN },
     ],

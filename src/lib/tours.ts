@@ -7,7 +7,7 @@ export function staffTourKey(path: string): string | null {
   const map: Record<string, string> = {
     '/scouting': 'scouting-home', '/scouting/plan': 'plan', '/scouting/academies': 'academies', '/scouting/camps': 'camps',
     '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool',
-    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/player-files': 'player-files', '/staff-reports': 'staff-reports', '/finance': 'finance', '/partners': 'partners', '/transfers': 'transfers', '/club-portal': 'club-portal', '/assistant': 'assistant', '/users': 'users', '/settings': 'settings',
+    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/player-files': 'player-files', '/staff-reports': 'staff-reports', '/finance': 'finance', '/partners': 'partners', '/transfers': 'transfers', '/club-portal': 'club-portal', '/assistant': 'assistant', '/sync': 'sync', '/users': 'users', '/settings': 'settings',
   }
   return map[path] ?? null
 }
@@ -137,6 +137,11 @@ export const STAFF_TOURS: TourMap = {
   assistant: [
     { target: 'suggestions', title: 'Ask anything', body: 'Start with one of these, or write your own question in any language.' },
     { target: 'ask', title: 'Your question', body: 'Enter sends, Shift+Enter starts a new line. The assistant only reads the data you are allowed to see.' },
+  ],
+  sync: [
+    { target: 'sync-status', title: 'Connection', body: 'Whether Pluribus is connected to the SharePoint Talent folder, and when it last read it.' },
+    { target: 'page-actions', title: 'Sync now', body: '"Sync now" reads only what changed since the last run. "Full scan" reads the whole folder again and removes what no longer exists.' },
+    { target: 'sync-runs', title: 'History', body: 'Every run with what changed, or the reason it failed.' },
   ],
   users: [
     { target: 'tabs', title: 'Accounts', body: 'Coaches who sign up through the link wait under "pending" until you approve them.' },
