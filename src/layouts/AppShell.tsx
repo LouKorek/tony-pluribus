@@ -8,6 +8,7 @@ import { cx, Spinner } from '../components/ui'
 import { TourProvider, useTour } from '../lib/tour'
 import { STAFF_TOURS, staffTourKey } from '../lib/tours'
 import { supabase } from '../lib/supabase'
+import { InstallButton } from '../lib/install'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return (
@@ -109,6 +110,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="border-t border-white/10 p-3">
+        <InstallButton className="mb-2" />
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red font-display text-sm font-bold uppercase">
             {(() => { const w = (profile?.full_name || profile?.username || '?').trim().split(/\s+/); return w.length > 1 ? w[0][0] + w[w.length - 1][0] : w[0].slice(0, 2) })()}

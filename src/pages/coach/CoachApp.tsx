@@ -3,6 +3,7 @@ import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useSe
 import {
   Bell, CalendarDays, Check, ChevronRight, CircleHelp, Home as HomeIcon, LogOut, MapPin, Plus, Printer, Share2, Trophy, Undo2, UserPlus, Users, X,
 } from 'lucide-react'
+import { InstallButton } from '../../lib/install'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
@@ -104,6 +105,7 @@ function Shell({ children }: { children: ReactNode }) {
                   className={cx('rounded px-2 py-1 uppercase', lang === l ? 'bg-lime text-ink' : 'text-white/60 hover:text-white')}>{l}</button>
               ))}
             </div>
+            <InstallButton variant="icon" label="Install the app" />
             <CoachHelp />
             {!preview && <NavLink to="/updates" className="relative rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label={t('updates')}>
               <Bell size={18} />

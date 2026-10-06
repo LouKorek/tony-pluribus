@@ -5,6 +5,7 @@ import './index.css'
 import App from './App'
 import { AuthProvider } from './lib/auth'
 import ViewAsBanner from './components/ViewAsBanner'
+import './lib/install'
 
 // A successful start clears the one-time reload flag used when a deploy replaces page files.
 window.setTimeout(() => { try { sessionStorage.removeItem('pluribus.reloaded') } catch { /* storage blocked */ } }, 10000)
