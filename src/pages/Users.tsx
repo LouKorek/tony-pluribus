@@ -199,7 +199,7 @@ function AcademyPicker({ value, onChange, academies, districts, onAdded, suggest
   )
 }
 
-function CreateUserModal({ academies, districts, regions, myRole, onClose, onDone, onAcademyAdded }: {
+export function CreateUserModal({ academies, districts, regions, myRole, onClose, onDone, onAcademyAdded }: {
   academies: Academy[]; districts: District[]; regions: Region[]; myRole?: Role; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
 }) {
   const [f, setF] = useState({ username: '', full_name: '', phone: '', role: 'staff' as Role, academy_id: '', region_id: '', password: generatePassword() })
@@ -266,7 +266,7 @@ function CreateUserModal({ academies, districts, regions, myRole, onClose, onDon
   )
 }
 
-function EditUserModal({ user, me, academies, districts, regions, onClose, onDone, onAcademyAdded }: {
+export function EditUserModal({ user, me, academies, districts, regions, onClose, onDone, onAcademyAdded }: {
   user: Profile; me: Profile | null; academies: Academy[]; districts: District[]; regions: Region[]; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
 }) {
   const [f, setF] = useState({ full_name: user.full_name ?? '', phone: user.phone ?? '', role: user.role, status: user.status, academy_id: user.academy_id ?? '', region_id: user.region_id ?? '' })
