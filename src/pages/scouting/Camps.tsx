@@ -140,7 +140,7 @@ export function PlanPage() {
         description={`Every weekend from ${fmtDate(win.from)} to ${fmtDate(win.to)}. Add a camp to any weekend; the coverage bar shows which districts already have a camp.`}
         actions={canEdit && <Button variant="primary" onClick={() => setCreating({})}><Plus size={16} /> New camp</Button>} />
 
-      <Card className="mb-5 p-4">
+      <Card className="mb-5 p-4" data-tour="coverage">
         <div className="flex items-center justify-between">
           <div className="label-caps text-muted">District coverage</div>
           <div className="text-sm font-semibold">{[...covered].filter(Boolean).length} / {ref.districts.length} districts planned</div>
@@ -160,7 +160,7 @@ export function PlanPage() {
       </Card>
 
       {!camps ? <Spinner /> : (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5" data-tour="weeks">
           {undated.length > 0 && (
             <Card className="mb-4 p-3"><div className="label-caps mb-2 text-warn">No date yet</div>
               <div className="flex flex-wrap gap-2">{undated.map(c => <CampChip key={c.id} c={c} n={stats[c.id]?.total} onClick={() => nav(`/scouting/camps/${c.id}`)} />)}</div>

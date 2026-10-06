@@ -43,7 +43,7 @@ export default function Overview() {
         </Link>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-tour="overview-stats">
         <Stat accent label="Scouting season" value={scoutingSeason?.label.replace('-20', '/') ?? '—'} sub={groups.map(g => `${g.code} ${g.birth_year_from}–${g.birth_year_to}`).join(' · ')} />
         <Stat label="Academies" value={c?.academies ?? '—'} sub="In the academy register" />
         <Stat label="Players" value={c?.players ?? '—'} sub="Across all seasons" />
@@ -69,7 +69,7 @@ export default function Overview() {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card data-tour="build" className="p-5">
           <div className="label-caps text-muted">Build progress</div>
           <ul className="mt-3 space-y-2.5">
             {stages.map(s => {

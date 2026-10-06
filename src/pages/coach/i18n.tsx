@@ -87,6 +87,7 @@ const S = {
   language: ['Language', 'Ururimi'],
   selectAll: ['Select all', 'Hitamo bose'],
   clear: ['Clear', 'Siba'],
+  tour: ['Tour of this screen', "Uko iyi paji ikoreshwa"],
   dateTbc: ['Date to be set', 'Itariki izatangazwa'],
 } as const
 

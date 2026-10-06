@@ -47,7 +47,7 @@ export default function ScoutingHome() {
       <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Scouting home" description="Where the season stands: the funnel, the next camps, and what needs attention." />
 
       <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-        <Card className="p-5">
+        <Card className="p-5" data-tour="funnel">
           <div className="flex items-baseline justify-between">
             <div className="label-caps text-muted">Season funnel · players</div>
             {f && Object.keys(f.by_group).length > 0 && <div className="text-xs text-muted">{Object.entries(f.by_group).sort().map(([g, n]) => `${g} ${n}`).join(' · ')}</div>}
@@ -69,7 +69,7 @@ export default function ScoutingHome() {
           )}
         </Card>
 
-        <Card className="p-5">
+        <Card data-tour="attention" className="p-5">
           <div className="label-caps text-muted">Needs attention</div>
           <ul className="mt-3 space-y-2 text-sm">
             {needResults.length > 0 && <Todo icon={<ClipboardList size={16} />} to="/scouting/camps" text={`${needResults.length} past camp${needResults.length > 1 ? 's' : ''} not marked completed`} />}
@@ -81,7 +81,7 @@ export default function ScoutingHome() {
         </Card>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6" data-tour="next-camps">
         <div className="mb-2 flex items-center justify-between">
           <div className="label-caps text-muted">Next camps</div>
           <Link to="/scouting/plan" className="text-sm font-semibold text-red hover:underline">Open the plan</Link>

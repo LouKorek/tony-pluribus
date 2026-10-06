@@ -38,7 +38,7 @@ export default function SettingsPage() {
       <PageHeader eyebrow="System" title="Settings" description="Project details, seasons and the age groups the scouting season uses." />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="p-5">
+        <Card className="p-5" data-tour="project">
           <div className="label-caps text-muted">Project</div>
           <dl className="mt-3 grid grid-cols-[130px_1fr] gap-y-2 text-sm">
             <dt className="text-muted">Name</dt><dd className="font-semibold">{project?.name}</dd>
@@ -49,7 +49,7 @@ export default function SettingsPage() {
           </dl>
         </Card>
 
-        <Card className="p-5">
+        <Card data-tour="seasons" className="p-5">
           <div className="label-caps text-muted">Seasons</div>
           <ul className="mt-3 divide-y divide-line text-sm">
             {seasons.map(s => (
@@ -64,7 +64,7 @@ export default function SettingsPage() {
           </ul>
         </Card>
 
-        <Card className="p-5 lg:col-span-2">
+        <Card data-tour="age-groups" className="p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div>
               <div className="label-caps text-muted">Age groups · scouting {scoutingSeason?.label}</div>

@@ -28,6 +28,7 @@ export interface Profile {
   region_id: string | null
   approved_at: string | null
   last_seen_at: string | null
+  tours_seen?: string[]
   created_at: string
 }
 

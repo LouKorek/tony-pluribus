@@ -28,7 +28,7 @@ export default function FinalsPage() {
         description="The five province finals and the national final. The national result lists match the SELECTED, SEE AGAIN and ABSENCES sheets." />
 
       {!camps ? <Spinner /> : (<>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-tour="final-cards">
           {provinces.map(({ region, camp }) => camp ? (
             <FinalCard key={region.id} camp={camp} title={region.name} total={stats[camp.id]?.total} selected={stats[camp.id]?.selected} onClick={() => nav(`/scouting/camps/${camp.id}`)} />
           ) : (
@@ -88,7 +88,7 @@ function NationalBoard({ camp }: { camp: Camp | null }) {
   const groups = Array.from(new Set([...(camp?.age_groups ?? []), ...lists[tab].map(r => r.age_group ?? 'Other')]))
 
   return (
-    <div className="mt-8">
+    <div className="mt-8" data-tour="national">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div><div className="label-caps text-red">National result</div><h2 className="font-display text-2xl font-bold uppercase">The {ref.groups.map(g => g.code).join(' · ')} intake</h2></div>
         <Segmented value={tab} onChange={setTab} options={[

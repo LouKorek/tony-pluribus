@@ -101,14 +101,14 @@ export default function CampSheet() {
         {canEdit && (
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => setEditing(true)}><Pencil size={15} /> Edit camp</Button>
-            {NEXT[camp.stage] && <Button onClick={() => setPromoting(true)} disabled={!st.selected}><ArrowUpRight size={15} /> Invite to {STAGE_LABEL[NEXT[camp.stage]!].toLowerCase()}</Button>}
-            <Button variant="dark" onClick={publish} disabled={!unpublished}><Megaphone size={15} /> Publish results{unpublished ? ` (${unpublished})` : ''}</Button>
-            <Button variant="primary" onClick={() => setAdding(true)}><UserPlus size={15} /> Add player</Button>
+            {NEXT[camp.stage] && <Button data-tour="promote" onClick={() => setPromoting(true)} disabled={!st.selected}><ArrowUpRight size={15} /> Invite to {STAGE_LABEL[NEXT[camp.stage]!].toLowerCase()}</Button>}
+            <Button data-tour="publish" variant="dark" onClick={publish} disabled={!unpublished}><Megaphone size={15} /> Publish results{unpublished ? ` (${unpublished})` : ''}</Button>
+            <Button data-tour="add-player" variant="primary" onClick={() => setAdding(true)}><UserPlus size={15} /> Add player</Button>
           </div>
         )}
       </div>
 
-      <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-6" data-tour="camp-stats">
         {[['Players', st.total], ['Attended', st.attended], ['Absent', st.absent], ['Graded', st.graded], ['Selected', st.selected], ['See again', st.see_again]].map(([l, v], i) => (
           <Card key={l as string} className={cx('px-3 py-2.5', i === 4 && 'border-ink bg-ink text-white')}>
             <div className={cx('text-[11px] font-semibold uppercase tracking-wide', i === 4 ? 'text-lime' : 'text-muted')}>{l}</div>

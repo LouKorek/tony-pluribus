@@ -50,7 +50,7 @@ export default function PlayersPage() {
         description="Everyone the scouting has met, across seasons. Each child has one card that follows them from academy squad to the Tony squads."
         actions={canEdit && <Button variant="primary" onClick={() => setCreating(true)}><Plus size={16} /> New player</Button>} />
 
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row" data-tour="filters">
         <SearchInput className="lg:w-72" value={q} onChange={v => { setQ(v); setLimit(PAGE) }} placeholder="Search by name" />
         <Select className="lg:w-52" value={pool} onChange={e => setPool(e.target.value)}>
           <option value="">Any status</option>{POOL_ORDER.map(s => <option key={s} value={s}>{POOL_LABEL[s]}</option>)}

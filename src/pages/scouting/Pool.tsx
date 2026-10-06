@@ -40,7 +40,7 @@ export default function PoolPage() {
     <div>
       <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Potential pool"
         description="Every player in this season's scouting, by how far they have come. It replaces the yearly Draft – Potential presentation." />
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center" data-tour="filters">
         <Segmented value={group} onChange={setGroup} options={[{ value: 'all', label: 'All ages' }, ...ref.groups.map(g => ({ value: g.code, label: g.code }))]} />
         <Select className="lg:w-52" value={region} onChange={e => setRegion(e.target.value)}>
           <option value="">All provinces</option>{ref.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -51,7 +51,7 @@ export default function PoolPage() {
       {!players ? <Spinner /> : players.length === 0 ? (
         <Card><Empty icon={<Sparkles size={20} />} title="The pool is empty">Players join the pool as soon as they are submitted to, or added in, a camp of this season.</Empty></Card>
       ) : (
-        <div className="scroll-thin -mx-4 flex gap-3 overflow-x-auto px-4 pb-3 sm:-mx-8 sm:px-8">
+        <div className="scroll-thin -mx-4 flex gap-3 overflow-x-auto px-4 pb-3 sm:-mx-8 sm:px-8" data-tour="columns">
           {COLUMNS.map(col => {
             const items = list.filter(p => p.pool_status === col.key)
             return (

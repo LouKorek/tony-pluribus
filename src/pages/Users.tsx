@@ -73,7 +73,7 @@ export default function UsersPage() {
       {viewErr && <div className="mb-4"><Alert>{viewErr}</Alert></div>}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 rounded-lg bg-black/5 p-1">
+        <div data-tour="tabs" className="flex gap-1 rounded-lg bg-black/5 p-1">
           {(['pending', 'active', 'locked', 'all'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} className={cx('flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold capitalize transition-colors', tab === t ? 'bg-card text-text shadow-sm' : 'text-muted hover:text-text')}>
               {t}

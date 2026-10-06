@@ -71,14 +71,14 @@ export default function AcademiesPage() {
         description="The academy register for every district: contacts, visits and how many players each academy brings and has selected."
         actions={canEdit && <Button variant="primary" onClick={() => setOpen('new')}><Plus size={16} /> New academy</Button>} />
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4" data-tour="academy-stats">
         <Card className="p-4"><div className="label-caps text-muted">Academies</div><div className="mt-1 font-display text-4xl font-bold">{ref.academies.filter(a => a.is_active).length}</div><div className="text-xs text-muted">active in the register</div></Card>
         <Card className="p-4"><div className="label-caps text-muted">Visited</div><div className="mt-1 font-display text-4xl font-bold">{visited}</div><div className="text-xs text-muted">scouting for {seasonLabel}</div></Card>
         <Card className="p-4"><div className="label-caps text-muted">Players seen</div><div className="mt-1 font-display text-4xl font-bold">{seen.toLocaleString()}</div><div className="text-xs text-muted">as reported by the scouts</div></Card>
         <Card className="p-4"><div className="label-caps text-muted">Selected</div><div className="mt-1 font-display text-4xl font-bold">{sel}</div><div className="text-xs text-muted">{seen ? Math.round((sel / seen) * 100) : 0}% of players seen</div></Card>
       </div>
 
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center" data-tour="filters">
         <SearchInput className="lg:w-72" value={q} onChange={setQ} placeholder="Search academy, contact, district" />
         <Select className="lg:w-48" value={region} onChange={e => { setRegion(e.target.value); setDistrict('') }}>
           <option value="">All provinces</option>{ref.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -89,7 +89,7 @@ export default function AcademiesPage() {
         <Select className="lg:w-56" value={show} onChange={e => setShow(e.target.value as typeof show)}>
           <option value="active">Active</option><option value="visited">Visited this season</option><option value="not_visited">Not visited this season</option><option value="inactive">Inactive</option><option value="all">All</option>
         </Select>
-        <Select className="lg:ml-auto lg:w-56" value={seasonId} onChange={e => setSeasonId(e.target.value)} title="Scouting season">
+        <Select data-tour="season" className="lg:ml-auto lg:w-56" value={seasonId} onChange={e => setSeasonId(e.target.value)} title="Scouting season">
           {ordered.map(s => <option key={s.id} value={s.id}>Scouting for {s.label}</option>)}
         </Select>
       </div>

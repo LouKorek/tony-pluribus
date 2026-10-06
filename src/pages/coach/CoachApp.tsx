@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink, Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Bell, CalendarDays, Check, ChevronRight, Home as HomeIcon, LogOut, MapPin, Plus, Printer, Share2, Trophy, Undo2, UserPlus, Users, X,
+  Bell, CalendarDays, Check, ChevronRight, CircleHelp, Home as HomeIcon, LogOut, MapPin, Plus, Printer, Share2, Trophy, Undo2, UserPlus, Users, X,
 } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
@@ -9,12 +9,15 @@ import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Spinner, Textarea, cx } from '../../components/ui'
 import { Brand } from '../../layouts/AppShell'
 import { DECISION_T, LangProvider, STAGE_T, STATUS_T, useT } from './i18n'
+import { TourProvider, useTour } from '../../lib/tour'
+import { COACH_TOURS } from './tours'
 import { CoachDataProvider, groupOf, openInvites, pendingInvites, useCoach, type JourneyItem, type OpenCamp, type SquadPlayer } from './data'
 
 export default function CoachApp({ previewAcademy }: { previewAcademy?: string }) {
   return (
     <LangProvider>
       <CoachDataProvider previewAcademy={previewAcademy}>
+        <CoachTours>
         <Shell>
           <Routes>
             <Route index element={<HomeScreen />} />
@@ -24,6 +27,7 @@ export default function CoachApp({ previewAcademy }: { previewAcademy?: string }
             <Route path="*" element={<Home404 />} />
           </Routes>
         </Shell>
+        </CoachTours>
       </CoachDataProvider>
     </LangProvider>
   )
@@ -40,6 +44,32 @@ function useGo() {
 function Home404() {
   const { base } = useCoach()
   return <Navigate to={base || '/'} replace />
+}
+
+/* ───────────────────────── Guided tours ───────────────────────── */
+
+function CoachTours({ children }: { children: ReactNode }) {
+  const { profile } = useAuth()
+  const { lang } = useT()
+  const { base } = useCoach()
+  const loc = useLocation()
+  const rel = loc.pathname.slice(base.length) || '/'
+  const screen = ({ '/': 'coach-home', '/squad': 'coach-squad', '/camps': 'coach-camps', '/updates': 'coach-updates' } as Record<string, string>)[rel] ?? null
+  return (
+    <TourProvider tours={COACH_TOURS} screen={screen} lang={lang} seen={profile?.tours_seen ?? []}
+      onSeen={key => { supabase.rpc('tour_seen', { p_key: key }).then(() => {}) }}>
+      {children}
+    </TourProvider>
+  )
+}
+
+function CoachHelp() {
+  const { hasTour, start } = useTour()
+  const { t } = useT()
+  return (
+    <button data-tour="help" onClick={() => start()} disabled={!hasTour} aria-label={t('tour')} title={t('tour')}
+      className="rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-30"><CircleHelp size={18} /></button>
+  )
 }
 
 /* ───────────────────────── Shell ───────────────────────── */
@@ -68,12 +98,13 @@ function Shell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Brand compact />
           <div className="flex items-center gap-1">
-            <div className="mr-1 flex rounded-md bg-white/8 p-0.5 text-[12px] font-bold" role="group" aria-label={t('language')}>
+            <div data-tour="lang" className="mr-1 flex rounded-md bg-white/8 p-0.5 text-[12px] font-bold" role="group" aria-label={t('language')}>
               {(['en', 'rw'] as const).map(l => (
                 <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l}
                   className={cx('rounded px-2 py-1 uppercase', lang === l ? 'bg-lime text-ink' : 'text-white/60 hover:text-white')}>{l}</button>
               ))}
             </div>
+            <CoachHelp />
             {!preview && <NavLink to="/updates" className="relative rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label={t('updates')}>
               <Bell size={18} />
               {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-lime" />}
@@ -81,7 +112,7 @@ function Shell({ children }: { children: ReactNode }) {
             {!preview && <button onClick={signOut} className="rounded-md p-2 text-white/60 hover:bg-white/10 hover:text-white" aria-label={t('signOut')} title={t('signOut')}><LogOut size={17} /></button>}
           </div>
         </div>
-        <nav className="mx-auto hidden max-w-3xl gap-1 px-3 pb-2 sm:flex">
+        <nav data-tour="coach-tabs" className="mx-auto hidden max-w-3xl gap-1 px-3 pb-2 sm:flex">
           {tabs.map(tb => (
             <NavLink key={tb.to} to={tb.to} end={tb.to === (base || '/')}
               className={({ isActive }) => cx('flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold', isActive ? 'bg-lime text-ink' : 'text-white/70 hover:bg-white/8 hover:text-white')}>
@@ -97,7 +128,7 @@ function Shell({ children }: { children: ReactNode }) {
         {loading ? <Spinner /> : children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] sm:hidden">
+      <nav data-tour="coach-tabs" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] sm:hidden">
         <div className={cx('grid', preview ? 'grid-cols-3' : 'grid-cols-4')}>
           {tabs.map(tb => (
             <NavLink key={tb.to} to={tb.to} end={tb.to === (base || '/')}
@@ -174,7 +205,7 @@ function HomeScreen() {
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3" data-tour="coach-stats">
         <MiniStat label={t('playersInSquad')} value={squad.length} />
         <MiniStat label={t('submitted')} value={standing?.submitted ?? 0} />
         <MiniStat label={t('selected')} value={standing?.selected ?? 0} accent />
@@ -183,7 +214,7 @@ function HomeScreen() {
       </div>
 
       <Section title={t('actionNeeded')}>
-        <Card className="divide-y divide-line">
+        <Card className="divide-y divide-line" data-tour="coach-actions">
           {invites.map(({ player, item }) => (
             <button key={item.id} onClick={() => nav('/camps')} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-soft text-red"><Trophy size={17} /></span>
@@ -252,12 +283,12 @@ function SquadScreen() {
 
   return (
     <div>
-      <ScreenTitle title={t('squad')} action={!preview && <Button variant="primary" onClick={() => setEditing('new')}><Plus size={16} />{t('addPlayer')}</Button>} />
+      <ScreenTitle title={t('squad')} action={!preview && <Button data-tour="add-player" variant="primary" onClick={() => setEditing('new')}><Plus size={16} />{t('addPlayer')}</Button>} />
       {squad.length > 6 && <SearchInput value={q} onChange={setQ} placeholder={t('search')} className="mb-3" />}
       {squad.length === 0 ? (
         <Card><Empty icon={<Users size={20} />} title={t('emptySquad')}>{t('emptySquadHint')}</Empty></Card>
       ) : (
-        <Card className="divide-y divide-line">
+        <Card className="divide-y divide-line" data-tour="squad-list">
           {list.map(p => {
             const g = groupOf(p.birth_year, groups)
             return (
@@ -487,18 +518,18 @@ function CampsScreen() {
 
       {invites.length > 0 && (
         <Section title={t('invitations')}>
-          <div className="space-y-3">{invites.map(({ player, item }) => <InviteCard key={item.id} player={player} item={item} />)}</div>
+          <div className="space-y-3" data-tour="invites">{invites.map(({ player, item }) => <InviteCard key={item.id} player={player} item={item} />)}</div>
         </Section>
       )}
 
-      <Section title={t('openCamps')}>
+      <div data-tour="open-camps"><Section title={t('openCamps')}>
         <p className="-mt-1 mb-3 text-sm text-muted">{t('openCampsHint')}</p>
         {camps.length === 0 ? (
           <Card><Empty icon={<CalendarDays size={20} />} title={t('noOpenCamps')}>{t('noOpenCampsHint')}</Empty></Card>
         ) : (
           <div className="space-y-3">{camps.map(c => <CampCard key={c.id} camp={c} onSubmit={() => setSubmitTo(c)} />)}</div>
         )}
-      </Section>
+      </Section></div>
 
       {submitTo && <SubmitModal camp={submitTo} onClose={() => setSubmitTo(null)} />}
     </div>
@@ -672,7 +703,7 @@ function UpdatesScreen() {
       {notifs.length === 0 ? (
         <Card><Empty icon={<Bell size={20} />} title={t('noUpdates')}>{t('noUpdatesHint')}</Empty></Card>
       ) : (
-        <Card className="divide-y divide-line">{notifs.map(n => <NotifRow key={n.id} n={n} fresh={unreadAtOpen.current.has(n.id)} />)}</Card>
+        <Card className="divide-y divide-line" data-tour="updates">{notifs.map(n => <NotifRow key={n.id} n={n} fresh={unreadAtOpen.current.has(n.id)} />)}</Card>
       )}
     </div>
   )

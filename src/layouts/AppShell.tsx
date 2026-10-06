@@ -1,10 +1,13 @@
 import { Suspense, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LogOut, Menu, X, ChevronsUpDown } from 'lucide-react'
+import { CircleHelp, LogOut, Menu, X, ChevronsUpDown } from 'lucide-react'
 import { NAV, BUILD_STAGE } from '../lib/nav'
 import { useAuth } from '../lib/auth'
 import { ROLE_LABEL } from '../lib/supabase'
 import { cx, Spinner } from '../components/ui'
+import { TourProvider, useTour } from '../lib/tour'
+import { STAFF_TOURS, staffTourKey } from '../lib/tours'
+import { supabase } from '../lib/supabase'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return (
@@ -26,7 +29,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="mt-1.5 font-display text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">Pluribus</div>
       </div>
 
-      <div className="mx-3 mb-3 flex items-center justify-between rounded-lg border border-white/10 bg-ink-2 px-3 py-2.5" title="Project and season">
+      <div data-tour="project-box" className="mx-3 mb-3 flex items-center justify-between rounded-lg border border-white/10 bg-ink-2 px-3 py-2.5" title="Project and season">
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{project?.name ?? 'Project'}</div>
           <div className="truncate text-xs text-white/50">Scouting {scoutingSeason?.label ?? '—'}</div>
@@ -34,7 +37,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <ChevronsUpDown size={15} className="shrink-0 text-white/30" />
       </div>
 
-      <nav className="scroll-thin flex-1 overflow-y-auto px-3 pb-4">
+      <nav data-tour="nav" className="scroll-thin flex-1 overflow-y-auto px-3 pb-4">
         {NAV.map(g => {
           const items = g.items.filter(i => !i.roles || (role && i.roles.includes(role)))
           if (!items.length) return null
@@ -77,6 +80,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="truncate text-sm font-semibold">{profile?.full_name || profile?.username}</div>
             <div className="truncate text-xs text-white/50">{profile ? ROLE_LABEL[profile.role] : ''}</div>
           </div>
+          <HelpButton />
           <button onClick={signOut} className="rounded-md p-2 text-white/50 hover:bg-white/10 hover:text-white" title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>
         </div>
       </div>
@@ -84,7 +88,27 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
+function HelpButton({ className }: { className?: string }) {
+  const { hasTour, start } = useTour()
+  return (
+    <button data-tour="help" onClick={() => start()} disabled={!hasTour}
+      className={cx('rounded-md p-2 text-white/50 hover:bg-white/10 hover:text-white disabled:opacity-30', className)}
+      title="Tour of this screen" aria-label="Tour of this screen"><CircleHelp size={17} /></button>
+  )
+}
+
 export default function AppShell() {
+  const { profile } = useAuth()
+  const loc = useLocation()
+  return (
+    <TourProvider tours={STAFF_TOURS} screen={staffTourKey(loc.pathname)} seen={profile?.tours_seen ?? []}
+      onSeen={key => { supabase.rpc('tour_seen', { p_key: key }).then(() => {}) }}>
+      <Shell />
+    </TourProvider>
+  )
+}
+
+function Shell() {
   const [open, setOpen] = useState(false)
   const loc = useLocation()
   return (
@@ -105,7 +129,7 @@ export default function AppShell() {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-ink px-4 text-white lg:hidden">
           <button onClick={() => setOpen(true)} className="rounded-md p-1.5 hover:bg-white/10" aria-label="Open menu"><Menu size={20} /></button>
           <Brand compact />
-          <span className="w-8" />
+          <HelpButton className="text-white/70" />
         </header>
         <main key={loc.pathname} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
           <Suspense fallback={<Spinner />}><Outlet /></Suspense>

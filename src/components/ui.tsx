@@ -51,8 +51,8 @@ export function Textarea(p: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea {...p} className={cx(inputCls, 'py-2', p.className)} />
 }
 
-export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx('rounded-xl border border-line bg-card', className)}>{children}</div>
+export function Card({ children, className, ...rest }: { children: ReactNode; className?: string; 'data-tour'?: string }) {
+  return <div {...rest} className={cx('rounded-xl border border-line bg-card', className)}>{children}</div>
 }
 
 type Tone = 'neutral' | 'good' | 'warn' | 'bad' | 'info' | 'lime' | 'dark'
@@ -72,12 +72,12 @@ export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: R
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: string; title: string; description?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
+      <div data-tour="page-header">
         {eyebrow && <div className="label-caps mb-1 text-red">{eyebrow}</div>}
         <h1 className="font-display text-3xl font-bold uppercase leading-none tracking-tight text-text sm:text-[34px]">{title}</h1>
         {description && <p className="mt-2 max-w-2xl text-[15px] text-muted">{description}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div data-tour="page-actions" className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   )
 }
@@ -126,7 +126,7 @@ export function Spinner() {
 export function Stat({ label, value, sub, accent }: { label: string; value: ReactNode; sub?: ReactNode; accent?: boolean }) {
   return (
     <Card className={cx('p-4', accent && 'border-ink bg-ink text-white')}>
-      <div className={cx('label-caps', accent ? 'text-lime' : 'text-muted')}>{label}</div>
+      <div data-tour="stat" className={cx('label-caps', accent ? 'text-lime' : 'text-muted')}>{label}</div>
       <div className="mt-1 font-display text-4xl font-bold leading-none">{value}</div>
       {sub && <div className={cx('mt-1.5 text-xs', accent ? 'text-white/60' : 'text-muted')}>{sub}</div>}
     </Card>
@@ -166,7 +166,7 @@ export function Drawer({ open, onClose, title, subtitle, children, footer, width
 
 export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode; count?: number }[] }) {
   return (
-    <div className="inline-flex flex-wrap gap-1 rounded-lg bg-black/5 p-1">
+    <div data-tour="tabs" className="inline-flex flex-wrap gap-1 rounded-lg bg-black/5 p-1">
       {options.map(o => (
         <button key={o.value} type="button" onClick={() => onChange(o.value)}
           className={cx('flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors', value === o.value ? 'bg-card text-text shadow-sm' : 'text-muted hover:text-text')}>
@@ -180,7 +180,7 @@ export function Segmented<T extends string>({ value, onChange, options }: { valu
 
 export function SearchInput({ value, onChange, placeholder, className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
   return (
-    <div className={cx('relative', className)}>
+    <div data-tour="search" className={cx('relative', className)}>
       <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
       <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="h-10 w-full rounded-lg border border-line-2 bg-card pl-9 pr-3 text-[15px] placeholder:text-faint focus:border-ink focus:outline-none focus:ring-2 focus:ring-lime/70" />
