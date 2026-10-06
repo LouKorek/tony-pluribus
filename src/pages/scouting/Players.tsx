@@ -165,7 +165,7 @@ export function PlayerDrawer({ playerId, onClose, onSaved, onOpenOther }: { play
     ])
     const player = pl as Player
     setP(player); setF(player)
-    setJourney(((j as Journey[]) ?? []).sort((a, b) => (a.camp.starts_on ?? '').localeCompare(b.camp.starts_on ?? '')))
+    setJourney(((j as Journey[]) ?? []).sort((a, b) => (a.camp.starts_on ?? '9999').localeCompare(b.camp.starts_on ?? '9999')))
     if (player) {
       const { data: s } = await supabase.from('players').select('*').is('merged_into', null).neq('id', player.id)
         .ilike('last_name', player.last_name).ilike('first_name', `${player.first_name.split(' ')[0]}%`).limit(5)

@@ -107,7 +107,7 @@ export default function AppShell() {
           <Brand compact />
           <span className="w-8" />
         </header>
-        <main key={loc.pathname} className="mx-auto w-full max-w-[1240px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
+        <main key={loc.pathname} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
           <Outlet />
         </main>
       </div>
