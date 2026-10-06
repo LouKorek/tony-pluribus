@@ -1,7 +1,7 @@
 // Pluribus · SharePoint sync (stage 6).
 // Reads the changes in the shared Talent folder through Microsoft Graph (delta query) and keeps the
 // talent_files index up to date: new, changed, renamed, moved and deleted files and folders.
-// Who may run it: an active owner/admin from the Sync Center, or the scheduled job with the service key.
+// Who may run it: an active owner/admin from the Sync Center, or the scheduled job (pg_cron, every 15 minutes).
 // Secrets: MS_CLIENT_SECRET (set by the owner in Supabase). The tenant and app ids below are not secret.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
@@ -24,10 +24,16 @@ Deno.serve(async req => {
   const url = Deno.env.get('SUPABASE_URL')!, service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const db = createClient(url, service, { auth: { persistSession: false } })
 
-  // who is asking
+  // who is asking: the scheduled job (token kept in the database) or a signed-in admin
   const jwt = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+  const cronToken = req.headers.get('x-cron-token')
   let userId: string | null = null
-  if (jwt !== service) {
+  let scheduled = false
+  if (cronToken) {
+    const { data: ok } = await db.from('sync_state').select('project_id').eq('cron_token', cronToken).maybeSingle()
+    if (!ok) return json({ error: 'Not allowed' }, 403)
+    scheduled = true
+  } else if (jwt !== service) {
     const { data: { user } } = await db.auth.getUser(jwt)
     if (!user) return json({ error: 'Please sign in again' }, 401)
     const { data: me } = await db.from('profiles').select('role, status').eq('id', user.id).maybeSingle()
@@ -44,7 +50,10 @@ Deno.serve(async req => {
 
   const { data: state } = await db.from('sync_state').select('*').eq('project_id', projectId).maybeSingle()
   const full = body.full === true || !state?.delta_link
-  const { data: run } = await db.from('sync_runs').insert({ project_id: projectId, full_scan: full, triggered_by: userId }).select('id, started_at').single()
+  // never two runs at the same time
+  const { data: busy } = await db.from('sync_runs').select('id').eq('project_id', projectId).eq('status', 'running').gt('started_at', new Date(Date.now() - 10 * 60_000).toISOString()).limit(1)
+  if (busy?.length) return json({ error: 'A sync is already running. Try again in a minute.' }, 409)
+  const { data: run } = await db.from('sync_runs').insert({ project_id: projectId, full_scan: full, triggered_by: userId, scheduled }).select('id, started_at').single()
   const finish = async (patch: Record<string, unknown>) => {
     await db.from('sync_runs').update({ ...patch, finished_at: new Date().toISOString() }).eq('id', run!.id)
   }

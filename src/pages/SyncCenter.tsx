@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Alert, Badge, Button, Card, PageHeader, Stat } from '../components/ui'
 
 interface State { last_run_at: string | null; last_ok_at: string | null; last_status: string | null; last_error: string | null; delta_link: string | null }
-interface Run { id: string; started_at: string; finished_at: string | null; status: 'running' | 'ok' | 'error'; full_scan: boolean; changed: number; deleted: number; error: string | null }
+interface Run { id: string; started_at: string; finished_at: string | null; status: 'running' | 'ok' | 'error'; full_scan: boolean; scheduled?: boolean; changed: number; deleted: number; error: string | null }
 const when = (s: string | null) => s ? new Date(s).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
 
 export default function SyncCenterPage() {
@@ -16,7 +16,7 @@ export default function SyncCenterPage() {
 
   const load = useCallback(async () => {
     const [s, r, t] = await Promise.all([
-      supabase.from('sync_state').select('*').maybeSingle(),
+      supabase.from('sync_state').select('last_run_at, last_ok_at, last_status, last_error, delta_link').maybeSingle(),
       supabase.from('sync_runs').select('*').order('started_at', { ascending: false }).limit(20),
       supabase.rpc('talent_folder_stats'),
     ])
@@ -43,7 +43,7 @@ export default function SyncCenterPage() {
         actions={<><Button onClick={() => run(true)} disabled={busy}>Full scan</Button><Button variant="primary" loading={busy} onClick={() => run(false)}><RefreshCcw size={15} /> Sync now</Button></>} />
       <div data-tour="sync-status" className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat accent label="Status" value={!state ? 'Not connected' : ok ? 'Connected' : waiting ? 'Waiting' : 'Error'} sub={state?.last_ok_at ? `Last good sync ${when(state.last_ok_at)}` : 'Waiting for Microsoft approval'} />
-        <Stat label="Last run" value={when(state?.last_run_at ?? null)} />
+        <Stat label="Last run" value={when(state?.last_run_at ?? null)} sub="Runs on its own every 15 minutes" />
         <Stat label="Files" value={stats?.files?.toLocaleString() ?? '—'} sub="in the Talent folder index" />
         <Stat label="Folders" value={stats?.folders?.toLocaleString() ?? '—'} />
       </div>
@@ -56,7 +56,7 @@ export default function SyncCenterPage() {
             <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-sm">
               {r.status === 'ok' ? <CheckCircle2 size={16} className="text-good" /> : r.status === 'error' ? <CircleAlert size={16} className="text-red" /> : <Clock size={16} className="text-warn" />}
               <span className="w-36 text-muted">{when(r.started_at)}</span>
-              {r.full_scan && <Badge>Full scan</Badge>}
+              {r.full_scan && <Badge>Full scan</Badge>}{r.scheduled && <Badge tone="info">Automatic</Badge>}
               <span>{r.status === 'error' ? <span className="text-red">{r.error}</span> : r.status === 'running' ? 'Running…' : `${r.changed} new or changed · ${r.deleted} removed`}</span>
             </li>
           ))}</ul>
