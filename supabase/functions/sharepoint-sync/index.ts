@@ -33,7 +33,7 @@ Deno.serve(async req => {
     const { data: ok } = await db.from('sync_state').select('project_id').eq('cron_token', cronToken).maybeSingle()
     if (!ok) return json({ error: 'Not allowed' }, 403)
     scheduled = true
-  } else if (jwt !== service) {
+  } else if (!(jwt && jwt === service)) {
     const { data: { user } } = await db.auth.getUser(jwt)
     if (!user) return json({ error: 'Please sign in again' }, 401)
     const { data: me } = await db.from('profiles').select('role, status').eq('id', user.id).maybeSingle()
