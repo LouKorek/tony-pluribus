@@ -197,7 +197,7 @@ function HomeScreen() {
           {campsWithRoom > 0 && (
             <button onClick={() => nav('/camps')} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lime text-ink"><CalendarDays size={17} /></span>
-              <span className="min-w-0 flex-1 font-semibold">{campsWithRoom} {t('openCampsCta')}</span>
+              <span className="min-w-0 flex-1 font-semibold">{t('openCampsCta')}: {campsWithRoom}</span>
               <ChevronRight size={18} className="text-faint" />
             </button>
           )}
@@ -418,7 +418,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
       )}
 
       <h3 className="label-caps mb-2 mt-7 text-muted">{t('details')}</h3>
-      <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1.5 text-sm">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
         <dt className="text-muted">{t('birthDate')}</dt><dd>{player.birth_date ? fmtDate(player.birth_date) : '—'}</dd>
         <dt className="text-muted">{t('foot')}</dt><dd>{player.preferred_foot ? t(player.preferred_foot) : '—'}</dd>
         <dt className="text-muted">{t('guardianName')}</dt><dd>{player.guardian_name || '—'}</dd>

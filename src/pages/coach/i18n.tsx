@@ -19,7 +19,7 @@ const S = {
   actionNeeded: ['Action needed', 'Ibikenewe gukorwa'],
   allClear: ['Nothing waiting for you right now.', 'Nta kintu gitegereje ubu.'],
   replyInvite: ['Reply to the invitation', 'Subiza ubutumire'],
-  openCampsCta: ['district camps are open for your players', "amakambi y'akarere arafunguye ku bakinnyi bawe"],
+  openCampsCta: ['District camps open for your players', "Amakambi y'akarere afunguye ku bakinnyi bawe"],
   seeCamps: ['See camps', 'Reba amakambi'],
   latestUpdates: ['Latest updates', 'Amakuru mashya'],
   seeAll: ['See all', 'Reba byose'],
