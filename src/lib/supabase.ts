@@ -36,7 +36,7 @@ export interface Season { id: string; project_id: string; label: string; starts_
 export interface Region { id: string; name: string; sort: number }
 export interface District { id: string; name: string; region_id: string }
 export interface AgeGroup { id: string; season_id: string; code: string; birth_year_from: number; birth_year_to: number; sort: number }
-export interface Academy { id: string; name: string; district_id: string | null; contact_name: string | null; contact_phone: string | null; is_active: boolean }
+export interface Academy { id: string; name: string; district_id: string | null; contact_name: string | null; contact_phone: string | null; notes: string | null; is_active: boolean }
 
 export const ROLE_LABEL: Record<Role, string> = {
   owner: 'Owner', admin: 'Admin', staff: 'Technical staff', scout: 'Scout', observer: 'Observer', coach: 'Academy coach',

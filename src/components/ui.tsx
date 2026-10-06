@@ -1,4 +1,4 @@
-import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { useEffect, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 import { X, Loader2 } from 'lucide-react'
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ')
@@ -137,4 +137,66 @@ export function generatePassword() {
   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
   const a = new Uint32Array(10); crypto.getRandomValues(a)
   return Array.from(a, n => chars[n % chars.length]).join('')
+}
+
+export function Drawer({ open, onClose, title, subtitle, children, footer, width = 560 }: { open: boolean; onClose: () => void; title: ReactNode; subtitle?: ReactNode; children: ReactNode; footer?: ReactNode; width?: number }) {
+  useEffect(() => {
+    if (!open) return
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [open, onClose])
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-ink/50" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="flex h-full w-full flex-col bg-card shadow-2xl" style={{ maxWidth: width }} role="dialog" aria-modal="true">
+        <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+          <div className="min-w-0">
+            <h2 className="truncate font-display text-2xl font-bold uppercase leading-tight tracking-tight">{title}</h2>
+            {subtitle && <div className="mt-0.5 text-sm text-muted">{subtitle}</div>}
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-muted hover:bg-black/5 hover:text-text" aria-label="Close"><X size={18} /></button>
+        </div>
+        <div className="scroll-thin flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        {footer && <div className="flex justify-end gap-2 border-t border-line bg-paper/60 px-5 py-3">{footer}</div>}
+      </div>
+    </div>
+  )
+}
+
+export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode; count?: number }[] }) {
+  return (
+    <div className="inline-flex flex-wrap gap-1 rounded-lg bg-black/5 p-1">
+      {options.map(o => (
+        <button key={o.value} type="button" onClick={() => onChange(o.value)}
+          className={cx('flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors', value === o.value ? 'bg-card text-text shadow-sm' : 'text-muted hover:text-text')}>
+          {o.label}
+          {o.count !== undefined && <span className="rounded-full bg-black/8 px-1.5 text-[11px] text-muted">{o.count}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function SearchInput({ value, onChange, placeholder, className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
+  return (
+    <div className={cx('relative', className)}>
+      <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="h-10 w-full rounded-lg border border-line-2 bg-card pl-9 pr-3 text-[15px] placeholder:text-faint focus:border-ink focus:outline-none focus:ring-2 focus:ring-lime/70" />
+    </div>
+  )
+}
+
+export function Th({ children, className }: { children?: ReactNode; className?: string }) {
+  return <th className={cx('whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold text-muted', className)}>{children}</th>
+}
+export function Td({ children, className }: { children?: ReactNode; className?: string }) {
+  return <td className={cx('px-3 py-2.5 align-middle', className)}>{children}</td>
+}
+
+export function useDebounced<T>(value: T, ms = 250): T {
+  const [v, setV] = useState(value)
+  useEffect(() => { const t = setTimeout(() => setV(value), ms); return () => clearTimeout(t) }, [value, ms])
+  return v
 }

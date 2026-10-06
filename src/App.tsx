@@ -7,6 +7,14 @@ import Overview from './pages/Overview'
 import UsersPage from './pages/Users'
 import SettingsPage from './pages/Settings'
 import { CoachHome, ComingSoon } from './pages/misc'
+import { RefProvider } from './lib/scouting'
+import ScoutingHome from './pages/scouting/Home'
+import AcademiesPage from './pages/scouting/Academies'
+import CampsPage, { PlanPage } from './pages/scouting/Camps'
+import CampSheet from './pages/scouting/CampSheet'
+import FinalsPage from './pages/scouting/Finals'
+import PlayersPage from './pages/scouting/Players'
+import PoolPage from './pages/scouting/Pool'
 
 export default function App() {
   const { loading, session, profile } = useAuth()
@@ -32,9 +40,18 @@ export default function App() {
 
   const admin = isAdmin(profile)
   return (
+    <RefProvider>
     <Routes>
       <Route element={<AppShell />}>
         <Route index element={<Overview />} />
+        <Route path="scouting" element={<ScoutingHome />} />
+        <Route path="scouting/plan" element={<PlanPage />} />
+        <Route path="scouting/academies" element={<AcademiesPage />} />
+        <Route path="scouting/camps" element={<CampsPage />} />
+        <Route path="scouting/camps/:id" element={<CampSheet />} />
+        <Route path="scouting/finals" element={<FinalsPage />} />
+        <Route path="scouting/players" element={<PlayersPage />} />
+        <Route path="scouting/pool" element={<PoolPage />} />
         <Route path="users" element={admin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="settings" element={admin ? <SettingsPage /> : <Navigate to="/" replace />} />
         <Route path="login" element={<Navigate to="/" replace />} />
@@ -43,5 +60,6 @@ export default function App() {
         <Route path="*" element={<ComingSoon />} />
       </Route>
     </Routes>
+    </RefProvider>
   )
 }
