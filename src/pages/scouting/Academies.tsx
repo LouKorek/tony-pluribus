@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Phone, Plus, School } from 'lucide-react'
+import { Eye, Phone, Plus, School } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { supabase, errMsg, type Academy } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useRefData, fmtDate } from '../../lib/scouting'
@@ -196,6 +197,7 @@ function AcademyDrawer({ academy, history, canEdit, onClose, onSaved }: { academ
               </div>
             )}
             <p className="mt-3 text-sm text-muted">{players === null ? '' : `${players} player${players === 1 ? '' : 's'} linked to this academy in the system.`}</p>
+            <Link to={`/coach-preview/${academy.id}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-red hover:underline"><Eye size={15} />See this academy's coach portal</Link>
           </div>
         )}
       </div>

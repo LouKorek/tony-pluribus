@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LogOut, Menu, X, ChevronsUpDown } from 'lucide-react'
 import { NAV, BUILD_STAGE } from '../lib/nav'
 import { useAuth } from '../lib/auth'
 import { ROLE_LABEL } from '../lib/supabase'
-import { cx } from '../components/ui'
+import { cx, Spinner } from '../components/ui'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return (
@@ -108,7 +108,7 @@ export default function AppShell() {
           <span className="w-8" />
         </header>
         <main key={loc.pathname} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
-          <Outlet />
+          <Suspense fallback={<Spinner />}><Outlet /></Suspense>
         </main>
       </div>
     </div>

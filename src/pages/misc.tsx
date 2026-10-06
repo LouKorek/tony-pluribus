@@ -1,9 +1,7 @@
 import { useLocation, Link } from 'react-router-dom'
-import { Hammer, LogOut, School } from 'lucide-react'
+import { Hammer } from 'lucide-react'
 import { findNav, STAGE_NAME } from '../lib/nav'
-import { useAuth } from '../lib/auth'
 import { Button, Card, PageHeader } from '../components/ui'
-import { Brand } from '../layouts/AppShell'
 
 export function ComingSoon() {
   const { pathname } = useLocation()
@@ -20,29 +18,6 @@ export function ComingSoon() {
         </p>
         <Link to="/" className="mt-5"><Button>Back to overview</Button></Link>
       </Card>
-    </div>
-  )
-}
-
-export function CoachHome() {
-  const { profile, signOut } = useAuth()
-  return (
-    <div className="min-h-full bg-paper">
-      <header className="flex items-center justify-between bg-ink px-4 py-3 text-white">
-        <Brand compact />
-        <button onClick={signOut} className="rounded-md p-2 text-white/60 hover:bg-white/10" aria-label="Sign out"><LogOut size={17} /></button>
-      </header>
-      <div className="mx-auto max-w-md px-4 py-8">
-        <div className="label-caps text-red">Coach portal</div>
-        <h1 className="mt-1 font-display text-4xl font-bold uppercase leading-none">Welcome, {(profile?.full_name || profile?.username || '').split(' ')[0]}</h1>
-        <Card className="mt-6 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-good-soft text-good"><School size={18} /></div>
-            <div className="font-semibold">Your account is approved</div>
-          </div>
-          <p className="mt-3 text-sm text-muted">Your squad, camp submissions and updates open here in the next stage of the build.</p>
-        </Card>
-      </div>
     </div>
   )
 }

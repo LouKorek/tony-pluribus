@@ -1,20 +1,23 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { useAuth, isAdmin } from './lib/auth'
 import { Spinner } from './components/ui'
 import AppShell from './layouts/AppShell'
 import { LoginPage, OwnerSetupPage, PendingPage, SignupPage } from './pages/auth'
-import Overview from './pages/Overview'
-import UsersPage from './pages/Users'
-import SettingsPage from './pages/Settings'
-import { CoachHome, ComingSoon } from './pages/misc'
+const Overview = lazy(() => import('./pages/Overview'))
+const UsersPage = lazy(() => import('./pages/Users'))
+const SettingsPage = lazy(() => import('./pages/Settings'))
+import { ComingSoon } from './pages/misc'
+const CoachApp = lazy(() => import('./pages/coach/CoachApp'))
 import { RefProvider } from './lib/scouting'
-import ScoutingHome from './pages/scouting/Home'
-import AcademiesPage from './pages/scouting/Academies'
-import CampsPage, { PlanPage } from './pages/scouting/Camps'
-import CampSheet from './pages/scouting/CampSheet'
-import FinalsPage from './pages/scouting/Finals'
-import PlayersPage from './pages/scouting/Players'
-import PoolPage from './pages/scouting/Pool'
+const ScoutingHome = lazy(() => import('./pages/scouting/Home'))
+const AcademiesPage = lazy(() => import('./pages/scouting/Academies'))
+const CampsPage = lazy(() => import('./pages/scouting/Camps'))
+const PlanPage = lazy(() => import('./pages/scouting/Camps').then(m => ({ default: m.PlanPage })))
+const CampSheet = lazy(() => import('./pages/scouting/CampSheet'))
+const FinalsPage = lazy(() => import('./pages/scouting/Finals'))
+const PlayersPage = lazy(() => import('./pages/scouting/Players'))
+const PoolPage = lazy(() => import('./pages/scouting/Pool'))
 
 export default function App() {
   const { loading, session, profile } = useAuth()
@@ -33,15 +36,19 @@ export default function App() {
   if (!profile || profile.status !== 'active') return <PendingPage />
 
   if (profile.role === 'coach') return (
-    <Routes>
-      <Route path="*" element={<CoachHome />} />
-    </Routes>
+    <Suspense fallback={<Spinner />}>
+      <Routes>
+        <Route path="/*" element={<CoachApp />} />
+      </Routes>
+    </Suspense>
   )
 
   const admin = isAdmin(profile)
   return (
     <RefProvider>
+    <Suspense fallback={<Spinner />}>
     <Routes>
+      <Route path="coach-preview/:academyId/*" element={<CoachPreview />} />
       <Route element={<AppShell />}>
         <Route index element={<Overview />} />
         <Route path="scouting" element={<ScoutingHome />} />
@@ -60,6 +67,12 @@ export default function App() {
         <Route path="*" element={<ComingSoon />} />
       </Route>
     </Routes>
+    </Suspense>
     </RefProvider>
   )
+}
+
+function CoachPreview() {
+  const { academyId } = useParams()
+  return <CoachApp key={academyId} previewAcademy={academyId} />
 }

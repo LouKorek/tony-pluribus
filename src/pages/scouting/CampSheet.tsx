@@ -132,7 +132,7 @@ export default function CampSheet() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1280px] text-sm">
               <thead className="border-b border-line bg-paper/70"><tr>
-                <Th>Player</Th><Th>Year</Th><Th>Academy</Th><Th>Group</Th><Th>Attendance</Th><Th>10m (s)</Th><Th>20m (s)</Th><Th>CJ (cm)</Th><Th>OBS</Th><Th>Decision</Th><Th>GK</Th><Th>A</Th><Th>Position</Th>{camp.stage !== 'district' && <Th>Team</Th>}<Th>Comment</Th><Th />
+                <Th>Player</Th><Th>Year</Th><Th>Academy</Th><Th>Group</Th><Th>Attendance</Th><Th>10m (s)</Th><Th>20m (s)</Th><Th>CJ (cm)</Th><Th>OBS</Th><Th>Decision</Th><Th>GK</Th><Th>A</Th><Th>Position</Th>{camp.stage !== 'district' && <Th>Team</Th>}<Th>Comment</Th><Th>Message to coach</Th><Th />
               </tr></thead>
               <tbody>{shown.map(r => {
                 const outOfAge = r.player.birth_year && !ageGroupFor(r.player.birth_year, ref.groups)
@@ -182,6 +182,7 @@ export default function CampSheet() {
                     {camp.stage !== 'district' && <TextCell v={r.team} w="w-16" placeholder="1ST" disabled={!canEdit} onSave={v => patch(r.id, { team: v })} />}
                     <TextCell v={r.status === 'absent' || r.status === 'declined' ? r.absence_reason : r.comment} w="w-48" placeholder={r.status === 'absent' || r.status === 'declined' ? 'Reason' : 'Comment'} disabled={!canEdit}
                       onSave={v => patch(r.id, r.status === 'absent' || r.status === 'declined' ? { absence_reason: v } : { comment: v })} />
+                    <TextCell v={r.coach_message} w="w-48" placeholder="Shown to the coach on publish" disabled={!canEdit} onSave={v => patch(r.id, { coach_message: v })} />
                     <td className="px-2 py-1.5">
                       {canEdit && (confirmDelete === r.id
                         ? <button onClick={() => remove(r.id)} className="rounded-md bg-red px-2 py-1 text-xs font-semibold text-white">Remove?</button>
