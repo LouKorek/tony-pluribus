@@ -7,7 +7,7 @@ export function staffTourKey(path: string): string | null {
   const map: Record<string, string> = {
     '/scouting': 'scouting-home', '/scouting/plan': 'plan', '/scouting/academies': 'academies', '/scouting/camps': 'camps',
     '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool',
-    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/users': 'users', '/settings': 'settings',
+    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/player-files': 'player-files', '/staff-reports': 'staff-reports', '/finance': 'finance', '/partners': 'partners', '/transfers': 'transfers', '/club-portal': 'club-portal', '/assistant': 'assistant', '/users': 'users', '/settings': 'settings',
   }
   return map[path] ?? null
 }
@@ -108,6 +108,35 @@ export const STAFF_TOURS: TourMap = {
   evaluations: [
     { target: 'eval-matrix', title: 'Potential and performance', body: 'A: potential and performance · B: potential · C: performance · D: neither. Filter by team or birth year.' },
     { target: 'eval-table', title: 'Grade and summary', body: 'Give each player a grade and a short summary. The individual reports from the folder open from here.' },
+  ],
+  'player-files': [
+    { target: 'files-grid', title: 'Documents per player', body: 'One column per document. Green: the file is in the Talent folder (click to open it). Red: still missing. Tick "Only players with something missing" to get the to-do list.' },
+    { target: 'files-grid', title: 'Link a document', body: 'Use "Add" on a player to find the file in the Talent folder and link it as a birth certificate, consent, medical and so on.' },
+  ],
+  'staff-reports': [
+    { target: 'week', title: 'Week by week', body: 'The coordinator report of one week. Move back to see every earlier week from the Reports folder.' },
+    { target: 'days', title: 'Day by day', body: 'Every activity with its place, contact, staff and feedback. Click one to edit it, or use "Add activity".' },
+  ],
+  finance: [
+    { target: 'fin-month', title: 'Month', body: 'Choose a month, or all months. Next to it, pick one or several accounts and types.' },
+    { target: 'fin-totals', title: 'Totals', body: 'Spent, received and how many entries have a receipt, for what you filtered.' },
+    { target: 'fin-table', title: 'Entries', body: 'Every payment with its receipt from the Finance folder. Click an entry to correct it.' },
+  ],
+  partners: [
+    { target: 'partner-filters', title: 'Filter', body: 'Pick one or several kinds (club, federation, school, sponsor…) and statuses.' },
+    { target: 'partner-grid', title: 'A partner', body: 'Click a partner for its people, the player moves with it and the log of every call and meeting.' },
+  ],
+  transfers: [
+    { target: 'move-view', title: 'Board or list', body: 'The board shows each move in its stage: open, in progress, agreed, completed. The list shows everything in one table.' },
+    { target: 'move-board', title: 'A move', body: 'Click a move to update its stage, dates, amount and notes. "New move" can open the same move for several players at once.' },
+  ],
+  'club-portal': [
+    { target: 'page-actions', title: 'Share players with a club', body: 'Create a list, pick the players and choose what the club sees: matches and goals, speed and size.' },
+    { target: 'showcases', title: 'The link', body: 'Copy the link and send it. The club opens it without signing in. Switch it off or set an end date at any time; you see how many times it was opened.' },
+  ],
+  assistant: [
+    { target: 'suggestions', title: 'Ask anything', body: 'Start with one of these, or write your own question in any language.' },
+    { target: 'ask', title: 'Your question', body: 'Enter sends, Shift+Enter starts a new line. The assistant only reads the data you are allowed to see.' },
   ],
   users: [
     { target: 'tabs', title: 'Accounts', body: 'Coaches who sign up through the link wait under "pending" until you approve them.' },

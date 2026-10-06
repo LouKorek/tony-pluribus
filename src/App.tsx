@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType } from 'react'
-import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { useAuth, isAdmin } from './lib/auth'
 import { Spinner } from './components/ui'
 import AppShell from './layouts/AppShell'
@@ -38,9 +38,23 @@ const PhysicalPage = page(() => import('./pages/football/Physical'))
 const TrainingPage = page(() => import('./pages/football/Training'))
 const MatchesPage = page(() => import('./pages/football/Matches'))
 const EvaluationsPage = page(() => import('./pages/football/Evaluations'))
+const PlayerFilesPage = page(() => import('./pages/ops/PlayerFiles'))
+const StaffReportsPage = page(() => import('./pages/ops/StaffReports'))
+const FinancePage = page(() => import('./pages/ops/Finance'))
+const PartnersPage = page(() => import('./pages/ops/Partners'))
+const TransfersPage = page(() => import('./pages/ops/Transfers'))
+const ClubPortalPage = page(() => import('./pages/ops/ClubPortal'))
+const AssistantPage = page(() => import('./pages/ops/Assistant'))
+const SharePage = page(() => import('./pages/Share'))
 
 export default function App() {
   const { loading, session, profile } = useAuth()
+  const { pathname } = useLocation()
+
+  // A list shared with a club opens for anyone with the link, signed in or not.
+  if (pathname.startsWith('/share/')) return (
+    <Suspense fallback={<Spinner />}><Routes><Route path="/share/:token" element={<SharePage />} /></Routes></Suspense>
+  )
 
   if (loading) return <Spinner />
 
@@ -88,6 +102,13 @@ export default function App() {
         <Route path="training" element={<Need area="training"><TrainingPage /></Need>} />
         <Route path="matches" element={<Need area="matches"><MatchesPage /></Need>} />
         <Route path="evaluations" element={<Need area="evaluations"><EvaluationsPage /></Need>} />
+        <Route path="player-files" element={<Need area="player_files"><PlayerFilesPage /></Need>} />
+        <Route path="staff-reports" element={<Need area="staff_reports"><StaffReportsPage /></Need>} />
+        <Route path="finance" element={<Need area="finance"><FinancePage /></Need>} />
+        <Route path="partners" element={<Need area="partners"><PartnersPage /></Need>} />
+        <Route path="transfers" element={<Need area="transfers"><TransfersPage /></Need>} />
+        <Route path="club-portal" element={<Need area="club_portal"><ClubPortalPage /></Need>} />
+        <Route path="assistant" element={<Need area="assistant"><AssistantPage /></Need>} />
         <Route path="users" element={admin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="settings" element={admin ? <SettingsPage /> : <Navigate to="/" replace />} />
         <Route path="login" element={<Navigate to="/" replace />} />
