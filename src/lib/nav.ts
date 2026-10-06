@@ -16,7 +16,7 @@ export interface NavItem {
 }
 export interface NavGroup { label: string; items: NavItem[] }
 
-export const BUILD_STAGE = 4
+export const BUILD_STAGE = 5
 
 const STAFF: Role[] = ['owner', 'admin', 'staff', 'scout', 'observer']
 const ADMIN: Role[] = ['owner', 'admin']

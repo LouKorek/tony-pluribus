@@ -7,7 +7,7 @@ export function staffTourKey(path: string): string | null {
   const map: Record<string, string> = {
     '/scouting': 'scouting-home', '/scouting/plan': 'plan', '/scouting/academies': 'academies', '/scouting/camps': 'camps',
     '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool',
-    '/dashboards': 'dashboards', '/reports': 'reports', '/users': 'users', '/settings': 'settings',
+    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/users': 'users', '/settings': 'settings',
   }
   return map[path] ?? null
 }
@@ -75,6 +75,12 @@ export const STAFF_TOURS: TourMap = {
     { target: 'report-filters', title: 'Filters', body: 'Set the season, camp, province or academy the report should cover.' },
     { target: 'report-export', title: 'Excel or PDF', body: 'Download an Excel file formatted for printing, or open the print version and save it as PDF.' },
     { target: 'report-preview', title: 'Preview', body: 'Check the report here before you download it.' },
+  ],
+  files: [
+    { target: 'file-stats', title: 'The Talent folder', body: 'Every folder and file of the shared folder that SL Benfica and TFEP use, with the date of the last change.' },
+    { target: 'crumbs', title: 'Where you are', body: 'The path of the folder you are in. Click a part of it to go back up.' },
+    { target: 'search', title: 'Search', body: 'Find any file in the whole folder by part of its name.' },
+    { target: 'file-list', title: 'Open a file', body: 'Click a folder to open it, or a file to open it in SharePoint. Finance, contracts and personal documents are shown to admins only.' },
   ],
   users: [
     { target: 'tabs', title: 'Accounts', body: 'Coaches who sign up through the link wait under "pending" until you approve them.' },

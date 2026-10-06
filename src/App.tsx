@@ -31,6 +31,7 @@ const PlayersPage = page(() => import('./pages/scouting/Players'))
 const PoolPage = page(() => import('./pages/scouting/Pool'))
 const DashboardsPage = page(() => import('./pages/insights/Dashboards'))
 const ReportsPage = page(() => import('./pages/insights/Reports'))
+const FilesPage = page(() => import('./pages/Files'))
 
 export default function App() {
   const { loading, session, profile } = useAuth()
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="scouting/pool" element={<PoolPage />} />
         <Route path="dashboards" element={<DashboardsPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="files" element={<FilesPage />} />
         <Route path="users" element={admin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="settings" element={admin ? <SettingsPage /> : <Navigate to="/" replace />} />
         <Route path="login" element={<Navigate to="/" replace />} />

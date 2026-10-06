@@ -74,7 +74,7 @@ export default function Overview() {
           <ul className="mt-3 space-y-2.5">
             {stages.map(s => {
               const done = s <= BUILD_STAGE
-              const name = s === 1 ? 'Foundations: login, users, menu' : s === 2 ? 'Scouting: plan, academies, camps, finals, players' : s === 3 ? 'Coach portal: squad, submissions, invitations, results' : s === 4 ? 'Dashboards, reports (Excel/PDF), guided tours' : STAGE_NAME[s]
+              const name = s === 1 ? 'Foundations: login, users, menu' : s === 2 ? 'Scouting: plan, academies, camps, finals, players' : s === 3 ? 'Coach portal: squad, submissions, invitations, results' : s === 4 ? 'Dashboards, reports (Excel/PDF), guided tours' : s === 5 ? 'History 2025/26 and 2026/27, Talent folder' : STAGE_NAME[s]
               return (
                 <li key={s} className="flex items-center gap-2.5 text-sm">
                   {done ? <CheckCircle2 size={17} className="text-good" /> : <Circle size={17} className="text-line-2" />}
