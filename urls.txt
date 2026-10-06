@@ -1,0 +1,2 @@
+vo_male.wav https://d8j0ntlcm91z4.cloudfront.net/user_3DRaorqH8vqBamy1xjWWdw6rSN5/hf_20261006_132556_6a54992b-8069-41b4-a761-4b782ebcc5ef.wav
+vo_female.wav https://d8j0ntlcm91z4.cloudfront.net/user_3DRaorqH8vqBamy1xjWWdw6rSN5/hf_20261006_132616_60458718-435e-4cb6-bd5e-191f178b4132.wav
