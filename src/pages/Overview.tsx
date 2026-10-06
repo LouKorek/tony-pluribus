@@ -30,7 +30,7 @@ export default function Overview() {
   const hour = new Date().getHours()
   const greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
-  const stages = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 6]
+  const stages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   return (
     <div>
       <PageHeader eyebrow={`${project?.name ?? ''} · ${project?.partner ?? ''}`} title={`${greet}, ${first}`} description={`Scouting season ${scoutingSeason?.label ?? ''}. District camps, provincial finals and the national final all live here.`} />
@@ -73,13 +73,13 @@ export default function Overview() {
           <div className="label-caps text-muted">Build progress</div>
           <ul className="mt-3 space-y-2.5">
             {stages.map(s => {
-              const done = s === 6 ? false : s <= BUILD_STAGE
-              const name = s === 1 ? 'Foundations: login, users, menu' : s === 2 ? 'Scouting: plan, academies, camps, finals, players' : s === 3 ? 'Coach portal: squad, submissions, invitations, results' : s === 4 ? 'Dashboards, reports (Excel/PDF), guided tours' : s === 5 ? 'History 2025/26 and 2026/27, Talent folder' : s === 6 ? 'Live two-way sync with the SharePoint Talent folder' : s === 7 ? 'Squads, attendance, physical tests' : s === 8 ? 'Training, matches, evaluations' : s === 9 ? 'Player files' : s === 10 ? 'Staff reports, finance, club & partners' : s === 11 ? 'Transfer desk, club portal, AI assistant' : STAGE_NAME[s]
+              const done = s <= BUILD_STAGE
+              const name = s === 1 ? 'Foundations: login, users, menu' : s === 2 ? 'Scouting: plan, academies, camps, finals, players' : s === 3 ? 'Coach portal: squad, submissions, invitations, results' : s === 4 ? 'Dashboards, reports (Excel/PDF), guided tours' : s === 5 ? 'History 2025/26 and 2026/27, Talent folder' : s === 6 ? 'Live sync with the SharePoint Talent folder (every 15 minutes)' : s === 7 ? 'Squads, attendance, physical tests' : s === 8 ? 'Training, matches, evaluations' : s === 9 ? 'Player files' : s === 10 ? 'Staff reports, finance, club & partners' : s === 11 ? 'Transfer desk, club portal, AI assistant' : STAGE_NAME[s]
               return (
                 <li key={s} className="flex items-center gap-2.5 text-sm">
                   {done ? <CheckCircle2 size={17} className="text-good" /> : <Circle size={17} className="text-line-2" />}
                   <span className={done ? 'font-semibold' : 'text-muted'}>{name}</span>
-                  {s === 6 && <span className="ml-auto"><Badge tone="lime">Next</Badge></span>}
+                  
                 </li>
               )
             })}
