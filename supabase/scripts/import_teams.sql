@@ -64,7 +64,7 @@ begin
   perform set_config('pluribus.system', 'on', true);
   if p_kind = 'team_players' then
     insert into public.team_players(team_id, player_id, position, slot)
-    select (x->>'team')::uuid, (x->>'player')::uuid, nullif(x->>'pos',''), nullif(x->>'slot','')::int from jsonb_array_elements(p) x
+    select (e->>'team')::uuid, (e->>'player')::uuid, nullif(e->>'pos',''), nullif(e->>'slot','')::int from jsonb_array_elements(p) e
     on conflict (team_id, player_id) do nothing;
   elsif p_kind = 'days' then
     for x in select * from jsonb_array_elements(p) loop
@@ -75,11 +75,11 @@ begin
     return v_out;
   elsif p_kind = 'attendance' then
     insert into public.attendance(day_id, player_id, minutes, code)
-    select (x->>'day')::uuid, (x->>'player')::uuid, nullif(x->>'minutes','')::int, nullif(x->>'code','') from jsonb_array_elements(p) x
+    select (e->>'day')::uuid, (e->>'player')::uuid, nullif(e->>'minutes','')::int, nullif(e->>'code','') from jsonb_array_elements(p) e
     on conflict (day_id, player_id) do nothing;
   elsif p_kind = 'measurements' then
     insert into public.measurements(player_id, team_id, taken_on, metric, value)
-    select (x->>'player')::uuid, (x->>'team')::uuid, nullif(x->>'date','')::date, x->>'metric', (x->>'value')::numeric from jsonb_array_elements(p) x;
+    select (e->>'player')::uuid, (e->>'team')::uuid, nullif(e->>'date','')::date, e->>'metric', (e->>'value')::numeric from jsonb_array_elements(p) e;
   elsif p_kind = 'matches' then
     for x in select * from jsonb_array_elements(p) loop
       insert into public.matches(team_id, number, competition, opponent, venue, goals_for, goals_against)
@@ -90,11 +90,11 @@ begin
     return v_out;
   elsif p_kind = 'match_players' then
     insert into public.match_players(match_id, player_id, goals, assists, yellow, red)
-    select (x->>'match')::uuid, (x->>'player')::uuid, (x->>'goals')::int, (x->>'assists')::int, (x->>'yellow')::int, (x->>'red')::int from jsonb_array_elements(p) x
+    select (e->>'match')::uuid, (e->>'player')::uuid, (e->>'goals')::int, (e->>'assists')::int, (e->>'yellow')::int, (e->>'red')::int from jsonb_array_elements(p) e
     on conflict (match_id, player_id) do nothing;
   elsif p_kind = 'evaluations' then
     insert into public.evaluations(player_id, season_id, grade)
-    select (x->>'player')::uuid, (select id from public.seasons where label = x->>'season'), x->>'grade' from jsonb_array_elements(p) x
+    select (e->>'player')::uuid, (select id from public.seasons where label = e->>'season'), e->>'grade' from jsonb_array_elements(p) e
     on conflict (player_id, season_id) do update set grade = excluded.grade;
   end if;
   get diagnostics n = row_count;
