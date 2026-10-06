@@ -21,16 +21,29 @@ export const useTour = () => useContext(Ctx)
 export function TourProvider({ tours, screen, seen, onSeen, lang = 'en', children }: {
   tours: TourMap; screen: string | null; seen: string[]; onSeen: (key: string) => void; lang?: 'en' | 'rw'; children: ReactNode
 }) {
-  const [active, setActive] = useState<{ key: string; i: number } | null>(null)
+  // steps are fixed when a tour starts: a step whose element is not on the screen right now is left out
+  const [active, setActive] = useState<{ key: string; i: number; steps: TourStep[] } | null>(null)
   const done = useRef(new Set(seen))
   useEffect(() => { seen.forEach(k => done.current.add(k)) }, [seen])
 
-  // First visit to a screen: start its tour once the page has rendered.
+  const begin = useCallback((key: string) => {
+    const all = tours[key]
+    if (!all) return
+    const steps = all.filter(s => !s.target || findTarget(s.target))
+    setActive({ key, i: 0, steps: steps.length ? steps : [{ ...all[0], target: undefined }] })
+  }, [tours])
+
+  // First visit to a screen: start its tour once the page has rendered and no window (form, card) is open on top.
   useEffect(() => {
     if (!screen || !tours[screen] || done.current.has(screen)) return
-    const t = window.setTimeout(() => setActive(a => a ?? { key: screen, i: 0 }), 900)
+    let t = 0
+    const attempt = () => {
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) { t = window.setTimeout(attempt, 1500); return }
+      if (!done.current.has(screen)) begin(screen)
+    }
+    t = window.setTimeout(attempt, 900)
     return () => window.clearTimeout(t)
-  }, [screen, tours])
+  }, [screen, tours, begin])
 
   // Leaving the screen closes a tour that belongs to it.
   useEffect(() => { setActive(a => (a && a.key !== screen ? null : a)) }, [screen])
@@ -42,10 +55,10 @@ export function TourProvider({ tours, screen, seen, onSeen, lang = 'en', childre
 
   const start = useCallback((key?: string) => {
     const k = key ?? screen
-    if (k && tours[k]) setActive({ key: k, i: 0 })
-  }, [screen, tours])
+    if (k) begin(k)
+  }, [screen, begin])
 
-  const steps = active ? tours[active.key] : null
+  const steps = active?.steps ?? null
   return (
     <Ctx.Provider value={{ screen, hasTour: !!(screen && tours[screen]), start }}>
       {children}

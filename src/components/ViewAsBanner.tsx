@@ -8,7 +8,7 @@ export default function ViewAsBanner() {
   const [busy, setBusy] = useState(false)
   if (!target) return null
   return (
-    <div className="fixed left-1/2 top-2 z-[60] flex max-w-[94vw] -translate-x-1/2 items-center gap-2 rounded-full border border-ink bg-lime py-1 pl-3 pr-1 text-sm text-ink shadow-lg">
+    <div className="fixed bottom-20 left-1/2 z-[60] sm:bottom-4 flex max-w-[94vw] -translate-x-1/2 items-center gap-2 rounded-full border border-ink bg-lime py-1 pl-3 pr-1 text-sm text-ink shadow-lg">
       <Eye size={15} className="shrink-0" />
       <span className="truncate">Viewing as <b>{target}</b></span>
       <button disabled={busy} onClick={() => { setBusy(true); stopViewAs() }}
