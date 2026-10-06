@@ -38,7 +38,7 @@ export default function ClubPortalPage() {
                 <div className="min-w-0"><div className="truncate font-display text-lg font-bold uppercase leading-tight">{s.title}</div><div className="mt-0.5 text-sm text-muted">{s.audience ? `For ${s.audience} · ` : ''}{s.showcase_players.length} players</div></div>
                 <Badge tone={live(s) ? 'good' : 'neutral'}>{live(s) ? 'Live' : s.active ? 'Expired' : 'Off'}</Badge>
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 text-xs text-muted"><span className="inline-flex items-center gap-1"><Eye size={12} /> {s.views} views</span>{s.expires_on && <span>Until {new Date(s.expires_on + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}</div>
+              <div className="mt-2 flex flex-wrap gap-x-4 text-xs text-muted"><span className="inline-flex items-center gap-1"><Eye size={12} /> {s.views} view{s.views === 1 ? "" : "s"}</span>{s.expires_on && <span>Until {new Date(s.expires_on + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}</div>
               <div data-tour="share-link" className="mt-3 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => copy(s)} disabled={!live(s)}><Copy size={13} /> {copied === s.id ? 'Copied' : 'Copy link'}</Button>
                 {live(s) && <Button size="sm" variant="ghost" onClick={() => window.open(shareUrl(s.token), '_blank', 'noopener')}><ExternalLink size={13} /> Open as the club sees it</Button>}
