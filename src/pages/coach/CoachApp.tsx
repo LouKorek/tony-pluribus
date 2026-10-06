@@ -6,7 +6,7 @@ import {
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
-import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Spinner, Textarea, cx } from '../../components/ui'
+import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Spinner, Textarea, cx, printArea } from '../../components/ui'
 import { Brand } from '../../layouts/AppShell'
 import { DECISION_T, LangProvider, STAGE_T, STATUS_T, useT } from './i18n'
 import { TourProvider, useTour } from '../../lib/tour'
@@ -471,7 +471,7 @@ function Certificate({ player, item, onClose }: { player: SquadPlayer; item: Jou
     <Modal open onClose={onClose} title={t('certificate')} wide
       footer={<>
         {canShare && <Button onClick={() => navigator.share({ title: t('certificate'), text }).catch(() => {})}><Share2 size={15} />{t('share')}</Button>}
-        <Button variant="primary" onClick={() => window.print()}><Printer size={15} />{t('print')}</Button>
+        <Button variant="primary" onClick={printArea}><Printer size={15} />{t('print')}</Button>
       </>}>
       <div className="print-area overflow-hidden rounded-xl bg-ink p-6 text-white sm:p-9">
         <div className="flex items-center justify-between">

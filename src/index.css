@@ -55,7 +55,12 @@ body {
 
 @media print {
   @page { margin: 12mm; }
-  body * { visibility: hidden; }
-  .print-area, .print-area * { visibility: visible; }
-  .print-area { position: fixed; left: 0; top: 0; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; }
+  aside, header, nav, .no-print { display: none !important; }
+  main { max-width: none !important; padding: 0 !important; }
+  main, main * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* Printing a single element (the selection certificate) */
+  body.print-only * { visibility: hidden; }
+  body.print-only .print-area, body.print-only .print-area * { visibility: visible; }
+  body.print-only .print-area { position: fixed; left: 0; top: 0; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

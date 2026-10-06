@@ -200,3 +200,11 @@ export function useDebounced<T>(value: T, ms = 250): T {
   useEffect(() => { const t = setTimeout(() => setV(value), ms); return () => clearTimeout(t) }, [value, ms])
   return v
 }
+
+/** Print only the element marked .print-area (for example a certificate). */
+export function printArea() {
+  document.body.classList.add('print-only')
+  const done = () => { document.body.classList.remove('print-only'); window.removeEventListener('afterprint', done) }
+  window.addEventListener('afterprint', done)
+  window.print()
+}
