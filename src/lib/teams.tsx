@@ -71,7 +71,7 @@ export function TeamBar({ seasonId, onSeason, seasons, teams, teamId, onTeam, ex
 }) {
   return (
     <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-center">
-      <Select data-tour="team-season" className="lg:w-44" value={seasonId ?? ''} onChange={e => onSeason(e.target.value)} aria-label="Season">
+      <Select data-tour="team-season" className="lg:w-56" value={seasonId ?? ''} onChange={e => onSeason(e.target.value)} aria-label="Season">
         {[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Season {s.label}{s.is_current_operational ? ' (now)' : ''}</option>)}
       </Select>
       <div data-tour="team-tabs" className="inline-flex flex-wrap gap-1 rounded-lg bg-black/5 p-1">

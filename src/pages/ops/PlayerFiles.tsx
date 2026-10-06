@@ -54,7 +54,7 @@ export default function PlayerFilesPage() {
     <div>
       <PageHeader eyebrow="Operations" title="Player files" description="The documents of every Tony player: birth certificate, identity, registration agreement, non-registration statement, consent, medical and photo. The files stay in the Talent folder." />
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
-        <Select className="lg:w-44" value={season?.id ?? ''} onChange={e => setSeason(e.target.value)}>{[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Season {s.label}</option>)}</Select>
+        <Select className="lg:w-52" value={season?.id ?? ''} onChange={e => setSeason(e.target.value)}>{[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Season {s.label}</option>)}</Select>
         <MultiSelect className="lg:w-48" placeholder="All teams" value={teams} onChange={setTeams} options={allTeams.map(t => ({ value: t, label: t }))} />
         <MultiSelect className="lg:w-56" placeholder="All documents" value={kinds} onChange={setKinds} options={CHECK.map(k => ({ value: k, label: DOC_KINDS.find(d => d[0] === k)![1] }))} />
         <SearchInput className="lg:w-56" value={q} onChange={setQ} placeholder="Find a player" />

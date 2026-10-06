@@ -54,7 +54,7 @@ export default function EvaluationsPage() {
     <div>
       <PageHeader eyebrow="Teams" title="Evaluations" description="The season evaluation of every Tony player: potential against performance (A–D), with the individual reports." />
       <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-center">
-        <Select className="lg:w-44" value={season?.id ?? ''} onChange={e => setSeason(e.target.value)}>{[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Season {s.label}</option>)}</Select>
+        <Select className="lg:w-52" value={season?.id ?? ''} onChange={e => setSeason(e.target.value)}>{[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Season {s.label}</option>)}</Select>
         <MultiSelect className="lg:w-52" placeholder="All teams" value={teamsF} onChange={setTeamsF} options={allTeams.map(t => ({ value: t, label: t }))} />
         <MultiSelect className="lg:w-52" placeholder="All birth years" value={years} onChange={setYears} options={allYears.map(y => ({ value: y, label: `Born ${y}` }))} />
       </div>

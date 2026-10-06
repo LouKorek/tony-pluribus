@@ -83,8 +83,8 @@ export default function SquadsPage() {
                       <td className="px-3 py-2 text-right">{s && (s.yellow || s.red) ? <span className="inline-flex gap-1">{s.yellow > 0 && <span className="rounded-sm bg-warn px-1 text-[11px] font-bold text-white">{s.yellow}</span>}{s.red > 0 && <span className="rounded-sm bg-red px-1 text-[11px] font-bold text-white">{s.red}</span>}</span> : '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.sprint_10m ? Number(s.sprint_10m).toFixed(2) : '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.sprint_20m ? Number(s.sprint_20m).toFixed(2) : '—'}</td>
-                      <td className="px-3 py-2 text-right">{s?.weight_kg ? `${Number(s.weight_kg)} kg` : '—'}</td>
-                      <td className="px-3 py-2 text-right">{s?.height_cm ? `${Number(s.height_cm)} cm` : '—'}</td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right">{s?.weight_kg ? `${Number(s.weight_kg)} kg` : '—'}</td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right">{s?.height_cm ? `${Number(s.height_cm)} cm` : '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.grade ? <span title={GRADE_LABEL[s.grade][0]} className={cx('inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold', GRADE_LABEL[s.grade][1])}>{s.grade}</span> : '—'}</td>
                       <td className="px-2 py-2 text-right">{canEdit && <Button size="sm" variant="ghost" onClick={() => setEditing(r)}>Edit</Button>}</td>
                     </tr>
