@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, KeyRound, Pencil, Plus, Search, UserPlus, Users as UsersIcon, Wand2 } from 'lucide-react'
+import { Check, Eye, KeyRound, Pencil, Plus, Search, UserPlus, Users as UsersIcon, Wand2 } from 'lucide-react'
 import { supabase, ROLE_LABEL, ROLE_HINT, USERNAME_RE, errMsg, type Academy, type District, type Profile, type Region, type Role, type Status } from '../lib/supabase'
+import { startViewAs } from '../lib/viewAs'
 import { useAuth } from '../lib/auth'
 import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Spinner, cx, generatePassword } from '../components/ui'
 
@@ -26,6 +27,13 @@ export default function UsersPage() {
   const [q, setQ] = useState('')
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Profile | null>(null)
+  const [viewing, setViewing] = useState<string | null>(null)
+  const [viewErr, setViewErr] = useState<string | null>(null)
+  async function viewAs(u: Profile) {
+    setViewing(u.id); setViewErr(null)
+    const e = await startViewAs(u.id, `${u.full_name || u.username} (${ROLE_LABEL[u.role]})`)
+    if (e) { setViewErr(e); setViewing(null) }
+  }
   const [resetting, setResetting] = useState<Profile | null>(null)
 
   const load = useCallback(async () => {
@@ -62,6 +70,7 @@ export default function UsersPage() {
         description="Staff accounts are created here with a username and password. Academy coaches sign up through the link on the sign-in page and wait here for approval."
         actions={<Button variant="primary" onClick={() => setCreating(true)}><UserPlus size={16} /> New user</Button>}
       />
+      {viewErr && <div className="mb-4"><Alert>{viewErr}</Alert></div>}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 rounded-lg bg-black/5 p-1">
@@ -118,6 +127,9 @@ export default function UsersPage() {
                             ? <Button size="sm" variant="primary" onClick={() => setEditing(u)}><Check size={14} /> Review</Button>
                             : <Button size="sm" variant="ghost" onClick={() => setEditing(u)} disabled={u.role === 'owner' && me?.role !== 'owner'}><Pencil size={14} /> Edit</Button>}
                           <Button size="sm" variant="ghost" onClick={() => setResetting(u)} disabled={u.role === 'owner' && me?.role !== 'owner'} title="Set a new password"><KeyRound size={14} /></Button>
+                          {me?.role === 'owner' && u.id !== me.id && (
+                            <Button size="sm" variant="ghost" loading={viewing === u.id} onClick={() => viewAs(u)} title={`See and use the system as ${u.username}`}><Eye size={14} /> View as</Button>
+                          )}
                         </div>
                       </td>
                     </tr>

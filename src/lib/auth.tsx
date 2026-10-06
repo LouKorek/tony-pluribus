@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { stopViewAs, viewingAs } from './viewAs'
 import { supabase, type Profile, type Project, type Season } from './supabase'
 
 interface AuthState {
@@ -57,7 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading, session, profile, project, seasons,
     scoutingSeason: seasons.find(s => s.is_current_scouting) ?? null,
     refresh: async () => { const { data } = await supabase.auth.getSession(); await load(data.session) },
-    signOut: async () => { await supabase.auth.signOut() },
+    // Signing out while the owner views the system as someone else returns to the owner's own account.
+    signOut: async () => { if (viewingAs()) await stopViewAs(); else await supabase.auth.signOut() },
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
