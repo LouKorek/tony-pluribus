@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Circle, Clock } from 'lucide-react'
 import { supabase, type AgeGroup } from '../lib/supabase'
 import { useAuth, isAdmin } from '../lib/auth'
 import { BUILD_STAGE, STAGE_NAME } from '../lib/nav'
-import { Badge, Card, PageHeader, Stat } from '../components/ui'
+import { Card, PageHeader, Stat } from '../components/ui'
 
 interface Counts { users: number; pending: number; academies: number; players: number; camps: number }
 
