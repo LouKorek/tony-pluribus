@@ -8,7 +8,8 @@ import { Alert, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Sp
 const CODES = ['A', 'JA', 'I', 'SI', 'S', 'M', 'SM', 'TM', 'PT', '*']
 const codeTone = (c: string) => ['A'].includes(c) ? 'bg-red text-white' : ['I', 'SI'].includes(c) ? 'bg-warn text-white' : ['JA', 'S'].includes(c) ? 'bg-black/15 text-text' : ['M', 'SM'].includes(c) ? 'bg-ink text-lime' : 'bg-info-soft text-info'
 const monthLabel = (m: string) => new Date(m + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-const shiftMonth = (m: string, d: number) => { const x = new Date(m + '-01T00:00:00'); x.setMonth(x.getMonth() + d); return x.toISOString().slice(0, 7) }
+// month arithmetic on the calendar only: local time zones (Kigali, Lisbon, Israel) must not shift the month
+const shiftMonth = (m: string, d: number) => { const [y, mo] = m.split('-').map(Number); const t = y * 12 + (mo - 1) + d; return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}` }
 
 export default function AttendancePage() {
   const { can, inTeam } = useAuth()

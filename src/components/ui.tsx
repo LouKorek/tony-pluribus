@@ -40,15 +40,17 @@ export function Field({ label, hint, error, children, required }: { label: strin
   )
 }
 
-const inputCls = 'focus-visible:outline-none w-full rounded-lg border border-line-2 bg-card px-3 text-[15px] text-text placeholder:text-faint focus:border-ink focus:outline-none focus:ring-2 focus:ring-lime/70'
+const inputCls = 'focus-visible:outline-none rounded-lg border border-line-2 bg-card px-3 text-[15px] text-text placeholder:text-faint focus:border-ink focus:outline-none focus:ring-2 focus:ring-lime/70'
+/** full width unless the caller sets its own width (an unprefixed w-… class) */
+const width = (c?: string) => /(^|\s)w-/.test(c ?? '') ? '' : 'w-full'
 export function Input(p: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...p} className={cx(inputCls, 'h-10', p.className)} />
+  return <input {...p} className={cx(inputCls, width(p.className), 'h-10', p.className)} />
 }
 export function Select({ children, ...p }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...p} className={cx(inputCls, 'h-10 pr-8', p.className)}>{children}</select>
+  return <select {...p} className={cx(inputCls, width(p.className), 'h-10 pr-8', p.className)}>{children}</select>
 }
 export function Textarea(p: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...p} className={cx(inputCls, 'py-2', p.className)} />
+  return <textarea {...p} className={cx(inputCls, width(p.className), 'py-2', p.className)} />
 }
 
 export function Card({ children, className, ...rest }: { children: ReactNode; className?: string; 'data-tour'?: string }) {
