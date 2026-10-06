@@ -10,7 +10,7 @@ import { useCamps, stageTone } from './Camps'
 interface Funnel { submitted: number; seen: number; district_selected: number; province: number; province_selected: number; national: number; national_selected: number; see_again: number; by_group: Record<string, number> }
 
 export default function ScoutingHome() {
-  const { scoutingSeason, profile } = useAuth()
+  const { viewSeason, profile } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats } = useCamps()
@@ -18,13 +18,13 @@ export default function ScoutingHome() {
   const [todo, setTodo] = useState({ doubtful: 0, pending: 0 })
 
   useEffect(() => {
-    if (!scoutingSeason) return
-    supabase.rpc('season_funnel', { p_season: scoutingSeason.id }).then(({ data }) => setF(data as Funnel))
+    if (!viewSeason) return
+    supabase.rpc('season_funnel', { p_season: viewSeason.id }).then(({ data }) => setF(data as Funnel))
     Promise.all([
       supabase.from('players').select('id', { count: 'exact', head: true }).eq('age_status', 'doubtful').is('merged_into', null),
       isAdmin(profile) ? supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending') : Promise.resolve({ count: 0 }),
     ]).then(([d, p]) => setTodo({ doubtful: d.count ?? 0, pending: p.count ?? 0 }))
-  }, [scoutingSeason, profile])
+  }, [viewSeason, profile])
 
   const today = new Date().toISOString().slice(0, 10)
   const upcoming = (camps ?? []).filter(c => c.status !== 'cancelled' && c.starts_on && c.starts_on >= today).slice(0, 6)
@@ -44,7 +44,7 @@ export default function ScoutingHome() {
 
   return (
     <div>
-      <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Scouting home" description="Where the season stands: the funnel, the next camps, and what needs attention." />
+      <PageHeader eyebrow={`Scouting ${viewSeason?.label ?? ''}`} title="Scouting home" description="Where the season stands: the funnel, the next camps, and what needs attention." />
 
       <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
         <Card className="p-5" data-tour="funnel">

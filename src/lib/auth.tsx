@@ -10,6 +10,9 @@ interface AuthState {
   project: Project | null
   seasons: Season[]
   scoutingSeason: Season | null
+  /** The season the scouting screens show. Defaults to the season being scouted; can be switched to look at history. */
+  viewSeason: Season | null
+  setViewSeason: (id: string) => void
   refresh: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -23,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [project, setProject] = useState<Project | null>(null)
   const [seasons, setSeasons] = useState<Season[]>([])
   const currentUser = useRef<string | null>(null)
+  const [viewId, setViewId] = useState<string | null>(() => { try { return sessionStorage.getItem('pluribus.viewSeason') } catch { return null } })
 
   const load = useCallback(async (s: Session | null) => {
     setSession(s)
@@ -57,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthState = {
     loading, session, profile, project, seasons,
     scoutingSeason: seasons.find(s => s.is_current_scouting) ?? null,
+    viewSeason: seasons.find(s => s.id === viewId) ?? seasons.find(s => s.is_current_scouting) ?? null,
+    setViewSeason: id => { setViewId(id); try { sessionStorage.setItem('pluribus.viewSeason', id) } catch { /* storage blocked */ } },
     refresh: async () => { const { data } = await supabase.auth.getSession(); await load(data.session) },
     // Signing out while the owner views the system as someone else returns to the owner's own account.
     signOut: async () => { if (viewingAs()) await stopViewAs(); else await supabase.auth.signOut() },

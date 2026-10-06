@@ -20,7 +20,7 @@ export function Brand({ compact }: { compact?: boolean }) {
 }
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { profile, project, scoutingSeason, signOut } = useAuth()
+  const { profile, project, seasons, scoutingSeason, viewSeason, setViewSeason, signOut } = useAuth()
   const role = profile?.role
   return (
     <div className="flex h-full flex-col bg-ink text-white">
@@ -29,13 +29,19 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="mt-1.5 font-display text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">Pluribus</div>
       </div>
 
-      <div data-tour="project-box" className="mx-3 mb-3 flex items-center justify-between rounded-lg border border-white/10 bg-ink-2 px-3 py-2.5" title="Project and season">
+      <label data-tour="project-box" className={cx('relative mx-3 mb-3 flex cursor-pointer items-center justify-between rounded-lg border bg-ink-2 px-3 py-2.5', viewSeason?.id !== scoutingSeason?.id ? 'border-lime/60' : 'border-white/10 hover:border-white/25')} title="Season shown on the scouting screens">
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{project?.name ?? 'Project'}</div>
-          <div className="truncate text-xs text-white/50">Scouting {scoutingSeason?.label ?? '—'}</div>
+          <div className={cx('truncate text-xs', viewSeason?.id !== scoutingSeason?.id ? 'text-lime' : 'text-white/50')}>
+            Scouting {viewSeason?.label ?? '—'}{viewSeason?.id !== scoutingSeason?.id ? ' · history' : ''}
+          </div>
         </div>
         <ChevronsUpDown size={15} className="shrink-0 text-white/30" />
-      </div>
+        <select aria-label="Season" value={viewSeason?.id ?? ''} onChange={e => setViewSeason(e.target.value)}
+          className="absolute inset-0 cursor-pointer opacity-0">
+          {[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Scouting {s.label}{s.is_current_scouting ? ' (current)' : ''}</option>)}
+        </select>
+      </label>
 
       <nav data-tour="nav" className="scroll-thin flex-1 overflow-y-auto px-3 pb-4">
         {NAV.map(g => {

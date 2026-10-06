@@ -17,7 +17,7 @@ const COLUMNS: { key: PoolStatus; hint: string }[] = [
 ]
 
 export default function PoolPage() {
-  const { scoutingSeason } = useAuth()
+  const { viewSeason } = useAuth()
   const ref = useRefData()
   const [players, setPlayers] = useState<Player[] | null>(null)
   const [group, setGroup] = useState('all')
@@ -26,10 +26,10 @@ export default function PoolPage() {
   const [open, setOpen] = useState<string | null>(null)
 
   const load = () => {
-    if (!scoutingSeason) return
-    supabase.rpc('season_players', { p_season: scoutingSeason.id }).then(({ data }) => setPlayers((data as Player[]) ?? []))
+    if (!viewSeason) return
+    supabase.rpc('season_players', { p_season: viewSeason.id }).then(({ data }) => setPlayers((data as Player[]) ?? []))
   }
-  useEffect(load, [scoutingSeason])
+  useEffect(load, [viewSeason])
 
   const list = useMemo(() => (players ?? []).filter(p =>
     (group === 'all' || ageGroupFor(p.birth_year, ref.groups) === group) &&
@@ -38,7 +38,7 @@ export default function PoolPage() {
 
   return (
     <div>
-      <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Potential pool"
+      <PageHeader eyebrow={`Scouting ${viewSeason?.label ?? ''}`} title="Potential pool"
         description="Every player in this season's scouting, by how far they have come. It replaces the yearly Draft – Potential presentation." />
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center" data-tour="filters">
         <Segmented value={group} onChange={setGroup} options={[{ value: 'all', label: 'All ages' }, ...ref.groups.map(g => ({ value: g.code, label: g.code }))]} />

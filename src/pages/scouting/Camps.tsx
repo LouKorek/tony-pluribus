@@ -8,19 +8,19 @@ import { Badge, Button, Card, Empty, PageHeader, SearchInput, Segmented, Spinner
 import { CampFormModal } from './campForm'
 
 export function useCamps() {
-  const { scoutingSeason } = useAuth()
+  const { viewSeason } = useAuth()
   const [camps, setCamps] = useState<Camp[] | null>(null)
   const [stats, setStats] = useState<Record<string, CampStats>>({})
   const load = useCallback(async () => {
-    if (!scoutingSeason) return
-    const { data } = await supabase.from('camps').select('*').eq('season_id', scoutingSeason.id).order('starts_on', { nullsFirst: false })
+    if (!viewSeason) return
+    const { data } = await supabase.from('camps').select('*').eq('season_id', viewSeason.id).order('starts_on', { nullsFirst: false })
     const list = (data as Camp[]) ?? []
     setCamps(list)
     if (list.length) {
       const { data: st } = await supabase.from('v_camp_stats').select('*').in('camp_id', list.map(c => c.id))
       setStats(Object.fromEntries(((st as CampStats[]) ?? []).map(s => [s.camp_id, s])))
     }
-  }, [scoutingSeason])
+  }, [viewSeason])
   useEffect(() => { load() }, [load])
   return { camps, stats, reload: load }
 }
@@ -30,7 +30,7 @@ export const statusTone = (s: Camp['status']) => (s === 'published' ? 'good' : s
 export const STATUS_LABEL: Record<Camp['status'], string> = { planned: 'Planned', open: 'Open', completed: 'Completed', published: 'Published', cancelled: 'Cancelled' }
 
 export default function CampsPage() {
-  const { scoutingSeason, profile } = useAuth()
+  const { viewSeason, profile } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats, reload } = useCamps()
@@ -45,7 +45,7 @@ export default function CampsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Camps"
+      <PageHeader eyebrow={`Scouting ${viewSeason?.label ?? ''}`} title="Camps"
         description="Every district camp, province final and the national final of the season. Open a camp to enter attendance, tests, grades and decisions."
         actions={canEdit && <Button variant="primary" onClick={() => setCreating(true)}><Plus size={16} /> New camp</Button>} />
 
@@ -111,13 +111,13 @@ function weekends(from: string, to: string) {
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 export function PlanPage() {
-  const { scoutingSeason, profile } = useAuth()
+  const { viewSeason, profile } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats, reload } = useCamps()
   const [creating, setCreating] = useState<Partial<Camp> | null>(null)
   const canEdit = profile?.role !== 'observer'
-  const win = scoutingWindow(scoutingSeason)
+  const win = scoutingWindow(viewSeason)
   const weeks = useMemo(() => weekends(win.from, win.to), [win.from, win.to])
   const today = iso(new Date())
 
@@ -136,7 +136,7 @@ export function PlanPage() {
   let lastMonth = ''
   return (
     <div>
-      <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Plan"
+      <PageHeader eyebrow={`Scouting ${viewSeason?.label ?? ''}`} title="Plan"
         description={`Every weekend from ${fmtDate(win.from)} to ${fmtDate(win.to)}. Add a camp to any weekend; the coverage bar shows which districts already have a camp.`}
         actions={canEdit && <Button variant="primary" onClick={() => setCreating({})}><Plus size={16} /> New camp</Button>} />
 

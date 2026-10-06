@@ -5,7 +5,7 @@ import { useRefData, STAGE_LABEL, type Camp, type Stage } from '../../lib/scouti
 import { Alert, Button, Field, Input, Modal, Select, Textarea, cx } from '../../components/ui'
 
 export function CampFormModal({ camp, defaults, onClose, onSaved }: { camp?: Camp | null; defaults?: Partial<Camp>; onClose: () => void; onSaved: (id: string) => void }) {
-  const { scoutingSeason, project } = useAuth()
+  const { viewSeason, project } = useAuth()
   const ref = useRefData()
   const init = { ...defaults, ...camp }
   const [f, setF] = useState({
@@ -44,7 +44,7 @@ export function CampFormModal({ camp, defaults, onClose, onSaved }: { camp?: Cam
     }
     const res = camp
       ? await supabase.from('camps').update(payload).eq('id', camp.id).select('id').single()
-      : await supabase.from('camps').insert({ ...payload, project_id: project?.id, season_id: scoutingSeason?.id }).select('id').single()
+      : await supabase.from('camps').insert({ ...payload, project_id: project?.id, season_id: viewSeason?.id }).select('id').single()
     setBusy(false)
     if (res.error) return setErr(errMsg(res.error))
     onSaved(res.data.id)

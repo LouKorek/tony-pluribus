@@ -69,7 +69,7 @@ interface RefData {
 const RefCtx = createContext<RefData | null>(null)
 
 export function RefProvider({ children }: { children: ReactNode }) {
-  const { scoutingSeason, profile } = useAuth()
+  const { viewSeason, profile } = useAuth()
   const [regions, setRegions] = useState<Region[]>([])
   const [districts, setDistricts] = useState<District[]>([])
   const [academies, setAcademies] = useState<Academy[]>([])
@@ -91,12 +91,12 @@ export function RefProvider({ children }: { children: ReactNode }) {
     Promise.all([
       supabase.from('regions').select('*').order('sort'),
       supabase.from('districts').select('*').order('name'),
-      scoutingSeason ? supabase.from('age_groups').select('*').eq('season_id', scoutingSeason.id).order('sort') : Promise.resolve({ data: [] }),
+      viewSeason ? supabase.from('age_groups').select('*').eq('season_id', viewSeason.id).order('sort') : Promise.resolve({ data: [] }),
       reloadAcademies(),
     ]).then(([r, d, g]) => {
       setRegions((r.data as Region[]) ?? []); setDistricts((d.data as District[]) ?? []); setGroups((g.data as AgeGroup[]) ?? []); setReady(true)
     })
-  }, [profile, scoutingSeason, reloadAcademies])
+  }, [profile, viewSeason, reloadAcademies])
 
   const value = useMemo<RefData>(() => {
     const dm = new Map(districts.map(d => [d.id, d]))

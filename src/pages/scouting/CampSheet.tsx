@@ -351,7 +351,6 @@ function AddPlayerModal({ camp, existing, onClose, onAdded }: { camp: Camp; exis
 
 /* ─────────── Invite to the next stage ─────────── */
 function PromoteModal({ camp, rows, onClose, onDone }: { camp: Camp; rows: Row[]; onClose: () => void; onDone: () => void }) {
-  const { scoutingSeason } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const next = NEXT[camp.stage]!
@@ -364,10 +363,10 @@ function PromoteModal({ camp, rows, onClose, onDone }: { camp: Camp; rows: Row[]
   const region = camp.region_id ?? ref.district(camp.district_id)?.region_id
 
   useEffect(() => {
-    let qy = supabase.from('camps').select('*').eq('season_id', scoutingSeason!.id).eq('stage', next).neq('status', 'cancelled')
+    let qy = supabase.from('camps').select('*').eq('season_id', camp.season_id).eq('stage', next).neq('status', 'cancelled')
     if (next === 'province_final' && region) qy = qy.eq('region_id', region)
     qy.then(({ data }) => { const l = (data as Camp[]) ?? []; setTargets(l); if (l.length === 1) setTarget(l[0].id) })
-  }, [next, region, scoutingSeason])
+  }, [next, region, camp.season_id])
 
   async function go() {
     if (!target) return setErr('Choose the camp to invite them to.')

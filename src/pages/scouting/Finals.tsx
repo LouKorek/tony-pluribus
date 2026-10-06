@@ -12,7 +12,7 @@ import { PlayerDrawer } from './Players'
 type Row = Participant & { player: Player }
 
 export default function FinalsPage() {
-  const { scoutingSeason, profile } = useAuth()
+  const { viewSeason, profile } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats, reload } = useCamps()
@@ -24,7 +24,7 @@ export default function FinalsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow={`Scouting ${scoutingSeason?.label ?? ''}`} title="Finals"
+      <PageHeader eyebrow={`Scouting ${viewSeason?.label ?? ''}`} title="Finals"
         description="The five province finals and the national final. The national result lists match the SELECTED, SEE AGAIN and ABSENCES sheets." />
 
       {!camps ? <Spinner /> : (<>

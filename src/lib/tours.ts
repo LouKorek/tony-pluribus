@@ -16,7 +16,7 @@ export const STAFF_TOURS: TourMap = {
   overview: [
     { title: 'Welcome to Pluribus', body: 'This is the home of the TFEP programme with SL Benfica. Every screen has a short tour like this one the first time you open it. You can skip it at any step.' },
     { target: 'nav', title: 'The menu', body: 'Everything lives here, grouped by area. Items marked "Soon" are already planned and open in a later stage of the build.' },
-    { target: 'project-box', title: 'Project and season', body: 'The project you work in and the scouting season shown across the screens.' },
+    { target: 'project-box', title: 'Project and season', body: 'The project you work in and the scouting season the screens show. Click it to switch to an earlier season and see its camps, finals and pool.' },
     { target: 'overview-stats', title: 'At a glance', body: 'The season, the academy register, players and camps planned. The numbers update as the staff work.' },
     { target: 'help', title: 'Need the tour again?', body: 'Press the "?" button on any screen to replay the tour of that screen.' },
   ],

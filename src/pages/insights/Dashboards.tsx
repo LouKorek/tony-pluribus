@@ -22,8 +22,8 @@ const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0)
 const fmt = (n: number) => n.toLocaleString('en-GB')
 
 export default function DashboardsPage() {
-  const { seasons, scoutingSeason } = useAuth()
-  const [seasonId, setSeasonId] = useState(scoutingSeason?.id ?? '')
+  const { seasons, viewSeason } = useAuth()
+  const [seasonId, setSeasonId] = useState(viewSeason?.id ?? '')
   const [d, setD] = useState<Dash | null>(null)
   const [err, setErr] = useState<string | null>(null)
 

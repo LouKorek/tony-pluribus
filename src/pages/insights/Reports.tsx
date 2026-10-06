@@ -8,11 +8,11 @@ import { REPORTS, type Params, type ReportData } from './reports'
 import { downloadExcel, openPrint } from './export'
 
 export default function ReportsPage() {
-  const { seasons, scoutingSeason } = useAuth()
+  const { seasons, viewSeason } = useAuth()
   const ref = useRefData()
   const [id, setId] = useState(REPORTS[0].id)
   const def = REPORTS.find(r => r.id === id)!
-  const [p, setP] = useState<Omit<Params, 'seasonLabel'>>({ season: scoutingSeason?.id ?? '', stage: 'national_final' })
+  const [p, setP] = useState<Omit<Params, 'seasonLabel'>>({ season: viewSeason?.id ?? '', stage: 'national_final' })
   const [camps, setCamps] = useState<Camp[]>([])
   const [data, setData] = useState<ReportData | null>(null)
   const [busy, setBusy] = useState(false)
