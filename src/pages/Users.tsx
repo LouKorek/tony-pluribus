@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, Eye, KeyRound, Pencil, Plus, Search, UserPlus, Users as UsersIcon, Wand2 } from 'lucide-react'
+import { Check, Eye, KeyRound, ShieldCheck, Pencil, Plus, Search, UserPlus, Users as UsersIcon, Wand2 } from 'lucide-react'
 import { supabase, ROLE_LABEL, ROLE_HINT, USERNAME_RE, errMsg, type Academy, type District, type Profile, type Region, type Role, type Status } from '../lib/supabase'
 import { startViewAs } from '../lib/viewAs'
 import { useAuth } from '../lib/auth'
@@ -28,6 +28,7 @@ export default function UsersPage() {
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Profile | null>(null)
   const [viewing, setViewing] = useState<string | null>(null)
+  const [accessFor, setAccessFor] = useState<Profile | null>(null)
   const [viewErr, setViewErr] = useState<string | null>(null)
   async function viewAs(u: Profile) {
     setViewing(u.id); setViewErr(null)
@@ -127,6 +128,9 @@ export default function UsersPage() {
                             ? <Button size="sm" variant="primary" onClick={() => setEditing(u)}><Check size={14} /> Review</Button>
                             : <Button size="sm" variant="ghost" onClick={() => setEditing(u)} disabled={u.role === 'owner' && me?.role !== 'owner'}><Pencil size={14} /> Edit</Button>}
                           <Button size="sm" variant="ghost" onClick={() => setResetting(u)} disabled={u.role === 'owner' && me?.role !== 'owner'} title="Set a new password"><KeyRound size={14} /></Button>
+                          {u.role !== 'owner' && u.role !== 'coach' && u.status === 'active' && (u.role !== 'admin' || me?.role === 'owner') && (
+                            <Button size="sm" variant="ghost" onClick={() => setAccessFor(u)} title="What this user can see and change"><ShieldCheck size={14} /> Access</Button>
+                          )}
                           {me?.role === 'owner' && u.id !== me.id && (
                             <Button size="sm" variant="ghost" loading={viewing === u.id} onClick={() => viewAs(u)} title={`See and use the system as ${u.username}`}><Eye size={14} /> View as</Button>
                           )}
@@ -144,6 +148,7 @@ export default function UsersPage() {
       {creating && <CreateUserModal academies={academies} districts={districts} regions={regions} myRole={me?.role} onClose={() => setCreating(false)} onDone={() => { setCreating(false); load() }} onAcademyAdded={load} />}
       {editing && <EditUserModal user={editing} me={me} academies={academies} districts={districts} regions={regions} onClose={() => setEditing(null)} onDone={() => { setEditing(null); load() }} onAcademyAdded={load} />}
       {resetting && <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} />}
+      {accessFor && <AccessModal user={accessFor} onClose={() => setAccessFor(null)} />}
     </div>
   )
 }
@@ -374,6 +379,98 @@ function ResetPasswordModal({ user, onClose }: { user: Profile; onClose: () => v
             </div>
           </Field>
           {err && <Alert>{err}</Alert>}
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+/* ─────────── Content access per user ─────────── */
+interface AccessRow { area: string; default: number; override: number | null; level: number }
+const AREA_LABEL: Record<string, [string, string]> = {
+  academies: ['Academies', 'The academy register and visits'],
+  camps: ['Camps and finals', 'Plan, camp sheets, results, invitations'],
+  players: ['Players and pool', 'Player cards, merging duplicates, the potential pool'],
+  insights: ['Dashboards and reports', 'Numbers, Excel and PDF reports'],
+  files: ['Talent folder', 'Default for every folder below'],
+  'files.private': ['Personal documents and finance', 'Birth certificates, contracts, health files, release letters, finance'],
+}
+const LEVELS = ['None', 'View', 'Edit']
+
+export function AccessModal({ user, onClose }: { user: Profile; onClose: () => void }) {
+  const [rows, setRows] = useState<AccessRow[] | null>(null)
+  const [set, setSet] = useState<Record<string, number | null>>({})
+  const [err, setErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    supabase.rpc('admin_get_access', { p_user: user.id }).then(({ data, error }) => {
+      if (error) setErr(errMsg(error)); else setRows(data as AccessRow[])
+    })
+  }, [user.id])
+
+  const value = (r: AccessRow) => {
+    const o = r.area in set ? set[r.area] : r.override
+    if (o !== null && o !== undefined) return o
+    if (r.area.startsWith('files:')) {
+      const f = rows?.find(x => x.area === 'files')
+      if (f) return value(f)
+    }
+    return r.default
+  }
+  const isOverride = (r: AccessRow) => { const o = r.area in set ? set[r.area] : r.override; return o !== null && o !== undefined }
+  const choose = (r: AccessRow, lvl: number) => setSet(s => ({ ...s, [r.area]: lvl === (r.area.startsWith('files:') ? value(rows!.find(x => x.area === 'files')!) : r.default) ? null : lvl }))
+
+  async function save() {
+    setBusy(true); setErr(null)
+    const { error } = await supabase.rpc('admin_set_access', { p_user: user.id, p: set })
+    setBusy(false)
+    if (error) return setErr(errMsg(error))
+    onClose()
+  }
+
+  const line = (r: AccessRow, indent = false) => {
+    const [label, hint] = AREA_LABEL[r.area] ?? [r.area.replace(/^files:/, ''), '']
+    const v = value(r)
+    const max = r.area === 'insights' ? 1 : 2
+    return (
+      <div key={r.area} className={cx('flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between', indent && 'sm:pl-6')}>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold">{indent && <span className="text-faint">└</span>}{label}
+            {isOverride(r) ? <Badge tone="lime">Set for this user</Badge> : <span className="text-xs font-normal text-faint">role default</span>}</div>
+          {hint && <div className="text-xs text-muted">{hint}</div>}
+        </div>
+        <div className="flex shrink-0 gap-1 rounded-lg bg-black/5 p-1">
+          {LEVELS.slice(0, max + 1).map((l, i) => (
+            <button key={l} type="button" onClick={() => choose(r, i)}
+              className={cx('rounded-md px-3 py-1 text-sm font-semibold', v === i ? (i === 0 ? 'bg-card text-red shadow-sm' : 'bg-ink text-white shadow-sm') : 'text-muted hover:text-text')}>{l}</button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const main = rows?.filter(r => !r.area.startsWith('files')) ?? []
+  const folders = rows?.filter(r => r.area.startsWith('files:')) ?? []
+  const files = rows?.find(r => r.area === 'files')
+  const priv = rows?.find(r => r.area === 'files.private')
+  return (
+    <Modal open wide title={`Access · ${user.full_name || user.username}`} onClose={onClose}
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} disabled={!rows} onClick={save}>Save access</Button></>}>
+      {err && <div className="mb-3"><Alert>{err}</Alert></div>}
+      {!rows ? <Spinner /> : (
+        <div className="space-y-5">
+          <p className="text-sm text-muted">The role <b>{ROLE_LABEL[user.role]}</b> sets the starting point. Change any line to give this user more or less. "None" hides the screen, "View" shows it read-only, "Edit" allows changes.</p>
+          <div><div className="label-caps mb-1 text-muted">Scouting and insights</div><div className="divide-y divide-line">{main.map(r => line(r))}</div></div>
+          <div>
+            <div className="label-caps mb-1 text-muted">Talent folder</div>
+            <div className="divide-y divide-line">
+              {files && line(files)}
+              {folders.map(r => line(r, true))}
+              {priv && line(priv)}
+            </div>
+            <p className="mt-2 text-xs text-muted">Editing files from inside Pluribus starts with the SharePoint sync. Until then "Edit" works like "View".</p>
+          </div>
         </div>
       )}
     </Modal>

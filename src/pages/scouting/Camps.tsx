@@ -30,14 +30,14 @@ export const statusTone = (s: Camp['status']) => (s === 'published' ? 'good' : s
 export const STATUS_LABEL: Record<Camp['status'], string> = { planned: 'Planned', open: 'Open', completed: 'Completed', published: 'Published', cancelled: 'Cancelled' }
 
 export default function CampsPage() {
-  const { viewSeason, profile } = useAuth()
+  const { viewSeason, can } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats, reload } = useCamps()
   const [stage, setStage] = useState<Stage | 'all'>('all')
   const [q, setQ] = useState('')
   const [creating, setCreating] = useState(false)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('camps', 2)
 
   const list = (camps ?? []).filter(c => (stage === 'all' || c.stage === stage) &&
     (!q || `${c.name} ${ref.district(c.district_id)?.name ?? ''} ${ref.regions.find(r => r.id === c.region_id)?.name ?? ''} ${c.venue ?? ''} ${c.staff ?? ''}`.toLowerCase().includes(q.toLowerCase())))
@@ -111,12 +111,12 @@ function weekends(from: string, to: string) {
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 export function PlanPage() {
-  const { viewSeason, profile } = useAuth()
+  const { viewSeason, can } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats, reload } = useCamps()
   const [creating, setCreating] = useState<Partial<Camp> | null>(null)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('camps', 2)
   const win = scoutingWindow(viewSeason)
   const weeks = useMemo(() => weekends(win.from, win.to), [win.from, win.to])
   const today = iso(new Date())

@@ -17,7 +17,7 @@ export const poolTone = (s: PoolStatus) => ({
 const PAGE = 100
 
 export default function PlayersPage() {
-  const { profile, project } = useAuth()
+  const { project, can } = useAuth()
   const ref = useRefData()
   const [rows, setRows] = useState<Player[] | null>(null)
   const [total, setTotal] = useState(0)
@@ -30,7 +30,7 @@ export default function PlayersPage() {
   const [limit, setLimit] = useState(PAGE)
   const [open, setOpen] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('players', 2)
 
   const load = useCallback(async () => {
     let qy = supabase.from('players').select('*', { count: 'exact' }).is('merged_into', null).order('last_name').order('first_name').range(0, limit - 1)
@@ -145,7 +145,7 @@ export function AcademySelect({ value, onChange, disabled }: { value: string; on
 type Journey = Participant & { camp: Camp }
 
 export function PlayerDrawer({ playerId, onClose, onSaved, onOpenOther }: { playerId: string; onClose: () => void; onSaved?: () => void; onOpenOther?: (id: string) => void }) {
-  const { profile, seasons } = useAuth()
+  const { seasons, can } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const [p, setP] = useState<Player | null>(null)
@@ -156,7 +156,7 @@ export function PlayerDrawer({ playerId, onClose, onSaved, onOpenOther }: { play
   const [busy, setBusy] = useState(false)
   const [similar, setSimilar] = useState<Player[]>([])
   const [merging, setMerging] = useState<Player | null>(null)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('players', 2)
 
   const load = useCallback(async () => {
     const [{ data: pl }, { data: j }] = await Promise.all([

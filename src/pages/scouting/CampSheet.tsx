@@ -18,7 +18,7 @@ const NEXT: Partial<Record<Stage, Stage>> = { district: 'province_final', provin
 export default function CampSheet() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { profile } = useAuth()
+  const { can } = useAuth()
   const ref = useRefData()
   const [camp, setCamp] = useState<Camp | null>(null)
   const [rows, setRows] = useState<Row[] | null>(null)
@@ -30,7 +30,7 @@ export default function CampSheet() {
   const [openPlayer, setOpenPlayer] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('camps', 2)
 
   const load = useCallback(async () => {
     const [{ data: c }, { data: p }] = await Promise.all([

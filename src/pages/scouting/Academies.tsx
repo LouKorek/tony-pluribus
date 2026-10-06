@@ -9,7 +9,7 @@ import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, PageHeader, Se
 interface AcSeason { academy_id: string; season_id: string; visit_date: string | null; scouted: number | null; selected: number | null; obs: string | null; rating: string | null; status: string | null }
 
 export default function AcademiesPage() {
-  const { seasons, scoutingSeason, profile } = useAuth()
+  const { seasons, scoutingSeason, can } = useAuth()
   const ref = useRefData()
   const [rows, setRows] = useState<AcSeason[] | null>(null)
   const [coaches, setCoaches] = useState<Record<string, number>>({})
@@ -18,7 +18,7 @@ export default function AcademiesPage() {
   const [district, setDistrict] = useState('')
   const [show, setShow] = useState<'active' | 'visited' | 'not_visited' | 'inactive' | 'all'>('active')
   const [open, setOpen] = useState<Academy | 'new' | null>(null)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('academies', 2)
 
   // the latest season that has academy visit data = last completed scouting cycle
   const ordered = useMemo(() => [...seasons].sort((a, b) => b.label.localeCompare(a.label)), [seasons])

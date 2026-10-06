@@ -12,12 +12,12 @@ import { PlayerDrawer } from './Players'
 type Row = Participant & { player: Player }
 
 export default function FinalsPage() {
-  const { viewSeason, profile } = useAuth()
+  const { viewSeason, can } = useAuth()
   const ref = useRefData()
   const nav = useNavigate()
   const { camps, stats, reload } = useCamps()
   const [creating, setCreating] = useState<Partial<Camp> | null>(null)
-  const canEdit = profile?.role !== 'observer'
+  const canEdit = can('camps', 2)
   const finals = (camps ?? []).filter(c => c.stage !== 'district')
   const national = finals.find(c => c.stage === 'national_final')
   const provinces = ref.regions.map(r => ({ region: r, camp: finals.find(c => c.stage === 'province_final' && c.region_id === r.id) }))

@@ -13,6 +13,9 @@ interface AuthState {
   /** The season the scouting screens show. Defaults to the season being scouted; can be switched to look at history. */
   viewSeason: Season | null
   setViewSeason: (id: string) => void
+  /** My level per content area: 0 none, 1 view, 2 edit */
+  access: Record<string, number>
+  can: (area: string, level?: 1 | 2) => boolean
   refresh: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -25,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [project, setProject] = useState<Project | null>(null)
   const [seasons, setSeasons] = useState<Season[]>([])
+  const [access, setAccess] = useState<Record<string, number>>({})
   const currentUser = useRef<string | null>(null)
   const [viewId, setViewId] = useState<string | null>(() => { try { return sessionStorage.getItem('pluribus.viewSeason') } catch { return null } })
 
@@ -35,12 +39,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(p as Profile | null)
     if (p && p.status === 'active') {
       supabase.rpc('touch_last_seen').then(() => {})
-      const [{ data: pr }, { data: se }] = await Promise.all([
+      const [{ data: pr }, { data: se }, { data: ac }] = await Promise.all([
         supabase.from('projects').select('*').eq('id', p.project_id).maybeSingle(),
         supabase.from('seasons').select('*').eq('project_id', p.project_id).order('label'),
+        p.role === 'coach' ? Promise.resolve({ data: {} }) : supabase.rpc('my_access'),
       ])
       setProject(pr as Project | null)
       setSeasons((se as Season[]) ?? [])
+      setAccess((ac as Record<string, number>) ?? {})
     }
     setLoading(false)
   }, [])
@@ -59,7 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [load])
 
   const value: AuthState = {
-    loading, session, profile, project, seasons,
+    loading, session, profile, project, seasons, access,
+    can: (area, level = 1) => profile?.role === 'owner' || (access[area] ?? 0) >= level,
     scoutingSeason: seasons.find(s => s.is_current_scouting) ?? null,
     viewSeason: seasons.find(s => s.id === viewId) ?? seasons.find(s => s.is_current_scouting) ?? null,
     setViewSeason: id => { setViewId(id); try { sessionStorage.setItem('pluribus.viewSeason', id) } catch { /* storage blocked */ } },

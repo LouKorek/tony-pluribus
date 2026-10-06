@@ -13,6 +13,8 @@ export interface NavItem {
   /** stage in which the screen becomes live; items above the current build stage show a "Soon" tag */
   stage: number
   roles?: Role[]
+  /** content area that must be at least "view" for the item to show */
+  area?: string
 }
 export interface NavGroup { label: string; items: NavItem[] }
 
@@ -27,12 +29,12 @@ export const NAV: NavGroup[] = [
     label: 'Scouting',
     items: [
       { to: '/scouting', label: 'Scouting home', icon: Radar, stage: 2, roles: STAFF },
-      { to: '/scouting/plan', label: 'Plan', icon: CalendarRange, stage: 2, roles: STAFF },
-      { to: '/scouting/academies', label: 'Academies', icon: School, stage: 2, roles: STAFF },
-      { to: '/scouting/camps', label: 'Camps', icon: Tent, stage: 2, roles: STAFF },
-      { to: '/scouting/finals', label: 'Finals', icon: Trophy, stage: 2, roles: STAFF },
-      { to: '/scouting/players', label: 'Players', icon: Users2, stage: 2, roles: STAFF },
-      { to: '/scouting/pool', label: 'Potential pool', icon: Sparkles, stage: 2, roles: STAFF },
+      { to: '/scouting/plan', label: 'Plan', icon: CalendarRange, stage: 2, roles: STAFF, area: 'camps' },
+      { to: '/scouting/academies', label: 'Academies', icon: School, stage: 2, roles: STAFF, area: 'academies' },
+      { to: '/scouting/camps', label: 'Camps', icon: Tent, stage: 2, roles: STAFF, area: 'camps' },
+      { to: '/scouting/finals', label: 'Finals', icon: Trophy, stage: 2, roles: STAFF, area: 'camps' },
+      { to: '/scouting/players', label: 'Players', icon: Users2, stage: 2, roles: STAFF, area: 'players' },
+      { to: '/scouting/pool', label: 'Potential pool', icon: Sparkles, stage: 2, roles: STAFF, area: 'players' },
     ],
   },
   {
@@ -61,14 +63,14 @@ export const NAV: NavGroup[] = [
   {
     label: 'Insights',
     items: [
-      { to: '/dashboards', label: 'Dashboards', icon: BarChart3, stage: 4, roles: STAFF },
-      { to: '/reports', label: 'Reports', icon: FileSpreadsheet, stage: 4, roles: STAFF },
+      { to: '/dashboards', label: 'Dashboards', icon: BarChart3, stage: 4, roles: STAFF, area: 'insights' },
+      { to: '/reports', label: 'Reports', icon: FileSpreadsheet, stage: 4, roles: STAFF, area: 'insights' },
     ],
   },
   {
     label: 'System',
     items: [
-      { to: '/files', label: 'Files', icon: FolderTree, stage: 5, roles: STAFF },
+      { to: '/files', label: 'Files', icon: FolderTree, stage: 5, roles: STAFF, area: 'files' },
       { to: '/sync', label: 'Sync Center', icon: RefreshCcw, stage: 6, roles: ADMIN },
       { to: '/users', label: 'Users', icon: UserCog, stage: 1, roles: ADMIN },
       { to: '/settings', label: 'Settings', icon: Settings, stage: 1, roles: ADMIN },

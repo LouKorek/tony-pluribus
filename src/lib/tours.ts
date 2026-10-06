@@ -84,7 +84,7 @@ export const STAFF_TOURS: TourMap = {
   ],
   users: [
     { target: 'tabs', title: 'Accounts', body: 'Coaches who sign up through the link wait under "pending" until you approve them.' },
-    { target: 'main table', title: 'Manage a user', body: 'Edit the role and academy, lock an account, set a new password, or use "View as" to see the system exactly as that user does.' },
+    { target: 'main table', title: 'Manage a user', body: 'Edit the role and academy, lock an account, set a new password, open "Access" to choose what the user sees and can change, or use "View as" to see the system exactly as that user does.' },
     { target: 'page-actions', title: 'New user', body: 'Create staff accounts with a username and password.' },
   ],
   settings: [

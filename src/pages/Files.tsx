@@ -4,7 +4,7 @@ import {
   ChevronRight, ExternalLink, File, FileImage, FileSpreadsheet, FileText, FileVideo, Folder, FolderOpen, Lock, Presentation,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { useAuth, isAdmin } from '../lib/auth'
+import { useAuth } from '../lib/auth'
 import { Alert, Card, Empty, PageHeader, SearchInput, Spinner, cx, useDebounced } from '../components/ui'
 
 interface Item { id: string; path: string; parent: string; name: string; is_folder: boolean; ext: string | null; size: number | null; modified_at: string | null; restricted: boolean }
@@ -64,7 +64,7 @@ export default function FilesPage() {
           <span className="rounded-md border border-line bg-card px-2.5 py-1"><b>{stats.folders.toLocaleString()}</b> <span className="text-muted">folders</span></span>
           <span className="rounded-md border border-line bg-card px-2.5 py-1"><b>{stats.files.toLocaleString()}</b> <span className="text-muted">files</span></span>
           <span className="rounded-md border border-line bg-card px-2.5 py-1"><span className="text-muted">last change</span> <b>{fmtWhen(stats.modified_at)}</b></span>
-          {!isAdmin(profile) && <span className="flex items-center gap-1 rounded-md border border-line bg-card px-2.5 py-1 text-muted"><Lock size={13} /> Finance, contracts and players' documents are shown to admins only</span>}
+          {profile?.role !== 'owner' && <span className="flex items-center gap-1 rounded-md border border-line bg-card px-2.5 py-1 text-muted"><Lock size={13} /> Folders you do not have access to are hidden</span>}
         </div>
       )}
 

@@ -18,7 +18,7 @@ function page<T extends ComponentType<any>>(load: () => Promise<{ default: T }>)
 const Overview = page(() => import('./pages/Overview'))
 const UsersPage = page(() => import('./pages/Users'))
 const SettingsPage = page(() => import('./pages/Settings'))
-import { ComingSoon } from './pages/misc'
+import { ComingSoon, Need } from './pages/misc'
 const CoachApp = page(() => import('./pages/coach/CoachApp'))
 import { RefProvider } from './lib/scouting'
 const ScoutingHome = page(() => import('./pages/scouting/Home'))
@@ -66,16 +66,16 @@ export default function App() {
       <Route element={<AppShell />}>
         <Route index element={<Overview />} />
         <Route path="scouting" element={<ScoutingHome />} />
-        <Route path="scouting/plan" element={<PlanPage />} />
-        <Route path="scouting/academies" element={<AcademiesPage />} />
-        <Route path="scouting/camps" element={<CampsPage />} />
-        <Route path="scouting/camps/:id" element={<CampSheet />} />
-        <Route path="scouting/finals" element={<FinalsPage />} />
-        <Route path="scouting/players" element={<PlayersPage />} />
-        <Route path="scouting/pool" element={<PoolPage />} />
-        <Route path="dashboards" element={<DashboardsPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="files" element={<FilesPage />} />
+        <Route path="scouting/plan" element={<Need area="camps"><PlanPage /></Need>} />
+        <Route path="scouting/academies" element={<Need area="academies"><AcademiesPage /></Need>} />
+        <Route path="scouting/camps" element={<Need area="camps"><CampsPage /></Need>} />
+        <Route path="scouting/camps/:id" element={<Need area="camps"><CampSheet /></Need>} />
+        <Route path="scouting/finals" element={<Need area="camps"><FinalsPage /></Need>} />
+        <Route path="scouting/players" element={<Need area="players"><PlayersPage /></Need>} />
+        <Route path="scouting/pool" element={<Need area="players"><PoolPage /></Need>} />
+        <Route path="dashboards" element={<Need area="insights"><DashboardsPage /></Need>} />
+        <Route path="reports" element={<Need area="insights"><ReportsPage /></Need>} />
+        <Route path="files" element={<Need area="files"><FilesPage /></Need>} />
         <Route path="users" element={admin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="settings" element={admin ? <SettingsPage /> : <Navigate to="/" replace />} />
         <Route path="login" element={<Navigate to="/" replace />} />

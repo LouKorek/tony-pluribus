@@ -20,7 +20,7 @@ export function Brand({ compact }: { compact?: boolean }) {
 }
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { profile, project, seasons, scoutingSeason, viewSeason, setViewSeason, signOut } = useAuth()
+  const { profile, project, seasons, scoutingSeason, viewSeason, setViewSeason, signOut, can } = useAuth()
   const role = profile?.role
   return (
     <div className="flex h-full flex-col bg-ink text-white">
@@ -45,7 +45,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <nav data-tour="nav" className="scroll-thin flex-1 overflow-y-auto px-3 pb-4">
         {NAV.map(g => {
-          const items = g.items.filter(i => !i.roles || (role && i.roles.includes(role)))
+          const items = g.items.filter(i => (!i.roles || (role && i.roles.includes(role))) && (!i.area || can(i.area)))
           if (!items.length) return null
           return (
             <div key={g.label || 'root'} className="mt-3 first:mt-0">
