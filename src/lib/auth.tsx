@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, type Profile, type Project, type Season } from './supabase'
 
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [project, setProject] = useState<Project | null>(null)
   const [seasons, setSeasons] = useState<Season[]>([])
+  const currentUser = useRef<string | null>(null)
 
   const load = useCallback(async (s: Session | null) => {
     setSession(s)
@@ -40,9 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => load(data.session))
+    supabase.auth.getSession().then(({ data }) => { currentUser.current = data.session?.user.id ?? null; load(data.session) })
+    // Supabase re-emits SIGNED_IN whenever the tab regains focus. Only a real change of user may reload the app,
+    // otherwise every open form would be lost when someone switches tabs.
     const { data: sub } = supabase.auth.onAuthStateChange((evt, s) => {
-      if (evt === 'SIGNED_IN' || evt === 'SIGNED_OUT' || evt === 'USER_UPDATED') { setLoading(true); load(s) }
+      const prev = currentUser.current
+      const next = s?.user.id ?? null
+      if (evt === 'SIGNED_OUT' || (evt === 'SIGNED_IN' && next !== prev)) { currentUser.current = next; setLoading(true); load(s) }
       else setSession(s)
     })
     return () => sub.subscription.unsubscribe()
