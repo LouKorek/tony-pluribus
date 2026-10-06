@@ -30,24 +30,25 @@ export default function SyncCenterPage() {
     let text = (data as { error?: string; message?: string } | null)?.error
     if (error) { try { const j = await (error as { context?: Response }).context?.json(); text = j?.message ?? j?.error } catch { /* */ } text ??= error.message }
     setBusy(false)
-    if (text) setMsg({ tone: text === 'not_configured' || /secret/i.test(text) ? 'info' : 'bad', text: /not_configured|secret is not set/i.test(text) ? 'The Microsoft secret is not set yet. Once the owner pastes MS_CLIENT_SECRET into Supabase, run the sync again.' : text })
+    if (text) setMsg({ tone: text === 'not_configured' || /^Waiting/.test(text) ? 'info' : 'bad', text: /not_configured|secret is not set/i.test(text) ? 'The Microsoft secret is not set yet. Once the owner pastes MS_CLIENT_SECRET into Supabase, run the sync again.' : text })
     else { const d = data as { changed: number; deleted: number; full: boolean }; setMsg({ tone: 'good', text: `${d.full ? 'Full scan done' : 'Up to date'}: ${d.changed} new or changed, ${d.deleted} removed.` }) }
     load()
   }
 
   const ok = state?.last_status === 'ok'
+  const waiting = !ok && /^Waiting for the TonyRW admin/.test(state?.last_error ?? '')
   return (
     <div>
       <PageHeader eyebrow="System" title="Sync Center" description="Pluribus reads the shared Talent folder in SharePoint through the Pluribus Sync app. Every change there (new files, renames, moves, deletions) reaches the Files screen and the links across the system."
         actions={<><Button onClick={() => run(true)} disabled={busy}>Full scan</Button><Button variant="primary" loading={busy} onClick={() => run(false)}><RefreshCcw size={15} /> Sync now</Button></>} />
       <div data-tour="sync-status" className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat accent label="Status" value={!state ? 'Not connected' : ok ? 'Connected' : 'Error'} sub={state?.last_ok_at ? `Last good sync ${when(state.last_ok_at)}` : 'Waiting for Microsoft approval'} />
+        <Stat accent label="Status" value={!state ? 'Not connected' : ok ? 'Connected' : waiting ? 'Waiting' : 'Error'} sub={state?.last_ok_at ? `Last good sync ${when(state.last_ok_at)}` : 'Waiting for Microsoft approval'} />
         <Stat label="Last run" value={when(state?.last_run_at ?? null)} />
         <Stat label="Files" value={stats?.files?.toLocaleString() ?? '—'} sub="in the Talent folder index" />
         <Stat label="Folders" value={stats?.folders?.toLocaleString() ?? '—'} />
       </div>
       {msg && <div className="mb-4"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
-      {state?.last_status === 'error' && state.last_error && !msg && <div className="mb-4"><Alert>{state.last_error}</Alert></div>}
+      {state?.last_status === 'error' && state.last_error && !msg && <div className="mb-4"><Alert tone={waiting ? 'info' : 'bad'}>{state.last_error}</Alert></div>}
       <Card data-tour="sync-runs" className="overflow-hidden">
         <div className="border-b border-line bg-paper/70 px-4 py-2.5 text-xs font-semibold text-muted">Recent runs</div>
         {!runs.length ? <p className="px-4 py-6 text-center text-sm text-muted">No sync has run yet.</p> : (

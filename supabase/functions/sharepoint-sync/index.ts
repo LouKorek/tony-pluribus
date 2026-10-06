@@ -56,7 +56,12 @@ Deno.serve(async req => {
       body: new URLSearchParams({ client_id: CLIENT, client_secret: secret, scope: 'https://graph.microsoft.com/.default', grant_type: 'client_credentials' }),
     })
     const tok = await tr.json()
-    if (!tr.ok) throw new Error(`Microsoft sign-in failed: ${tok.error_description?.split('\r')[0] ?? tok.error ?? tr.status}`)
+    if (!tr.ok) {
+      const d = String(tok.error_description ?? tok.error ?? tr.status)
+      throw new Error(/AADSTS7000229|AADSTS65001|AADSTS700016/.test(d) ? 'Waiting for the TonyRW admin to approve the Pluribus Sync app (the approval link has not been accepted yet).'
+        : /AADSTS7000215|AADSTS7000222/.test(d) ? 'The Microsoft secret saved in Supabase is wrong or expired. Create a new client secret and paste it as MS_CLIENT_SECRET.'
+        : `Microsoft sign-in failed: ${d.split('\r')[0]}`)
+    }
     const g = async (u: string) => {
       const r = await fetch(u.startsWith('http') ? u : GRAPH + u, { headers: { authorization: `Bearer ${tok.access_token}` } })
       const j = await r.json().catch(() => ({}))
