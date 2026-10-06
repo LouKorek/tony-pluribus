@@ -1,23 +1,34 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, type ComponentType } from 'react'
 import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { useAuth, isAdmin } from './lib/auth'
 import { Spinner } from './components/ui'
 import AppShell from './layouts/AppShell'
 import { LoginPage, OwnerSetupPage, PendingPage, SignupPage } from './pages/auth'
-const Overview = lazy(() => import('./pages/Overview'))
-const UsersPage = lazy(() => import('./pages/Users'))
-const SettingsPage = lazy(() => import('./pages/Settings'))
+// After a new deploy, a tab that was already open asks for page files that no longer exist.
+// Reload once to pick up the new version instead of showing a blank screen.
+function page<T extends ComponentType<any>>(load: () => Promise<{ default: T }>) {
+  return lazy(() => load().catch(err => {
+    let reloaded = false
+    try { reloaded = sessionStorage.getItem('pluribus.reloaded') === '1'; sessionStorage.setItem('pluribus.reloaded', '1') } catch { /* storage blocked */ }
+    if (!reloaded) { window.location.reload(); return new Promise<{ default: T }>(() => {}) }
+    throw err
+  }))
+}
+
+const Overview = page(() => import('./pages/Overview'))
+const UsersPage = page(() => import('./pages/Users'))
+const SettingsPage = page(() => import('./pages/Settings'))
 import { ComingSoon } from './pages/misc'
-const CoachApp = lazy(() => import('./pages/coach/CoachApp'))
+const CoachApp = page(() => import('./pages/coach/CoachApp'))
 import { RefProvider } from './lib/scouting'
-const ScoutingHome = lazy(() => import('./pages/scouting/Home'))
-const AcademiesPage = lazy(() => import('./pages/scouting/Academies'))
-const CampsPage = lazy(() => import('./pages/scouting/Camps'))
-const PlanPage = lazy(() => import('./pages/scouting/Camps').then(m => ({ default: m.PlanPage })))
-const CampSheet = lazy(() => import('./pages/scouting/CampSheet'))
-const FinalsPage = lazy(() => import('./pages/scouting/Finals'))
-const PlayersPage = lazy(() => import('./pages/scouting/Players'))
-const PoolPage = lazy(() => import('./pages/scouting/Pool'))
+const ScoutingHome = page(() => import('./pages/scouting/Home'))
+const AcademiesPage = page(() => import('./pages/scouting/Academies'))
+const CampsPage = page(() => import('./pages/scouting/Camps'))
+const PlanPage = page(() => import('./pages/scouting/Camps').then(m => ({ default: m.PlanPage })))
+const CampSheet = page(() => import('./pages/scouting/CampSheet'))
+const FinalsPage = page(() => import('./pages/scouting/Finals'))
+const PlayersPage = page(() => import('./pages/scouting/Players'))
+const PoolPage = page(() => import('./pages/scouting/Pool'))
 
 export default function App() {
   const { loading, session, profile } = useAuth()
