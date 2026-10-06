@@ -136,6 +136,7 @@ function Body({ d }: { d: Dash }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Age groups">
+          {d.groups.length === 0 && <Nothing>No age groups are set for this season.</Nothing>}
           <div className="space-y-3">
             {d.groups.map(g => (
               <div key={g.code}>

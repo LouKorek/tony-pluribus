@@ -92,7 +92,7 @@ function TourOverlay({ steps, index, lang, onNext, onBack, onSkip }: {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onSkip()
-      else if (e.key === 'ArrowRight' || e.key === 'Enter') onNext()
+      else if (e.key === 'ArrowRight') onNext()   // Enter presses the focused Next button
       else if (e.key === 'ArrowLeft' && index > 0) onBack()
     }
     window.addEventListener('keydown', h)

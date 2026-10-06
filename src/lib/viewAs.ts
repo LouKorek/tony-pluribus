@@ -3,6 +3,8 @@ import { supabase } from './supabase'
 // The owner can open the system as another user to see and test exactly what that user sees.
 // The owner's own session is kept aside on this device and restored with "Back to my account".
 const KEY = 'pluribus.viewAs'
+// Name under which the owner deployed supabase/functions/impersonate in Supabase.
+const FUNCTION = 'clever-responder'
 
 interface Saved { access_token: string; refresh_token: string; target: string }
 
@@ -13,7 +15,7 @@ export function viewingAs(): string | null {
 export async function startViewAs(userId: string, label: string): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return 'Please sign in again'
-  const { data, error } = await supabase.functions.invoke('impersonate', { body: { user_id: userId } })
+  const { data, error } = await supabase.functions.invoke(FUNCTION, { body: { user_id: userId } })
   if (error) {
     let msg = error.message
     try { const body = await (error as { context?: Response }).context?.json(); if (body?.error) msg = body.error } catch { /* keep message */ }
