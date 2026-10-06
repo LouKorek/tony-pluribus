@@ -19,7 +19,7 @@ export async function startViewAs(userId: string, label: string): Promise<string
   if (error) {
     let msg = error.message
     try { const body = await (error as { context?: Response }).context?.json(); if (body?.error) msg = body.error } catch { /* keep message */ }
-    if (/Failed to send|404|not found/i.test(msg)) msg = '"View as" is not switched on yet: the impersonate function is not deployed in Supabase.'
+    if (/Failed to send a request|Requested function was not found/i.test(msg)) msg = '"View as" is not switched on yet: the impersonate function is not deployed in Supabase.'
     return msg
   }
   if (!data?.token_hash) return data?.error ?? 'Could not start'
