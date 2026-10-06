@@ -2,11 +2,12 @@
 do $$
 declare
   r jsonb := '{}'; v_acad uuid; v_dist uuid; v_reg uuid; v_proj uuid; v_season uuid; v_coach uuid := gen_random_uuid();
-  v_other uuid; v_camp uuid; v_final uuid; v_p1 uuid; v_p2 uuid; v_foreign uuid; v_cp uuid; n int; j jsonb;
+  v_other uuid; v_camp uuid; v_final uuid; v_p1 uuid; v_p2 uuid; v_foreign uuid; v_cp uuid; n int; j jsonb; v_owner uuid;
 begin
   select a.id, a.district_id, d.region_id, a.project_id into v_acad, v_dist, v_reg, v_proj
     from public.academies a join public.districts d on d.id = a.district_id order by a.name limit 1;
   select a.id into v_other from public.academies a where a.id <> v_acad and a.district_id is not null limit 1;
+  select id into v_owner from public.profiles where role = 'owner' limit 1;
   select id into v_season from public.seasons where is_current_scouting and project_id = v_proj;
   insert into auth.users(instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
                          created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
@@ -93,7 +94,7 @@ begin
   select count(*) into n from public.notifications where read_at is null; r := r || jsonb_build_object('notif_unread_after_mark', n);
 
   -- ===== staff preview (as the owner) =====
-  perform set_config('request.jwt.claims', json_build_object('sub', (select id from public.profiles where role = 'owner' limit 1), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   r := r || jsonb_build_object('staff_preview_squad', jsonb_array_length(public.coach_squad(v_acad)));
   begin perform public.coach_submit(v_camp, array[v_p1], null); r := r || '{"staff_write_blocked":false}';
   exception when others then r := r || '{"staff_write_blocked":true}'; end;
