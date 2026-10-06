@@ -49,6 +49,8 @@ begin
   begin perform public.coach_submit(v_final, array[v_p1], null); r := r || '{"final_submit_blocked":false}';
   exception when others then r := r || '{"final_submit_blocked":true}'; end;
   select count(*) into n from public.camp_participants; r := r || jsonb_build_object('direct_cp_visible', n);
+  begin perform public.coach_squad(v_other); r := r || '{"coach_preview_blocked":false}';
+  exception when others then r := r || '{"coach_preview_blocked":true}'; end;
 
   select (x->'journey'->0->>'id')::uuid into v_cp from jsonb_array_elements(public.coach_squad()) x where x->>'id' = v_p2::text;
   perform public.coach_withdraw(v_cp);
@@ -89,6 +91,12 @@ begin
   r := r || jsonb_build_object('standing', public.coach_standing());
   perform public.mark_notifications_read();
   select count(*) into n from public.notifications where read_at is null; r := r || jsonb_build_object('notif_unread_after_mark', n);
+
+  -- ===== staff preview (as the owner) =====
+  perform set_config('request.jwt.claims', json_build_object('sub', (select id from public.profiles where role = 'owner' limit 1), 'role', 'authenticated')::text, true);
+  r := r || jsonb_build_object('staff_preview_squad', jsonb_array_length(public.coach_squad(v_acad)));
+  begin perform public.coach_submit(v_camp, array[v_p1], null); r := r || '{"staff_write_blocked":false}';
+  exception when others then r := r || '{"staff_write_blocked":true}'; end;
 
   reset role;
   raise exception 'TESTRESULT %', r;
