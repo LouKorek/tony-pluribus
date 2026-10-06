@@ -4,7 +4,7 @@ import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useFileLinks } from '../../lib/teams'
 import { PlayerPicker, playerName, type PickedPlayer } from '../../components/PlayerPicker'
-import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Segmented, Select, Spinner, Textarea, cx } from '../../components/ui'
+import { Alert, Badge, Button, Card, DeleteButton, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Segmented, Select, Spinner, Textarea, cx } from '../../components/ui'
 import { MOVE_KIND, MOVE_STATUS, usePartners } from './Partners'
 
 interface Move {
@@ -110,7 +110,7 @@ function MoveModal({ move, onClose, onDone }: { move: Move | null; onClose: () =
   async function remove() { if (!move) return; const { error } = await supabase.from('player_moves').delete().eq('id', move.id); if (error) setErr(errMsg(error)); else onDone() }
   return (
     <Modal open wide title={move ? 'Edit move' : 'New move'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{move ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{move ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <Field label={move ? 'Player' : 'Players'} hint={move ? undefined : 'Pick several players to open the same move for each, for example a group trial.'} required><PlayerPicker multi={!move} value={players} onChange={v => setPlayers(move ? v.slice(-1) : v)} /></Field>
         <div className="grid gap-3 sm:grid-cols-2">

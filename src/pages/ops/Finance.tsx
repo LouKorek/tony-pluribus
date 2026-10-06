@@ -3,7 +3,7 @@ import { FileText, Plus, Wallet } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useFileLinks } from '../../lib/teams'
-import { Alert, Button, Card, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Stat, cx, useDebounced } from '../../components/ui'
+import { Alert, Button, Card, DeleteButton, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Stat, cx, useDebounced } from '../../components/ui'
 
 interface Account { id: string; name: string; kind: string; currency: string; holder: string | null }
 interface Tx { id: string; account_id: string; day: string; amount_out: number; amount_in: number; description: string | null; type: string | null; subtype: string | null; payee: string | null; invoice_ref: string | null; file_id: string | null; balance: number | null }
@@ -28,7 +28,8 @@ export default function FinancePage() {
     supabase.from('finance_accounts').select('*').order('name').then(({ data }) => setAccounts((data as Account[]) ?? []))
     supabase.from('finance_tx').select('day').order('day', { ascending: false }).limit(5000).then(({ data }) => {
       const ms = [...new Set(((data as { day: string }[]) ?? []).map(d => d.day.slice(0, 7)))]
-      setMonths(ms); setMonth(ms[0] ?? new Date().toISOString().slice(0, 7))
+      const now = new Date().toISOString().slice(0, 7)
+      setMonths(ms); setMonth(ms.find(m => m <= now) ?? ms[0] ?? now)
     })
   }, [])
 
@@ -128,7 +129,7 @@ function TxModal({ tx, accounts, types, onClose, onDone }: { tx: Tx | null; acco
   async function remove() { if (!tx) return; const { error } = await supabase.from('finance_tx').delete().eq('id', tx.id); if (error) setErr(errMsg(error)); else onDone() }
   return (
     <Modal open wide title={tx ? 'Edit entry' : 'New entry'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{tx ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{tx ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-4">
           <Field label="Account"><Select value={f.account_id} onChange={e => setF({ ...f, account_id: e.target.value })}>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</Select></Field>

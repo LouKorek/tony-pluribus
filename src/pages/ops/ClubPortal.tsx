@@ -3,7 +3,7 @@ import { Building2, Copy, ExternalLink, Eye, Plus } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { PlayerPicker, playerName, type PickedPlayer } from '../../components/PlayerPicker'
-import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Spinner, Textarea } from '../../components/ui'
+import { Alert, Badge, Button, Card, DeleteButton, Empty, Field, Input, Modal, PageHeader, Spinner, Textarea } from '../../components/ui'
 
 interface Showcase { id: string; title: string; audience: string | null; intro: string | null; token: string; active: boolean; expires_on: string | null; show_stats: boolean; show_tests: boolean; views: number; created_at: string; showcase_players: { player_id: string }[] }
 const shareUrl = (token: string) => `${window.location.origin}/share/${token}`
@@ -88,7 +88,7 @@ function ShowcaseModal({ showcase, onClose, onDone }: { showcase: Showcase | nul
 
   return (
     <Modal open wide title={showcase ? 'Edit shared list' : 'New shared list'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{showcase ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{showcase ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Title" required><Input value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder="U17 talents · October 2026" /></Field>

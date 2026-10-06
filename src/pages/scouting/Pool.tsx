@@ -3,7 +3,7 @@ import { Sparkles } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useRefData, POOL_LABEL, fullName, ageGroupFor, type Player, type PoolStatus } from '../../lib/scouting'
-import { Card, Empty, PageHeader, SearchInput, Segmented, Select, Spinner, cx } from '../../components/ui'
+import { Card, Empty, MultiSelect, PageHeader, SearchInput, Spinner, cx } from '../../components/ui'
 import { PlayerDrawer } from './Players'
 
 const COLUMNS: { key: PoolStatus; hint: string }[] = [
@@ -20,8 +20,8 @@ export default function PoolPage() {
   const { viewSeason } = useAuth()
   const ref = useRefData()
   const [players, setPlayers] = useState<Player[] | null>(null)
-  const [group, setGroup] = useState('all')
-  const [region, setRegion] = useState('')
+  const [group, setGroup] = useState<string[]>([])
+  const [region, setRegion] = useState<string[]>([])
   const [q, setQ] = useState('')
   const [open, setOpen] = useState<string | null>(null)
 
@@ -32,8 +32,8 @@ export default function PoolPage() {
   useEffect(load, [viewSeason])
 
   const list = useMemo(() => (players ?? []).filter(p =>
-    (group === 'all' || ageGroupFor(p.birth_year, ref.groups) === group) &&
-    (!region || ref.district(p.district_id ?? ref.academy(p.academy_id)?.district_id)?.region_id === region) &&
+    (!group.length || group.includes(ageGroupFor(p.birth_year, ref.groups) ?? '')) &&
+    (!region.length || region.includes(ref.district(p.district_id ?? ref.academy(p.academy_id)?.district_id)?.region_id ?? '')) &&
     (!q || fullName(p).toLowerCase().includes(q.toLowerCase()))), [players, group, region, q, ref])
 
   return (
@@ -41,10 +41,8 @@ export default function PoolPage() {
       <PageHeader eyebrow={`Scouting ${viewSeason?.label ?? ''}`} title="Potential pool"
         description="Every player in this season's scouting, by how far they have come. It replaces the yearly Draft – Potential presentation." />
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center" data-tour="filters">
-        <Segmented value={group} onChange={setGroup} options={[{ value: 'all', label: 'All ages' }, ...ref.groups.map(g => ({ value: g.code, label: g.code }))]} />
-        <Select className="lg:w-52" value={region} onChange={e => setRegion(e.target.value)}>
-          <option value="">All provinces</option>{ref.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-        </Select>
+        <MultiSelect className="lg:w-48" placeholder="All ages" value={group} onChange={setGroup} options={ref.groups.map(g => ({ value: g.code, label: `${g.code} · ${g.birth_year_from}–${g.birth_year_to}` }))} />
+        <MultiSelect className="lg:w-52" placeholder="All provinces" value={region} onChange={setRegion} options={ref.regions.map(r => ({ value: r.id, label: r.name }))} />
         <SearchInput className="lg:ml-auto lg:w-64" value={q} onChange={setQ} placeholder="Find a player" />
       </div>
 

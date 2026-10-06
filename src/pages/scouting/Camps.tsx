@@ -4,7 +4,7 @@ import { CalendarPlus, ChevronRight, MapPin, Plus, Tent } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useRefData, STAGE_SHORT, fmtDate, fmtRange, scoutingWindow, type Camp, type CampStats, type Stage } from '../../lib/scouting'
-import { Badge, Button, Card, Empty, PageHeader, SearchInput, Segmented, Spinner, Td, Th, cx } from '../../components/ui'
+import { Badge, Button, Card, Empty, MultiSelect, PageHeader, SearchInput, Segmented, Spinner, Td, Th, cx } from '../../components/ui'
 import { CampFormModal } from './campForm'
 
 export function useCamps() {
@@ -36,10 +36,13 @@ export default function CampsPage() {
   const { camps, stats, reload } = useCamps()
   const [stage, setStage] = useState<Stage | 'all'>('all')
   const [q, setQ] = useState('')
+  const [regions, setRegions] = useState<string[]>([])
+  const [statuses, setStatuses] = useState<string[]>([])
   const [creating, setCreating] = useState(false)
   const canEdit = can('camps', 2)
 
   const list = (camps ?? []).filter(c => (stage === 'all' || c.stage === stage) &&
+    (!regions.length || regions.includes(c.region_id ?? ref.district(c.district_id)?.region_id ?? '')) && (!statuses.length || statuses.includes(c.status)) &&
     (!q || `${c.name} ${ref.district(c.district_id)?.name ?? ''} ${ref.regions.find(r => r.id === c.region_id)?.name ?? ''} ${c.venue ?? ''} ${c.staff ?? ''}`.toLowerCase().includes(q.toLowerCase())))
   const count = (s: Stage) => (camps ?? []).filter(c => c.stage === s).length
 
@@ -49,14 +52,18 @@ export default function CampsPage() {
         description="Every district camp, province final and the national final of the season. Open a camp to enter attendance, tests, grades and decisions."
         actions={canEdit && <Button variant="primary" onClick={() => setCreating(true)}><Plus size={16} /> New camp</Button>} />
 
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <Segmented value={stage} onChange={setStage} options={[
           { value: 'all', label: 'All', count: camps?.length ?? 0 },
           { value: 'district', label: 'District', count: count('district') },
           { value: 'province_final', label: 'Province finals', count: count('province_final') },
           { value: 'national_final', label: 'National', count: count('national_final') },
         ]} />
-        <SearchInput className="sm:w-72" value={q} onChange={setQ} placeholder="Search camp, district, staff" />
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <MultiSelect className="sm:w-44" placeholder="All provinces" value={regions} onChange={setRegions} options={ref.regions.map(r => ({ value: r.id, label: r.name }))} />
+          <MultiSelect className="sm:w-40" placeholder="Any status" value={statuses} onChange={setStatuses} options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))} />
+          <SearchInput className="sm:w-64" value={q} onChange={setQ} placeholder="Search camp, district, staff" />
+        </div>
       </div>
 
       <Card className="overflow-hidden">

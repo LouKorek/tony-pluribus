@@ -15,7 +15,9 @@ export interface Ref {
   regionOf: (id: string | null | undefined) => Region | undefined
   academy: (id: string | null | undefined) => Academy | undefined
 }
-export interface Params { season: string; seasonLabel: string; camp?: string; stage?: Stage; region?: string; academy?: string; group?: string }
+export interface Params { season: string; seasonLabel: string; camp?: string; stage?: Stage; region?: string[]; academy?: string[]; group?: string[] }
+/** Names joined for titles and file names: "Kigali", "Kigali + East", "3 provinces". */
+const names = (list: string[], many: string) => list.length <= 2 ? list.join(' + ') : `${list.length} ${many}`
 export type ParamKey = 'camp' | 'stage' | 'region' | 'academy' | 'group'
 
 export interface ReportDef {
@@ -28,6 +30,7 @@ const ss = (label: string) => label.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1-$2')  
 const yes = (b: boolean) => (b ? '✓' : '')
 const num = (n: number | null) => (n === null || n === undefined ? null : Number(n))
 const decision = (d: Decision | null) => (d ? DECISION_LABEL[d] : '')
+const regionNames = (ref: Ref, ids: string[]) => names(ids.map(id => ref.regions.find(r => r.id === id)?.name ?? ''), 'provinces')
 const groupOrder = (ref: Ref, g: string | null) => { const i = ref.groups.findIndex(x => x.code === g); return i < 0 ? 99 : i }
 
 async function must<T>(q: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -92,7 +95,7 @@ export const REPORTS: ReportDef[] = [
     async load(p, ref) {
       const stage = p.stage ?? 'national_final'
       let q = supabase.from('camps').select('*').eq('season_id', p.season).eq('stage', stage).neq('status', 'cancelled')
-      if (p.region && stage === 'province_final') q = q.eq('region_id', p.region)
+      if (p.region?.length && stage === 'province_final') q = q.in('region_id', p.region)
       const camps = await must<Camp[]>(q.order('starts_on'))
       const rows = await participants(camps.map(c => c.id))
       const order: [string, (r: PRow) => boolean][] = [
@@ -113,9 +116,9 @@ export const REPORTS: ReportDef[] = [
         })
       }
       return {
-        fileName: `TFEP ${stage === 'national_final' ? 'National final' : 'Province finals'} results - ${ss(p.seasonLabel)}${p.region && stage === 'province_final' ? ' - ' + ref.regions.find(r => r.id === p.region)?.name : ''}`,
+        fileName: `TFEP ${stage === 'national_final' ? 'National final' : 'Province finals'} results - ${ss(p.seasonLabel)}${p.region?.length && stage === 'province_final' ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: `${STAGE_LABEL[stage]}${stage === 'province_final' ? 's' : ''} · results`,
-        subtitle: `Scouting ${p.seasonLabel}${p.region && stage === 'province_final' ? ` · ${ref.regions.find(r => r.id === p.region)?.name}` : ''}`,
+        subtitle: `Scouting ${p.seasonLabel}${p.region?.length && stage === 'province_final' ? ` · ${regionNames(ref, p.region)}` : ''}`,
         summary: order.slice(0, 4).map(([l, t]) => [l, rows.filter(t).length] as [string, Cell]),
         columns: [
           { key: 'n', label: '#', width: 5, align: 'right' }, { key: 'player', label: 'Player', width: 26 }, { key: 'year', label: 'Born', width: 7, align: 'center' },
@@ -129,11 +132,11 @@ export const REPORTS: ReportDef[] = [
   },
   {
     id: 'academy', title: 'Academy report',
-    description: "One academy's season: every player it sent, every camp and every result. Ready to share with the academy.",
+    description: "One or several academies' season: every player sent, every camp and every result. Pick one academy to share it with that academy.",
     params: ['academy'], required: ['academy'],
     async load(p, ref) {
-      const a = ref.academy(p.academy)!
-      const players = await must<Player[]>(supabase.from('players').select('*').eq('academy_id', a.id).is('merged_into', null))
+      const acs = (p.academy ?? []).map(id => ref.academy(id)).filter((a): a is NonNullable<typeof a> => !!a)
+      const players = await must<Player[]>(supabase.from('players').select('*').in('academy_id', acs.map(a => a.id)).is('merged_into', null))
       const camps = await must<Camp[]>(supabase.from('camps').select('*').eq('season_id', p.season))
       const cmap = new Map(camps.map(c => [c.id, c]))
       const rows = players.length ? (await must<Participant[]>(supabase.from('camp_participants').select('*').in('player_id', players.map(x => x.id)).neq('status', 'removed')))
@@ -141,10 +144,11 @@ export const REPORTS: ReportDef[] = [
       const pmap = new Map(players.map(x => [x.id, x]))
       const list = rows.map(r => ({ r, pl: pmap.get(r.player_id)!, c: cmap.get(r.camp_id)! }))
         .sort((x, y) => x.pl.last_name.localeCompare(y.pl.last_name) || (x.c.starts_on ?? '').localeCompare(y.c.starts_on ?? ''))
+      const one = acs.length === 1 ? acs[0] : null
       return {
-        fileName: `TFEP Academy report - ${a.name} - ${ss(p.seasonLabel)}`,
-        title: a.name,
-        subtitle: `Academy report · scouting ${p.seasonLabel} · ${ref.district(a.district_id)?.name ?? ''}, ${ref.regionOf(a.district_id)?.name ?? ''}`,
+        fileName: `TFEP Academy report - ${names(acs.map(a => a.name), 'academies')} - ${ss(p.seasonLabel)}`,
+        title: one ? one.name : `${acs.length} academies`,
+        subtitle: one ? `Academy report · scouting ${p.seasonLabel} · ${ref.district(one.district_id)?.name ?? ''}, ${ref.regionOf(one.district_id)?.name ?? ''}` : `Academy report · scouting ${p.seasonLabel} · ${acs.map(a => a.name).join(', ')}`,
         summary: [['Players in squad', players.length], ['Sent to camps', new Set(rows.map(r => r.player_id)).size], ['Selected', new Set(rows.filter(r => r.decision === 'selected').map(r => r.player_id)).size], ['Province finals', new Set(list.filter(x => x.c.stage !== 'district').map(x => x.pl.id)).size]],
         columns: [
           { key: 'player', label: 'Player', width: 26 }, { key: 'year', label: 'Born', width: 7, align: 'center' }, { key: 'group', label: 'Group', width: 7, align: 'center' },
@@ -152,12 +156,13 @@ export const REPORTS: ReportDef[] = [
           { key: 'obs', label: 'OBS', width: 6, align: 'center' }, { key: 'decision', label: 'Decision', width: 13 }, { key: 'published', label: 'Told coach', width: 10, align: 'center' },
           { key: 'comment', label: 'Comment', width: 34 },
         ],
-        sections: [{
-          rows: list.map(({ r, pl, c }) => ({
+        sections: acs.map(a => ({
+          title: one ? undefined : `${a.name} · ${ref.district(a.district_id)?.name ?? ''}`,
+          rows: list.filter(x => x.pl.academy_id === a.id).map(({ r, pl, c }) => ({
             player: fullName(pl), year: pl.birth_year, group: r.age_group ?? '', camp: c.name, date: fmtDate(c.starts_on), status: PSTATUS_LABEL[r.status],
             obs: r.obs ?? '', decision: decision(r.decision), published: r.decision ? yes(r.decision_published) : '', comment: r.coach_message ?? r.comment ?? '',
           })),
-        }],
+        })).filter(sec => one || sec.rows.length),
       }
     },
   },
@@ -169,11 +174,11 @@ export const REPORTS: ReportDef[] = [
       const visits = await must<{ academy_id: string; visit_date: string | null; scouted: number | null; selected: number | null; rating: string | null; status: string | null; obs: string | null }[]>(
         supabase.from('academy_seasons').select('*').eq('season_id', p.season))
       const vmap = new Map(visits.map(v => [v.academy_id, v]))
-      const regions = ref.regions.filter(r => !p.region || r.id === p.region)
+      const regions = ref.regions.filter(r => !p.region?.length || p.region.includes(r.id))
       return {
-        fileName: `TFEP Academy register - ${ss(p.seasonLabel)}${p.region ? ' - ' + regions[0]?.name : ''}`,
+        fileName: `TFEP Academy register - ${ss(p.seasonLabel)}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: 'Academy register',
-        subtitle: `Scouting ${p.seasonLabel}${p.region ? ` · ${regions[0]?.name}` : ' · all provinces'}`,
+        subtitle: `Scouting ${p.seasonLabel}${p.region?.length ? ` · ${regions.map(r => r.name).join(', ')}` : ' · all provinces'}`,
         summary: [['Academies', ref.academies.filter(a => a.is_active && regions.some(r => r.id === ref.regionOf(a.district_id)?.id)).length], ['Visited', visits.filter(v => v.visit_date && regions.some(r => r.id === ref.regionOf(ref.academy(v.academy_id)?.district_id)?.id)).length]],
         columns: [
           { key: 'academy', label: 'Academy', width: 30 }, { key: 'district', label: 'District', width: 14 }, { key: 'contact', label: 'Contact', width: 20 },
@@ -195,14 +200,15 @@ export const REPORTS: ReportDef[] = [
   {
     id: 'pool', title: 'Potential pool',
     description: 'Every player of the season grouped by how far he came, with academy and province.',
-    params: ['group'],
+    params: ['group', 'region'],
     async load(p, ref) {
       const players = await must<Player[]>(supabase.rpc('season_players', { p_season: p.season }))
-      const list = players.filter(x => !p.group || ageGroupFor(x.birth_year, ref.groups) === p.group)
+      const list = players.filter(x => (!p.group?.length || p.group.includes(ageGroupFor(x.birth_year, ref.groups) ?? '')) &&
+        (!p.region?.length || p.region.includes(ref.regionOf(x.district_id ?? ref.academy(x.academy_id)?.district_id)?.id ?? '')))
       return {
-        fileName: `TFEP Potential pool - ${ss(p.seasonLabel)}${p.group ? ' - ' + p.group : ''}`,
+        fileName: `TFEP Potential pool - ${ss(p.seasonLabel)}${p.group?.length ? ' - ' + p.group.join(' + ') : ''}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: 'Potential pool',
-        subtitle: `Scouting ${p.seasonLabel}${p.group ? ` · ${p.group}` : ''}`,
+        subtitle: `Scouting ${p.seasonLabel}${p.group?.length ? ` · ${p.group.join(', ')}` : ''}${p.region?.length ? ` · ${p.region.map(id => ref.regions.find(r => r.id === id)?.name).join(', ')}` : ''}`,
         summary: [['Players', list.length], ['Selected', list.filter(x => x.pool_status === 'selected').length], ['See again', list.filter(x => x.pool_status === 'see_again').length]],
         columns: [
           { key: 'player', label: 'Player', width: 26 }, { key: 'year', label: 'Born', width: 7, align: 'center' }, { key: 'group', label: 'Group', width: 7, align: 'center' },
@@ -228,11 +234,11 @@ export const REPORTS: ReportDef[] = [
       const stats = camps.length ? await must<CampStats[]>(supabase.from('v_camp_stats').select('*').in('camp_id', camps.map(c => c.id))) : []
       const smap = new Map(stats.map(s => [s.camp_id, s]))
       const regionOfCamp = (c: Camp) => c.region_id ?? ref.district(c.district_id)?.region_id ?? null
-      const list = camps.filter(c => !p.region || regionOfCamp(c) === p.region)
+      const list = camps.filter(c => !p.region?.length || p.region.includes(regionOfCamp(c) ?? '') || (c.stage === 'national_final' && !regionOfCamp(c)))
       return {
-        fileName: `TFEP Camps - ${ss(p.seasonLabel)}${p.region ? ' - ' + ref.regions.find(r => r.id === p.region)?.name : ''}`,
+        fileName: `TFEP Camps - ${ss(p.seasonLabel)}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: 'Camps of the season',
-        subtitle: `Scouting ${p.seasonLabel}${p.region ? ` · ${ref.regions.find(r => r.id === p.region)?.name}` : ''}`,
+        subtitle: `Scouting ${p.seasonLabel}${p.region?.length ? ` · ${p.region.map(id => ref.regions.find(r => r.id === id)?.name).join(', ')}` : ''}`,
         summary: [['Camps', list.length], ['Players', list.reduce((s, c) => s + (smap.get(c.id)?.total ?? 0), 0)], ['Selected', list.reduce((s, c) => s + (smap.get(c.id)?.selected ?? 0), 0)]],
         columns: [
           { key: 'date', label: 'Date', width: 16 }, { key: 'camp', label: 'Camp', width: 30 }, { key: 'where', label: 'District / province', width: 18 },

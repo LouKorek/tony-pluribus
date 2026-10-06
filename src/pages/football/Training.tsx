@@ -3,7 +3,7 @@ import { Dumbbell, FileText, Plus } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { TeamBar, useFileLinks, useTeamSeason, useTeams, type TrainingPlan } from '../../lib/teams'
-import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Spinner, Textarea } from '../../components/ui'
+import { Alert, Badge, Button, Card, DeleteButton, Empty, Field, Input, Modal, PageHeader, Spinner, Textarea } from '../../components/ui'
 
 const monthLabel = (m: string) => new Date(m + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
@@ -81,7 +81,7 @@ function PlanModal({ teamId, plan, next, onClose, onDone }: { teamId: string; pl
   async function remove() { if (!plan) return; const { error } = await supabase.from('training_sessions').delete().eq('id', plan.id); if (error) setErr(errMsg(error)); else onDone() }
   return (
     <Modal open title={plan ? 'Edit session plan' : 'New session plan'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{plan ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{plan ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
           <Field label="Date"><Input type="date" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} /></Field>

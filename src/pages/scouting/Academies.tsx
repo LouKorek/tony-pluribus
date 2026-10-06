@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { supabase, errMsg, type Academy } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useRefData, fmtDate } from '../../lib/scouting'
-import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx } from '../../components/ui'
+import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, MultiSelect, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx } from '../../components/ui'
 
 interface AcSeason { academy_id: string; season_id: string; visit_date: string | null; scouted: number | null; selected: number | null; obs: string | null; rating: string | null; status: string | null }
 
@@ -14,8 +14,8 @@ export default function AcademiesPage() {
   const [rows, setRows] = useState<AcSeason[] | null>(null)
   const [coaches, setCoaches] = useState<Record<string, number>>({})
   const [q, setQ] = useState('')
-  const [region, setRegion] = useState('')
-  const [district, setDistrict] = useState('')
+  const [region, setRegion] = useState<string[]>([])
+  const [district, setDistrict] = useState<string[]>([])
   const [show, setShow] = useState<'active' | 'visited' | 'not_visited' | 'inactive' | 'all'>('active')
   const [open, setOpen] = useState<Academy | 'new' | null>(null)
   const canEdit = can('academies', 2)
@@ -47,10 +47,10 @@ export default function AcademiesPage() {
   const prevSeasonId = useMemo(() => { const i = ordered.findIndex(s => s.id === seasonId); return ordered[i + 1]?.id }, [ordered, seasonId])
   const prev = useMemo(() => { const m = new Map<string, AcSeason>(); rows?.filter(r => r.season_id === prevSeasonId).forEach(r => m.set(r.academy_id, r)); return m }, [rows, prevSeasonId])
 
-  const districtsInRegion = ref.districts.filter(d => !region || d.region_id === region)
+  const districtsInRegion = ref.districts.filter(d => !region.length || region.includes(d.region_id))
   const list = ref.academies.filter(a => {
-    if (region && ref.regionOf(a.district_id)?.id !== region) return false
-    if (district && a.district_id !== district) return false
+    if (region.length && !region.includes(ref.regionOf(a.district_id)?.id ?? '')) return false
+    if (district.length && !district.includes(a.district_id ?? '')) return false
     const s = bySeason.get(a.id)
     if (show === 'active' && !a.is_active) return false
     if (show === 'inactive' && a.is_active) return false
@@ -80,12 +80,8 @@ export default function AcademiesPage() {
 
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center" data-tour="filters">
         <SearchInput className="lg:w-72" value={q} onChange={setQ} placeholder="Search academy, contact, district" />
-        <Select className="lg:w-48" value={region} onChange={e => { setRegion(e.target.value); setDistrict('') }}>
-          <option value="">All provinces</option>{ref.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-        </Select>
-        <Select className="lg:w-44" value={district} onChange={e => setDistrict(e.target.value)}>
-          <option value="">All districts</option>{districtsInRegion.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </Select>
+        <MultiSelect className="lg:w-48" placeholder="All provinces" value={region} onChange={v => { setRegion(v); setDistrict(district.filter(id => !v.length || v.includes(ref.district(id)?.region_id ?? ''))) }} options={ref.regions.map(r => ({ value: r.id, label: r.name }))} />
+        <MultiSelect className="lg:w-48" placeholder="All districts" value={district} onChange={setDistrict} searchable options={districtsInRegion.map(d => ({ value: d.id, label: d.name, group: ref.regions.find(r => r.id === d.region_id)?.name }))} />
         <Select className="lg:w-56" value={show} onChange={e => setShow(e.target.value as typeof show)}>
           <option value="active">Active</option><option value="visited">Visited this season</option><option value="not_visited">Not visited this season</option><option value="inactive">Inactive</option><option value="all">All</option>
         </Select>

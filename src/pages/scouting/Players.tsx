@@ -8,7 +8,7 @@ import {
   useRefData, POOL_LABEL, POOL_ORDER, STAGE_SHORT, DECISION_LABEL, PSTATUS_LABEL, fmtDate, fullName, ageGroupFor,
   type Camp, type Participant, type Player, type PoolStatus,
 } from '../../lib/scouting'
-import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx, useDebounced } from '../../components/ui'
+import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx, useDebounced } from '../../components/ui'
 
 export const poolTone = (s: PoolStatus) => ({
   academy_squad: 'neutral', submitted: 'info', observed: 'neutral', province_final: 'lime', national_final: 'dark',
@@ -24,10 +24,10 @@ export default function PlayersPage() {
   const [total, setTotal] = useState(0)
   const [q, setQ] = useState('')
   const dq = useDebounced(q)
-  const [pool, setPool] = useState('')
-  const [group, setGroup] = useState('')
-  const [region, setRegion] = useState('')
-  const [age, setAge] = useState('')
+  const [pool, setPool] = useState<string[]>([])
+  const [group, setGroup] = useState<string[]>([])
+  const [region, setRegion] = useState<string[]>([])
+  const [age, setAge] = useState<string[]>([])
   const [limit, setLimit] = useState(PAGE)
   const [open, setOpen] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -36,10 +36,10 @@ export default function PlayersPage() {
   const load = useCallback(async () => {
     let qy = supabase.from('players').select('*', { count: 'exact' }).is('merged_into', null).order('last_name').order('first_name').range(0, limit - 1)
     if (dq.trim()) for (const p of dq.trim().replace(/[%,()]/g, ' ').split(/\s+/)) qy = qy.or(`first_name.ilike.%${p}%,last_name.ilike.%${p}%`)
-    if (pool) qy = qy.eq('pool_status', pool)
-    if (age) qy = qy.eq('age_status', age)
-    if (group) { const g = ref.groups.find(x => x.code === group); if (g) qy = qy.gte('birth_year', g.birth_year_from).lte('birth_year', g.birth_year_to) }
-    if (region) qy = qy.in('district_id', ref.districts.filter(d => d.region_id === region).map(d => d.id))
+    if (pool.length) qy = qy.in('pool_status', pool)
+    if (age.length) qy = qy.in('age_status', age)
+    if (group.length) { const years = ref.groups.filter(x => group.includes(x.code)).flatMap(g => Array.from({ length: g.birth_year_to - g.birth_year_from + 1 }, (_, i) => g.birth_year_from + i)); qy = qy.in('birth_year', years) }
+    if (region.length) qy = qy.in('district_id', ref.districts.filter(d => region.includes(d.region_id)).map(d => d.id))
     const { data, count } = await qy
     setRows((data as Player[]) ?? []); setTotal(count ?? 0)
   }, [dq, pool, group, region, age, limit, ref.groups, ref.districts])
@@ -53,18 +53,10 @@ export default function PlayersPage() {
 
       <div className="mb-4 flex flex-col gap-2 lg:flex-row" data-tour="filters">
         <SearchInput className="lg:w-72" value={q} onChange={v => { setQ(v); setLimit(PAGE) }} placeholder="Search by name" />
-        <Select className="lg:w-52" value={pool} onChange={e => setPool(e.target.value)}>
-          <option value="">Any status</option>{POOL_ORDER.map(s => <option key={s} value={s}>{POOL_LABEL[s]}</option>)}
-        </Select>
-        <Select className="lg:w-40" value={group} onChange={e => setGroup(e.target.value)}>
-          <option value="">Any age</option>{ref.groups.map(g => <option key={g.code} value={g.code}>{g.code} · {g.birth_year_from}–{g.birth_year_to}</option>)}
-        </Select>
-        <Select className="lg:w-48" value={region} onChange={e => setRegion(e.target.value)}>
-          <option value="">All provinces</option>{ref.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-        </Select>
-        <Select className="lg:w-44" value={age} onChange={e => setAge(e.target.value)}>
-          <option value="">Any age check</option><option value="declared">Age declared</option><option value="doubtful">Age doubtful</option><option value="verified">Age verified</option>
-        </Select>
+        <MultiSelect className="lg:w-52" placeholder="Any status" value={pool} onChange={v => { setPool(v); setLimit(PAGE) }} options={POOL_ORDER.map(s => ({ value: s, label: POOL_LABEL[s] }))} />
+        <MultiSelect className="lg:w-40" placeholder="Any age" value={group} onChange={v => { setGroup(v); setLimit(PAGE) }} options={ref.groups.map(g => ({ value: g.code, label: `${g.code} · ${g.birth_year_from}–${g.birth_year_to}` }))} />
+        <MultiSelect className="lg:w-48" placeholder="All provinces" value={region} onChange={v => { setRegion(v); setLimit(PAGE) }} options={ref.regions.map(r => ({ value: r.id, label: r.name }))} />
+        <MultiSelect className="lg:w-44" placeholder="Any age check" value={age} onChange={v => { setAge(v); setLimit(PAGE) }} options={[{ value: 'declared', label: 'Age declared' }, { value: 'doubtful', label: 'Age doubtful' }, { value: 'verified', label: 'Age verified' }]} />
       </div>
 
       <Card className="overflow-hidden">

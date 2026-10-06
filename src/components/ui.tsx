@@ -269,3 +269,13 @@ export function MultiSelect({ options, value, onChange, placeholder = 'All', cla
     </div>
   )
 }
+
+/** A delete button that asks once more before it acts: the first click arms it, the second deletes. */
+export function DeleteButton({ onConfirm, label = 'Delete' }: { onConfirm: () => void | Promise<void>; label?: string }) {
+  const [armed, setArmed] = useState(false)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 4000); return () => clearTimeout(t) }, [armed])
+  return armed
+    ? <Button variant="danger" size="sm" loading={busy} onClick={async () => { setBusy(true); try { await onConfirm() } finally { setBusy(false); setArmed(false) } }}>Click again to delete</Button>
+    : <Button variant="ghost" size="sm" onClick={() => setArmed(true)}>{label}</Button>
+}

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Globe, Handshake, Mail, Phone, Plus, Trash2, UserRound } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
-import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Textarea, cx } from '../../components/ui'
+import { Alert, Badge, Button, Card, DeleteButton, Drawer, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Textarea, cx } from '../../components/ui'
 
 export interface Partner { id: string; name: string; kind: string; country: string | null; city: string | null; website: string | null; status: string; folder: string | null; notes: string | null }
 interface Contact { id: string; partner_id: string; name: string; role: string | null; phone: string | null; email: string | null; notes: string | null }
@@ -193,7 +193,7 @@ function PartnerModal({ partner, onClose, onDone }: { partner: Partner | null; o
   }
   return (
     <Modal open title={partner ? 'Edit partner' : 'New partner'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{partner ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{partner ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <Field label="Name" required><Input value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></Field>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -223,7 +223,7 @@ function ContactModal({ partnerId, contact, onClose, onDone }: { partnerId: stri
   async function remove() { if (!contact) return; const { error } = await supabase.from('partner_contacts').delete().eq('id', contact.id); if (error) setErr(errMsg(error)); else onDone() }
   return (
     <Modal open title={contact ? 'Edit contact' : 'Add contact'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{contact ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{contact ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Name" required><Input value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></Field>

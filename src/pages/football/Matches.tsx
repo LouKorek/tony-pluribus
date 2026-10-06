@@ -3,7 +3,7 @@ import { FileText, Plus, Swords } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { TeamBar, pname, useFileLinks, useRoster, useTeamSeason, useTeams, type Match, type MatchPlayer, type TeamPlayer } from '../../lib/teams'
-import { Alert, Button, Card, Empty, Field, Input, Modal, MultiSelect, PageHeader, Select, Spinner, Stat, Textarea, cx } from '../../components/ui'
+import { Alert, Button, Card, DeleteButton, Empty, Field, Input, Modal, MultiSelect, PageHeader, Select, Spinner, Stat, Textarea, cx } from '../../components/ui'
 
 const result = (m: Match) => m.goals_for == null || m.goals_against == null ? null : m.goals_for > m.goals_against ? 'W' : m.goals_for < m.goals_against ? 'L' : 'D'
 const COMPETITIONS = ['Friendly', 'League', 'TDS', '2nd Division', '3rd Division', 'U17 League', 'U20 League', 'Tournament', 'Cup']
@@ -120,7 +120,7 @@ function MatchModal({ teamId, match, roster, canEdit, onClose, onDone }: { teamI
 
   return (
     <Modal open wide title={match ? `${match.opponent}` : 'New match'} onClose={onClose}
-      footer={canEdit ? <div className="flex w-full justify-between">{match ? <Button variant="ghost" size="sm" onClick={remove}>Delete match</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div> : undefined}>
+      footer={canEdit ? <div className="flex w-full justify-between">{match ? <DeleteButton onConfirm={remove} label="Delete match" /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div> : undefined}>
       <fieldset disabled={!canEdit} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-4">
           <Field label="Date"><Input type="date" value={f.played_on} onChange={e => setF({ ...f, played_on: e.target.value })} /></Field>

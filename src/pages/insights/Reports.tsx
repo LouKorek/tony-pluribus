@@ -3,7 +3,7 @@ import { FileSpreadsheet, FileText, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { STAGE_LABEL, fmtDate, useRefData, type Camp, type Stage } from '../../lib/scouting'
-import { Alert, Button, Card, Empty, Field, PageHeader, Select, cx } from '../../components/ui'
+import { Alert, Button, Card, Empty, Field, MultiSelect, PageHeader, Select, cx } from '../../components/ui'
 import { REPORTS, type Params, type ReportData } from './reports'
 import { downloadExcel, openPrint } from './export'
 
@@ -25,7 +25,7 @@ export default function ReportsPage() {
     supabase.from('camps').select('*').eq('season_id', p.season).order('starts_on', { nullsFirst: false }).then(({ data }) => setCamps((data as Camp[]) ?? []))
   }, [p.season])
 
-  const missing = (def.required ?? []).filter(k => !p[k])
+  const missing = (def.required ?? []).filter(k => { const v = p[k]; return Array.isArray(v) ? !v.length : !v })
   const key = JSON.stringify([id, p, ref.ready])
   useEffect(() => {
     setData(null); setErr(null)
@@ -37,8 +37,8 @@ export default function ReportsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
-  const set = (k: keyof Params, v: string) => setP(s => ({ ...s, [k]: v || undefined }))
-  const academies = useMemo(() => ref.academies.filter(a => a.is_active && (!p.region || ref.regionOf(a.district_id)?.id === p.region)), [ref, p.region])
+  const set = (k: keyof Params, v: string | string[]) => setP(s => ({ ...s, [k]: (Array.isArray(v) ? v.length : v) ? v : undefined }))
+  const academies = useMemo(() => ref.academies.filter(a => a.is_active && (!p.region?.length || p.region.includes(ref.regionOf(a.district_id)?.id ?? ''))), [ref, p.region])
   const rowCount = data?.sections.reduce((s, x) => s + x.rows.length, 0) ?? 0
 
   return (
@@ -85,27 +85,20 @@ export default function ReportsPage() {
                 </Field>
               )}
               {(def.params.includes('region') || def.params.includes('academy')) && (!def.params.includes('stage') || p.stage === 'province_final') && (
-                <Field label="Province">
-                  <Select value={p.region ?? ''} onChange={e => setP(s => ({ ...s, region: e.target.value || undefined, academy: undefined }))}>
-                    <option value="">All provinces</option>
-                    {ref.regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                  </Select>
+                <Field label="Provinces">
+                  <MultiSelect placeholder="All provinces" value={p.region ?? []} options={ref.regions.map(r => ({ value: r.id, label: r.name }))}
+                    onChange={v => setP(s => ({ ...s, region: v.length ? v : undefined, academy: s.academy?.filter(id => !v.length || v.includes(ref.regionOf(ref.academy(id)?.district_id)?.id ?? '')) }))} />
                 </Field>
               )}
               {def.params.includes('academy') && (
-                <Field label="Academy" required>
-                  <Select value={p.academy ?? ''} onChange={e => set('academy', e.target.value)}>
-                    <option value="">Choose an academy</option>
-                    {academies.map(a => <option key={a.id} value={a.id}>{a.name} · {ref.district(a.district_id)?.name ?? ''}</option>)}
-                  </Select>
+                <Field label="Academies" required>
+                  <MultiSelect placeholder="Choose academies" allLabel="Clear" searchable value={p.academy ?? []} onChange={v => set('academy', v)}
+                    options={academies.map(a => ({ value: a.id, label: a.name, group: ref.district(a.district_id)?.name ?? '' })).sort((x, y) => x.group.localeCompare(y.group) || x.label.localeCompare(y.label))} />
                 </Field>
               )}
               {def.params.includes('group') && (
-                <Field label="Age group">
-                  <Select value={p.group ?? ''} onChange={e => set('group', e.target.value)}>
-                    <option value="">All ages</option>
-                    {ref.groups.map(g => <option key={g.code} value={g.code}>{g.code} · {g.birth_year_from}–{g.birth_year_to}</option>)}
-                  </Select>
+                <Field label="Age groups">
+                  <MultiSelect placeholder="All ages" value={p.group ?? []} onChange={v => set('group', v)} options={ref.groups.map(g => ({ value: g.code, label: `${g.code} · ${g.birth_year_from}–${g.birth_year_to}` }))} />
                 </Field>
               )}
             </div>

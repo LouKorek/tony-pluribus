@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, FileText, Plus, FileStack } from 'lucide-rea
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useFileLinks } from '../../lib/teams'
-import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Spinner, Textarea, cx, useDebounced } from '../../components/ui'
+import { Alert, Badge, Button, Card, DeleteButton, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Spinner, Textarea, cx, useDebounced } from '../../components/ui'
 
 interface Act { id: string; day: string; time_text: string | null; location: string | null; contact: string | null; activity: string; status: string | null; feedback: string | null; staff: string | null; file_id: string | null }
 const monday = (d: Date) => { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const w = (x.getUTCDay() + 6) % 7; x.setUTCDate(x.getUTCDate() - w); return x.toISOString().slice(0, 10) }
@@ -101,7 +101,7 @@ function ActModal({ act, day, onClose, onDone }: { act: Act | null; day: string;
   async function remove() { if (!act) return; const { error } = await supabase.from('staff_activities').delete().eq('id', act.id); if (error) setErr(errMsg(error)); else onDone() }
   return (
     <Modal open wide title={act ? 'Edit activity' : 'Add activity'} onClose={onClose}
-      footer={<div className="flex w-full justify-between">{act ? <Button variant="ghost" size="sm" onClick={remove}>Delete</Button> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
+      footer={<div className="flex w-full justify-between">{act ? <DeleteButton onConfirm={remove} /> : <span />}<div className="flex gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></div></div>}>
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Date"><Input type="date" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} /></Field>
