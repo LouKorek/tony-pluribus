@@ -1,0 +1,140 @@
+import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { X, Loader2 } from 'lucide-react'
+
+const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ')
+export { cx }
+
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dark'
+export function Button({ variant = 'secondary', size = 'md', loading, className, children, ...rest }:
+  ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'sm' | 'md'; loading?: boolean }) {
+  const v: Record<Variant, string> = {
+    primary: 'bg-red text-white hover:bg-red-dark border-red',
+    secondary: 'bg-card text-text border-line-2 hover:border-text/40',
+    ghost: 'bg-transparent text-muted border-transparent hover:bg-black/5 hover:text-text',
+    danger: 'bg-card text-red border-red/30 hover:bg-red-soft',
+    dark: 'bg-ink text-white border-ink hover:bg-ink-3',
+  }
+  return (
+    <button
+      {...rest}
+      disabled={rest.disabled || loading}
+      className={cx(
+        'inline-flex items-center justify-center gap-2 rounded-lg border font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap',
+        size === 'sm' ? 'h-8 px-3 text-[13px]' : 'h-10 px-4 text-sm',
+        v[variant], className)}
+    >
+      {loading && <Loader2 size={15} className="animate-spin" />}
+      {children}
+    </button>
+  )
+}
+
+export function Field({ label, hint, error, children, required }: { label: string; hint?: ReactNode; error?: string | null; children: ReactNode; required?: boolean }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[13px] font-semibold text-text">{label}{required && <span className="text-red"> *</span>}</span>
+      {children}
+      {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+      {error && <span className="mt-1 block text-xs font-medium text-red">{error}</span>}
+    </label>
+  )
+}
+
+const inputCls = 'focus-visible:outline-none w-full rounded-lg border border-line-2 bg-card px-3 text-[15px] text-text placeholder:text-faint focus:border-ink focus:outline-none focus:ring-2 focus:ring-lime/70'
+export function Input(p: InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...p} className={cx(inputCls, 'h-10', p.className)} />
+}
+export function Select({ children, ...p }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select {...p} className={cx(inputCls, 'h-10 pr-8', p.className)}>{children}</select>
+}
+export function Textarea(p: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea {...p} className={cx(inputCls, 'py-2', p.className)} />
+}
+
+export function Card({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cx('rounded-xl border border-line bg-card', className)}>{children}</div>
+}
+
+type Tone = 'neutral' | 'good' | 'warn' | 'bad' | 'info' | 'lime' | 'dark'
+export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) {
+  const t: Record<Tone, string> = {
+    neutral: 'bg-black/5 text-muted',
+    good: 'bg-good-soft text-good',
+    warn: 'bg-warn-soft text-warn',
+    bad: 'bg-red-soft text-red',
+    info: 'bg-info-soft text-info',
+    lime: 'bg-lime text-ink',
+    dark: 'bg-ink text-white',
+  }
+  return <span className={cx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap', t[tone])}>{children}</span>
+}
+
+export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: string; title: string; description?: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        {eyebrow && <div className="label-caps mb-1 text-red">{eyebrow}</div>}
+        <h1 className="font-display text-3xl font-bold uppercase leading-none tracking-tight text-text sm:text-[34px]">{title}</h1>
+        {description && <p className="mt-2 max-w-2xl text-[15px] text-muted">{description}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+    </div>
+  )
+}
+
+export function Modal({ open, onClose, title, children, footer, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
+  useEffect(() => {
+    if (!open) return
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [open, onClose])
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className={cx('flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-card shadow-2xl sm:rounded-2xl', wide ? 'sm:max-w-2xl' : 'sm:max-w-lg')} role="dialog" aria-modal="true" aria-label={title}>
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <h2 className="font-display text-xl font-bold uppercase tracking-tight">{title}</h2>
+          <button onClick={onClose} className="rounded-md p-1 text-muted hover:bg-black/5 hover:text-text" aria-label="Close"><X size={18} /></button>
+        </div>
+        <div className="scroll-thin flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        {footer && <div className="flex justify-end gap-2 border-t border-line bg-paper/60 px-5 py-3">{footer}</div>}
+      </div>
+    </div>
+  )
+}
+
+export function Empty({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center px-6 py-14 text-center">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-paper text-muted">{icon}</div>
+      <div className="font-semibold">{title}</div>
+      {children && <div className="mt-1 max-w-sm text-sm text-muted">{children}</div>}
+    </div>
+  )
+}
+
+export function Alert({ tone = 'bad', children }: { tone?: 'bad' | 'good' | 'info' | 'warn'; children: ReactNode }) {
+  const t = { bad: 'border-red/25 bg-red-soft text-red', good: 'border-good/25 bg-good-soft text-good', info: 'border-info/25 bg-info-soft text-info', warn: 'border-warn/25 bg-warn-soft text-warn' }
+  return <div className={cx('rounded-lg border px-3 py-2 text-sm font-medium', t[tone])}>{children}</div>
+}
+
+export function Spinner() {
+  return <div className="flex h-full min-h-[40vh] items-center justify-center text-muted"><Loader2 className="animate-spin" /></div>
+}
+
+export function Stat({ label, value, sub, accent }: { label: string; value: ReactNode; sub?: ReactNode; accent?: boolean }) {
+  return (
+    <Card className={cx('p-4', accent && 'border-ink bg-ink text-white')}>
+      <div className={cx('label-caps', accent ? 'text-lime' : 'text-muted')}>{label}</div>
+      <div className="mt-1 font-display text-4xl font-bold leading-none">{value}</div>
+      {sub && <div className={cx('mt-1.5 text-xs', accent ? 'text-white/60' : 'text-muted')}>{sub}</div>}
+    </Card>
+  )
+}
+
+export function generatePassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  const a = new Uint32Array(10); crypto.getRandomValues(a)
+  return Array.from(a, n => chars[n % chars.length]).join('')
+}

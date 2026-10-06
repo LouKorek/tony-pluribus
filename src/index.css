@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+
+  --color-ink: #0e1311;
+  --color-ink-2: #171d1a;
+  --color-ink-3: #232a26;
+  --color-paper: #f5f4ef;
+  --color-card: #ffffff;
+  --color-line: #e4e1d8;
+  --color-line-2: #d3cfc3;
+  --color-text: #151917;
+  --color-muted: #646a66;
+  --color-faint: #959a95;
+
+  --color-lime: #e0fd02;
+  --color-lime-soft: #f6ffc7;
+  --color-red: #d7262e;
+  --color-red-dark: #b01c23;
+  --color-red-soft: #fdecec;
+
+  --color-good: #157a4a;
+  --color-good-soft: #e3f4ea;
+  --color-warn: #a76a00;
+  --color-warn-soft: #fdf3dc;
+  --color-info: #1f5fa8;
+  --color-info-soft: #e6effa;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-paper);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1;
+}
+
+.label-caps {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+::selection { background: var(--color-lime); color: var(--color-ink); }
+
+:focus-visible { outline: 2px solid var(--color-red); outline-offset: 2px; }
+
+.scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: rgba(127,127,127,.35); border-radius: 3px; }
