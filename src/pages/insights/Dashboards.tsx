@@ -38,7 +38,7 @@ export default function DashboardsPage() {
       <PageHeader eyebrow="Insights" title="Scouting dashboard"
         description="The season in numbers, from the academy visits to the national final. Earlier seasons come from the Talent folder history."
         actions={<>
-          <Select data-tour="season" className="w-44" value={seasonId} onChange={e => setSeasonId(e.target.value)} aria-label="Season">
+          <Select data-tour="season" className="w-56" value={seasonId} onChange={e => setSeasonId(e.target.value)} aria-label="Season">
             {seasons.map(s => <option key={s.id} value={s.id}>Scouting {s.label}</option>)}
           </Select>
           <Button data-tour="print" className="no-print" onClick={() => window.print()}><Printer size={15} /> Print</Button>

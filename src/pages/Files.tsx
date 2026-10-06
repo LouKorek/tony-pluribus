@@ -56,7 +56,7 @@ export default function FilesPage() {
   return (
     <div>
       <PageHeader eyebrow="System" title="Files"
-        description={<>The shared <b>Talent</b> folder that SL Benfica and TFEP work in. Open any file in SharePoint from here. Until the live sync (stage 6) this is a snapshot{stats?.indexed_at ? `, taken ${fmtWhen(stats.indexed_at)}` : ''}.</>}
+        description={<>The shared <b>Talent</b> folder that SL Benfica and TFEP work in. Open any file in SharePoint from here. Kept in sync with SharePoint every 15 minutes{stats?.indexed_at ? `, last read ${fmtWhen(stats.indexed_at)}` : ''}.</>}
         actions={root ? <a href={encodeURI(path ? `${root}/${path}` : root)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line-2 bg-card px-4 text-sm font-semibold hover:border-text/40"><ExternalLink size={15} /> Open in SharePoint</a> : undefined} />
 
       {stats && (
