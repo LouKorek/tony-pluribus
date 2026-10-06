@@ -3,7 +3,7 @@ import { Check, Eye, KeyRound, ShieldCheck, Pencil, Plus, Search, UserPlus, User
 import { supabase, ROLE_LABEL, ROLE_HINT, USERNAME_RE, errMsg, type Academy, type District, type Profile, type Region, type Role, type Status } from '../lib/supabase'
 import { startViewAs } from '../lib/viewAs'
 import { useAuth } from '../lib/auth'
-import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Spinner, cx, generatePassword } from '../components/ui'
+import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, MultiSelect, PageHeader, Select, Spinner, cx, generatePassword } from '../components/ui'
 
 const ROLES: Role[] = ['owner', 'admin', 'staff', 'scout', 'observer', 'coach']
 const statusTone: Record<Status, 'good' | 'warn' | 'bad'> = { active: 'good', pending: 'warn', locked: 'bad' }
@@ -23,6 +23,7 @@ export default function UsersPage() {
   const [academies, setAcademies] = useState<Academy[]>([])
   const [districts, setDistricts] = useState<District[]>([])
   const [regions, setRegions] = useState<Region[]>([])
+  const [teams, setTeams] = useState<ScopeTeam[]>([])
   const [tab, setTab] = useState<'pending' | 'active' | 'locked' | 'all'>('all')
   const [q, setQ] = useState('')
   const [creating, setCreating] = useState(false)
@@ -43,6 +44,7 @@ export default function UsersPage() {
       supabase.from('academies').select('*').order('name'),
       supabase.from('districts').select('*').order('name'),
       supabase.from('regions').select('*').order('sort'),
+      supabase.from('teams').select('id, name, sort, season:seasons(label)').order('sort').then(({ data }) => setTeams(((data as unknown as { id: string; name: string; season: { label: string } }[]) ?? []).map(t => ({ id: t.id, name: t.name, season: t.season.label })).sort((a, b) => b.season.localeCompare(a.season)))),
     ])
     setUsers((u.data as Profile[]) ?? [])
     setAcademies((a.data as Academy[]) ?? [])
@@ -110,7 +112,7 @@ export default function UsersPage() {
                 {shown.map(u => {
                   const scope = u.role === 'coach'
                     ? (u.academy_id ? acName[u.academy_id] : u.requested_academy ? <span className="text-warn">Asked for: {u.requested_academy}</span> : <span className="text-faint">No academy</span>)
-                    : u.role === 'scout' ? (u.region_id ? rgName[u.region_id] : 'All regions')
+                    : ['scout', 'staff', 'observer'].includes(u.role) ? [(u.region_ids?.length ? u.region_ids.map(r => rgName[r]).join(', ') : u.role === 'scout' ? 'All provinces' : ''), (u.team_ids?.length ? `${u.team_ids.length} team${u.team_ids.length > 1 ? 's' : ''}` : '')].filter(Boolean).join(' · ') || 'Everything'
                     : u.role === 'owner' ? 'All projects' : 'Whole project'
                   return (
                     <tr key={u.id} className="border-b border-line last:border-0 hover:bg-paper/50">
@@ -145,8 +147,8 @@ export default function UsersPage() {
         )}
       </Card>
 
-      {creating && <CreateUserModal academies={academies} districts={districts} regions={regions} myRole={me?.role} onClose={() => setCreating(false)} onDone={() => { setCreating(false); load() }} onAcademyAdded={load} />}
-      {editing && <EditUserModal user={editing} me={me} academies={academies} districts={districts} regions={regions} onClose={() => setEditing(null)} onDone={() => { setEditing(null); load() }} onAcademyAdded={load} />}
+      {creating && <CreateUserModal teams={teams} academies={academies} districts={districts} regions={regions} myRole={me?.role} onClose={() => setCreating(false)} onDone={() => { setCreating(false); load() }} onAcademyAdded={load} />}
+      {editing && <EditUserModal teams={teams} user={editing} me={me} academies={academies} districts={districts} regions={regions} onClose={() => setEditing(null)} onDone={() => { setEditing(null); load() }} onAcademyAdded={load} />}
       {resetting && <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} />}
       {accessFor && <AccessModal user={accessFor} onClose={() => setAccessFor(null)} />}
     </div>
@@ -216,10 +218,10 @@ function AcademyPicker({ value, onChange, academies, districts, onAdded, suggest
   )
 }
 
-export function CreateUserModal({ academies, districts, regions, myRole, onClose, onDone, onAcademyAdded }: {
-  academies: Academy[]; districts: District[]; regions: Region[]; myRole?: Role; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
+export function CreateUserModal({ teams, academies, districts, regions, myRole, onClose, onDone, onAcademyAdded }: {
+  teams: ScopeTeam[]; academies: Academy[]; districts: District[]; regions: Region[]; myRole?: Role; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
 }) {
-  const [f, setF] = useState({ username: '', full_name: '', phone: '', role: 'staff' as Role, academy_id: '', region_id: '', password: generatePassword() })
+  const [f, setF] = useState({ username: '', full_name: '', phone: '', role: 'staff' as Role, academy_id: '', region_ids: [] as string[], team_ids: [] as string[], password: generatePassword() })
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState<{ username: string; password: string } | null>(null)
@@ -231,10 +233,11 @@ export function CreateUserModal({ academies, districts, regions, myRole, onClose
     if (f.password.length < 8) return setErr('Password: at least 8 characters.')
     if (f.role === 'coach' && !f.academy_id) return setErr('Choose the academy this coach belongs to.')
     setBusy(true)
-    const { error } = await supabase.rpc('admin_create_user', {
+    const { data: newId, error } = await supabase.rpc('admin_create_user', {
       p_username: u, p_password: f.password, p_full_name: f.full_name.trim() || null, p_role: f.role,
-      p_phone: f.phone.trim() || null, p_academy_id: f.academy_id || null, p_region_id: f.region_id || null,
+      p_phone: f.phone.trim() || null, p_academy_id: f.academy_id || null, p_region_id: f.region_ids.length === 1 ? f.region_ids[0] : null,
     })
+    if (!error && (f.region_ids.length || f.team_ids.length)) await supabase.rpc('admin_set_scope', { p_user: newId, p_region_ids: f.region_ids, p_team_ids: f.team_ids })
     setBusy(false)
     if (error) return setErr(errMsg(error))
     setCreated({ username: u, password: f.password })
@@ -263,14 +266,7 @@ export function CreateUserModal({ academies, districts, regions, myRole, onClose
         </div>
         <Field label="Role" required><RolePicker value={f.role} myRole={myRole} onChange={role => setF({ ...f, role })} /></Field>
         {f.role === 'coach' && <Field label="Academy" required><AcademyPicker value={f.academy_id} onChange={academy_id => setF({ ...f, academy_id })} academies={academies} districts={districts} onAdded={onAcademyAdded} /></Field>}
-        {f.role === 'scout' && (
-          <Field label="Region" hint="Leave empty for a scout who works in every region.">
-            <Select value={f.region_id} onChange={e => setF({ ...f, region_id: e.target.value })}>
-              <option value="">All regions</option>
-              {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </Select>
-          </Field>
-        )}
+        <ScopeFields role={f.role} regions={regions} teams={teams} regionIds={f.region_ids} teamIds={f.team_ids} onRegions={v => setF({ ...f, region_ids: v })} onTeams={v => setF({ ...f, team_ids: v })} />
         <Field label="Password" required hint="Generated for you. You can type your own instead.">
           <div className="flex gap-2">
             <Input value={f.password} onChange={e => setF({ ...f, password: e.target.value })} className="font-mono" />
@@ -283,10 +279,10 @@ export function CreateUserModal({ academies, districts, regions, myRole, onClose
   )
 }
 
-export function EditUserModal({ user, me, academies, districts, regions, onClose, onDone, onAcademyAdded }: {
-  user: Profile; me: Profile | null; academies: Academy[]; districts: District[]; regions: Region[]; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
+export function EditUserModal({ teams, user, me, academies, districts, regions, onClose, onDone, onAcademyAdded }: {
+  teams: ScopeTeam[]; user: Profile; me: Profile | null; academies: Academy[]; districts: District[]; regions: Region[]; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
 }) {
-  const [f, setF] = useState({ full_name: user.full_name ?? '', phone: user.phone ?? '', role: user.role, status: user.status, academy_id: user.academy_id ?? '', region_id: user.region_id ?? '' })
+  const [f, setF] = useState({ full_name: user.full_name ?? '', phone: user.phone ?? '', role: user.role, status: user.status, academy_id: user.academy_id ?? '', region_ids: user.region_ids ?? (user.region_id ? [user.region_id] : []), team_ids: user.team_ids ?? [] })
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const self = user.id === me?.id
@@ -297,8 +293,12 @@ export function EditUserModal({ user, me, academies, districts, regions, onClose
     setBusy(status)
     const { error } = await supabase.rpc('admin_update_user', {
       p_user_id: user.id, p_role: f.role, p_status: status, p_full_name: f.full_name.trim() || null,
-      p_phone: f.phone.trim() || null, p_academy_id: f.academy_id || null, p_region_id: f.region_id || null,
+      p_phone: f.phone.trim() || null, p_academy_id: f.academy_id || null, p_region_id: f.region_ids.length === 1 ? f.region_ids[0] : null,
     })
+    if (!error) {
+      const { error: e2 } = await supabase.rpc('admin_set_scope', { p_user: user.id, p_region_ids: ['staff', 'scout', 'observer'].includes(f.role) ? f.region_ids : [], p_team_ids: ['staff', 'scout', 'observer'].includes(f.role) ? f.team_ids : [] })
+      if (e2) { setBusy(null); return setErr(errMsg(e2)) }
+    }
     setBusy(null)
     if (error) return setErr(errMsg(error))
     onDone()
@@ -332,14 +332,7 @@ export function EditUserModal({ user, me, academies, districts, regions, onClose
         </div>
         {!self && <Field label="Role"><RolePicker value={f.role} myRole={me?.role} onChange={role => setF({ ...f, role })} /></Field>}
         {f.role === 'coach' && <Field label="Academy" required><AcademyPicker value={f.academy_id} onChange={academy_id => setF({ ...f, academy_id })} academies={academies} districts={districts} onAdded={onAcademyAdded} suggestion={user.requested_academy} /></Field>}
-        {f.role === 'scout' && (
-          <Field label="Region">
-            <Select value={f.region_id} onChange={e => setF({ ...f, region_id: e.target.value })}>
-              <option value="">All regions</option>
-              {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </Select>
-          </Field>
-        )}
+        {!self && <ScopeFields role={f.role} regions={regions} teams={teams} regionIds={f.region_ids} teamIds={f.team_ids} onRegions={v => setF({ ...f, region_ids: v })} onTeams={v => setF({ ...f, team_ids: v })} />}
         {err && <Alert>{err}</Alert>}
       </div>
     </Modal>
@@ -474,5 +467,23 @@ export function AccessModal({ user, onClose }: { user: Profile; onClose: () => v
         </div>
       )}
     </Modal>
+  )
+}
+
+/* ─────────── Provinces and teams a user works in ─────────── */
+export interface ScopeTeam { id: string; name: string; season: string }
+export function ScopeFields({ role, regions, teams, regionIds, teamIds, onRegions, onTeams }: {
+  role: Role; regions: Region[]; teams: ScopeTeam[]; regionIds: string[]; teamIds: string[]; onRegions: (v: string[]) => void; onTeams: (v: string[]) => void
+}) {
+  if (!['staff', 'scout', 'observer'].includes(role)) return null
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Provinces" hint="Empty = all provinces. Camps and academies outside them are read-only for this user.">
+        <MultiSelect placeholder="All provinces" value={regionIds} onChange={onRegions} options={regions.map(r => ({ value: r.id, label: r.name }))} />
+      </Field>
+      <Field label="Tony teams" hint="Empty = all teams. Squad, attendance, tests, training and matches of other teams are read-only.">
+        <MultiSelect placeholder="All teams" value={teamIds} onChange={onTeams} options={teams.map(t => ({ value: t.id, label: t.name, group: `Season ${t.season}` }))} />
+      </Field>
+    </div>
   )
 }

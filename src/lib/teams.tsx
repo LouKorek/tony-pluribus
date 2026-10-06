@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { supabase, type Season } from './supabase'
 import { useAuth } from './auth'
 import { Select, cx } from '../components/ui'
@@ -67,7 +67,7 @@ export function useRoster(teamId: string | undefined) {
 
 /** Season select + team tabs, shared by all team screens. */
 export function TeamBar({ seasonId, onSeason, seasons, teams, teamId, onTeam, extra }: {
-  seasonId: string | undefined; onSeason: (id: string) => void; seasons: Season[]; teams: Team[] | null; teamId: string | undefined; onTeam: (id: string) => void; extra?: React.ReactNode
+  seasonId: string | undefined; onSeason: (id: string) => void; seasons: Season[]; teams: Team[] | null; teamId: string | undefined; onTeam: (id: string) => void; extra?: ReactNode
 }) {
   return (
     <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-center">

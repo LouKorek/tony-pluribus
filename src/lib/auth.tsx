@@ -16,6 +16,9 @@ interface AuthState {
   /** My level per content area: 0 none, 1 view, 2 edit */
   access: Record<string, number>
   can: (area: string, level?: 1 | 2) => boolean
+  /** within the provinces / teams this user may change (empty list = all) */
+  inRegion: (regionId: string | null | undefined) => boolean
+  inTeam: (teamId: string | null | undefined) => boolean
   refresh: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -67,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthState = {
     loading, session, profile, project, seasons, access,
     can: (area, level = 1) => profile?.role === 'owner' || (access[area] ?? 0) >= level,
+    inRegion: id => !profile || ['owner', 'admin'].includes(profile.role) || !profile.region_ids?.length || (!!id && profile.region_ids.includes(id)),
+    inTeam: id => !profile || ['owner', 'admin'].includes(profile.role) || !profile.team_ids?.length || !id || profile.team_ids.includes(id),
     scoutingSeason: seasons.find(s => s.is_current_scouting) ?? null,
     viewSeason: seasons.find(s => s.id === viewId) ?? seasons.find(s => s.is_current_scouting) ?? null,
     setViewSeason: id => { setViewId(id); try { sessionStorage.setItem('pluribus.viewSeason', id) } catch { /* storage blocked */ } },

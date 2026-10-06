@@ -32,6 +32,12 @@ const PoolPage = page(() => import('./pages/scouting/Pool'))
 const DashboardsPage = page(() => import('./pages/insights/Dashboards'))
 const ReportsPage = page(() => import('./pages/insights/Reports'))
 const FilesPage = page(() => import('./pages/Files'))
+const SquadsPage = page(() => import('./pages/football/Squads'))
+const AttendancePage = page(() => import('./pages/football/Attendance'))
+const PhysicalPage = page(() => import('./pages/football/Physical'))
+const TrainingPage = page(() => import('./pages/football/Training'))
+const MatchesPage = page(() => import('./pages/football/Matches'))
+const EvaluationsPage = page(() => import('./pages/football/Evaluations'))
 
 export default function App() {
   const { loading, session, profile } = useAuth()
@@ -76,6 +82,12 @@ export default function App() {
         <Route path="dashboards" element={<Need area="insights"><DashboardsPage /></Need>} />
         <Route path="reports" element={<Need area="insights"><ReportsPage /></Need>} />
         <Route path="files" element={<Need area="files"><FilesPage /></Need>} />
+        <Route path="squads" element={<Need area="squads"><SquadsPage /></Need>} />
+        <Route path="attendance" element={<Need area="attendance"><AttendancePage /></Need>} />
+        <Route path="physical" element={<Need area="physical"><PhysicalPage /></Need>} />
+        <Route path="training" element={<Need area="training"><TrainingPage /></Need>} />
+        <Route path="matches" element={<Need area="matches"><MatchesPage /></Need>} />
+        <Route path="evaluations" element={<Need area="evaluations"><EvaluationsPage /></Need>} />
         <Route path="users" element={admin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="settings" element={admin ? <SettingsPage /> : <Navigate to="/" replace />} />
         <Route path="login" element={<Navigate to="/" replace />} />

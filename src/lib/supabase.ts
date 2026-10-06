@@ -26,6 +26,8 @@ export interface Profile {
   academy_id: string | null
   requested_academy: string | null
   region_id: string | null
+  region_ids?: string[]
+  team_ids?: string[]
   approved_at: string | null
   last_seen_at: string | null
   tours_seen?: string[]

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GitMerge, Plus, Users2 } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
+import { PlayerTony } from '../football/PlayerTony'
 import { useAuth } from '../../lib/auth'
 import {
   useRefData, POOL_LABEL, POOL_ORDER, STAGE_SHORT, DECISION_LABEL, PSTATUS_LABEL, fmtDate, fullName, ageGroupFor,
@@ -223,6 +224,8 @@ export function PlayerDrawer({ playerId, onClose, onSaved, onOpenOther }: { play
             </ol>
           )}
         </section>
+
+        <PlayerTony playerId={p.id} photoId={(p as Player & { photo_file_id?: string | null }).photo_file_id} />
 
         {similar.length > 0 && canEdit && (
           <Alert tone="warn">

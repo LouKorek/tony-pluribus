@@ -18,7 +18,7 @@ export interface NavItem {
 }
 export interface NavGroup { label: string; items: NavItem[] }
 
-export const BUILD_STAGE = 5
+export const BUILD_STAGE = 8
 
 const STAFF: Role[] = ['owner', 'admin', 'staff', 'scout', 'observer']
 const ADMIN: Role[] = ['owner', 'admin']
@@ -40,24 +40,24 @@ export const NAV: NavGroup[] = [
   {
     label: 'Teams',
     items: [
-      { to: '/squads', label: 'Squads', icon: Shirt, stage: 7, roles: STAFF },
-      { to: '/attendance', label: 'Attendance', icon: ClipboardCheck, stage: 7, roles: STAFF },
-      { to: '/training', label: 'Training', icon: Dumbbell, stage: 8, roles: STAFF },
-      { to: '/matches', label: 'Matches', icon: Swords, stage: 8, roles: STAFF },
-      { to: '/physical', label: 'Physical tests', icon: Timer, stage: 7, roles: STAFF },
-      { to: '/evaluations', label: 'Evaluations', icon: Star, stage: 8, roles: STAFF },
+      { to: '/squads', label: 'Squads', icon: Shirt, stage: 7, roles: STAFF, area: 'squads' },
+      { to: '/attendance', label: 'Attendance', icon: ClipboardCheck, stage: 7, roles: STAFF, area: 'attendance' },
+      { to: '/training', label: 'Training', icon: Dumbbell, stage: 8, roles: STAFF, area: 'training' },
+      { to: '/matches', label: 'Matches', icon: Swords, stage: 8, roles: STAFF, area: 'matches' },
+      { to: '/physical', label: 'Physical tests', icon: Timer, stage: 7, roles: STAFF, area: 'physical' },
+      { to: '/evaluations', label: 'Evaluations', icon: Star, stage: 8, roles: STAFF, area: 'evaluations' },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { to: '/player-files', label: 'Player files', icon: FolderLock, stage: 9, roles: ADMIN },
-      { to: '/staff-reports', label: 'Staff reports', icon: FileText, stage: 10, roles: STAFF },
-      { to: '/finance', label: 'Finance', icon: Wallet, stage: 10, roles: ADMIN },
-      { to: '/partners', label: 'Club & partners', icon: Handshake, stage: 10, roles: STAFF },
-      { to: '/transfers', label: 'Transfer desk', icon: ArrowLeftRight, stage: 11, roles: STAFF },
-      { to: '/club-portal', label: 'Club portal', icon: Building2, stage: 11, roles: ADMIN },
-      { to: '/assistant', label: 'AI assistant', icon: Bot, stage: 11, roles: STAFF },
+      { to: '/player-files', label: 'Player files', icon: FolderLock, stage: 9, roles: ADMIN, area: 'player_files' },
+      { to: '/staff-reports', label: 'Staff reports', icon: FileText, stage: 10, roles: STAFF, area: 'staff_reports' },
+      { to: '/finance', label: 'Finance', icon: Wallet, stage: 10, roles: ADMIN, area: 'finance' },
+      { to: '/partners', label: 'Club & partners', icon: Handshake, stage: 10, roles: STAFF, area: 'partners' },
+      { to: '/transfers', label: 'Transfer desk', icon: ArrowLeftRight, stage: 11, roles: STAFF, area: 'transfers' },
+      { to: '/club-portal', label: 'Club portal', icon: Building2, stage: 11, roles: ADMIN, area: 'club_portal' },
+      { to: '/assistant', label: 'AI assistant', icon: Bot, stage: 11, roles: STAFF, area: 'assistant' },
     ],
   },
   {
@@ -71,7 +71,7 @@ export const NAV: NavGroup[] = [
     label: 'System',
     items: [
       { to: '/files', label: 'Files', icon: FolderTree, stage: 5, roles: STAFF, area: 'files' },
-      { to: '/sync', label: 'Sync Center', icon: RefreshCcw, stage: 6, roles: ADMIN },
+      { to: '/sync', label: 'Sync Center', icon: RefreshCcw, stage: 12, roles: ADMIN },
       { to: '/users', label: 'Users', icon: UserCog, stage: 1, roles: ADMIN },
       { to: '/settings', label: 'Settings', icon: Settings, stage: 1, roles: ADMIN },
     ],

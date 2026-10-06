@@ -7,7 +7,7 @@ export function staffTourKey(path: string): string | null {
   const map: Record<string, string> = {
     '/scouting': 'scouting-home', '/scouting/plan': 'plan', '/scouting/academies': 'academies', '/scouting/camps': 'camps',
     '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool',
-    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/users': 'users', '/settings': 'settings',
+    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/users': 'users', '/settings': 'settings',
   }
   return map[path] ?? null
 }
@@ -81,6 +81,33 @@ export const STAFF_TOURS: TourMap = {
     { target: 'crumbs', title: 'Where you are', body: 'The path of the folder you are in. Click a part of it to go back up.' },
     { target: 'search', title: 'Search', body: 'Find any file in the whole folder by part of its name.' },
     { target: 'file-list', title: 'Open a file', body: 'Click a folder to open it, or a file to open it in SharePoint. Finance, contracts and personal documents are shown to admins only.' },
+  ],
+  squads: [
+    { target: 'team-season', title: 'Season', body: 'Choose the season. The running season opens first.' },
+    { target: 'team-tabs', title: 'Teams', body: 'Every Tony team of that season. The same choice carries over to attendance, tests, training and matches.' },
+    { target: 'squad-stats', title: 'The squad in numbers', body: 'Players, training sessions, attendance and goals of the season.' },
+    { target: 'squad-table', title: 'The players', body: 'Attendance, minutes, matches, goals, the latest speed and body tests and the evaluation of each player. Click a name for the full player card.' },
+    { target: 'page-actions', title: 'Add players', body: 'Add several players to the squad at once, for example the ones selected at the national final.' },
+  ],
+  attendance: [
+    { target: 'att-month', title: 'Month', body: 'Move between the months of the season.' },
+    { target: 'att-grid', title: 'Who trained', body: 'Minutes per player and day, or a code like Absent, Injured or Match. Click a cell to change it. Click a day at the top to mark everyone, or tick some players first to mark only them.' },
+    { target: 'att-legend', title: 'Codes', body: 'The same codes as the Presence Control sheets.' },
+  ],
+  physical: [
+    { target: 'tabs', title: 'Test type', body: 'Speed, weight and height, foot, jump and endurance.' },
+    { target: 'tests-table', title: 'Results by date', body: 'One column per test date. Type a value and leave the cell to save it. The last column shows the change since the first test.' },
+  ],
+  training: [
+    { target: 'plans', title: 'Session plans', body: 'Every training session by month, with its microcycle and the plan from the Talent folder.' },
+  ],
+  matches: [
+    { target: 'match-record', title: 'Record', body: 'Played, won, drawn, lost and goals, for the competitions you pick.' },
+    { target: 'match-list', title: 'Every match', body: 'Click a match to see or enter the line-up, minutes, goals, assists and cards. The PDF is the match report from the Talent folder.' },
+  ],
+  evaluations: [
+    { target: 'eval-matrix', title: 'Potential and performance', body: 'A: potential and performance · B: potential · C: performance · D: neither. Filter by team or birth year.' },
+    { target: 'eval-table', title: 'Grade and summary', body: 'Give each player a grade and a short summary. The individual reports from the folder open from here.' },
   ],
   users: [
     { target: 'tabs', title: 'Accounts', body: 'Coaches who sign up through the link wait under "pending" until you approve them.' },
