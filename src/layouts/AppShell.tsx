@@ -1,6 +1,6 @@
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { CircleHelp, LogOut, Menu, X, ChevronsUpDown } from 'lucide-react'
+import { Check, CircleHelp, LogOut, Menu, X, ChevronsUpDown } from 'lucide-react'
 import { NAV, BUILD_STAGE } from '../lib/nav'
 import { useAuth } from '../lib/auth'
 import { ROLE_LABEL } from '../lib/supabase'
@@ -19,8 +19,51 @@ export function Brand({ compact }: { compact?: boolean }) {
   )
 }
 
+/** Project and the scouting season the screens show. A custom list, readable on the dark sidebar. */
+function SeasonPicker() {
+  const { project, seasons, scoutingSeason, viewSeason, setViewSeason } = useAuth()
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const h = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false) }
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', h); document.addEventListener('keydown', k)
+    return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', k) }
+  }, [open])
+  const history = viewSeason?.id !== scoutingSeason?.id
+  return (
+    <div ref={box} className="relative mx-3 mb-3">
+      <button type="button" data-tour="project-box" onClick={() => setOpen(o => !o)} aria-haspopup="listbox" aria-expanded={open} title="Season shown on the scouting screens"
+        className={cx('flex w-full items-center justify-between rounded-lg border bg-ink-2 px-3 py-2.5 text-left', history ? 'border-lime/60' : open ? 'border-white/30' : 'border-white/10 hover:border-white/25')}>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold">{project?.name ?? 'Project'}</div>
+          <div className={cx('truncate text-xs', history ? 'text-lime' : 'text-white/50')}>Scouting {viewSeason?.label ?? '—'}{history ? ' · history' : ''}</div>
+        </div>
+        <ChevronsUpDown size={15} className="shrink-0 text-white/30" />
+      </button>
+      {open && (
+        <div role="listbox" className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-white/10 bg-ink-3 py-1 shadow-2xl">
+          <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-white/40">Scouting season</div>
+          {[...seasons].reverse().map(s => {
+            const on = s.id === viewSeason?.id
+            return (
+              <button key={s.id} type="button" role="option" aria-selected={on} onClick={() => { setViewSeason(s.id); setOpen(false) }}
+                className={cx('flex w-full items-center gap-2 px-3 py-2 text-left text-sm', on ? 'bg-white/10 font-semibold text-white' : 'text-white/80 hover:bg-white/5 hover:text-white')}>
+                <span className="flex-1">{s.label.replace('-20', '/')}</span>
+                {s.is_current_scouting && <span className="rounded bg-lime px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">Current</span>}
+                {on ? <Check size={14} className="text-lime" /> : <span className="w-3.5" />}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { profile, project, seasons, scoutingSeason, viewSeason, setViewSeason, signOut, can } = useAuth()
+  const { profile, signOut, can } = useAuth()
   const role = profile?.role
   return (
     <div className="flex h-full flex-col bg-ink text-white">
@@ -29,19 +72,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="mt-1.5 font-display text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">Pluribus</div>
       </div>
 
-      <label data-tour="project-box" className={cx('relative mx-3 mb-3 flex cursor-pointer items-center justify-between rounded-lg border bg-ink-2 px-3 py-2.5', viewSeason?.id !== scoutingSeason?.id ? 'border-lime/60' : 'border-white/10 hover:border-white/25')} title="Season shown on the scouting screens">
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{project?.name ?? 'Project'}</div>
-          <div className={cx('truncate text-xs', viewSeason?.id !== scoutingSeason?.id ? 'text-lime' : 'text-white/50')}>
-            Scouting {viewSeason?.label ?? '—'}{viewSeason?.id !== scoutingSeason?.id ? ' · history' : ''}
-          </div>
-        </div>
-        <ChevronsUpDown size={15} className="shrink-0 text-white/30" />
-        <select aria-label="Season" value={viewSeason?.id ?? ''} onChange={e => setViewSeason(e.target.value)}
-          className="absolute inset-0 cursor-pointer opacity-0">
-          {[...seasons].reverse().map(s => <option key={s.id} value={s.id}>Scouting {s.label}{s.is_current_scouting ? ' (current)' : ''}</option>)}
-        </select>
-      </label>
+      <SeasonPicker />
 
       <nav data-tour="nav" className="scroll-thin flex-1 overflow-y-auto px-3 pb-4">
         {NAV.map(g => {

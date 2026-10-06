@@ -64,3 +64,6 @@ body {
   body.print-only .print-area, body.print-only .print-area * { visibility: visible; }
   body.print-only .print-area { position: fixed; left: 0; top: 0; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* native drop-down lists always readable, whatever the colour of the control around them */
+select option, select optgroup { color: var(--color-text); background: var(--color-card); }
