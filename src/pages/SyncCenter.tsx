@@ -56,7 +56,7 @@ export default function SyncCenterPage() {
             <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-sm">
               {r.status === 'ok' ? <CheckCircle2 size={16} className="text-good" /> : r.status === 'error' ? <CircleAlert size={16} className="text-red" /> : <Clock size={16} className="text-warn" />}
               <span className="w-36 text-muted">{when(r.started_at)}</span>
-              {r.full_scan && <Badge>Full scan</Badge>}{r.scheduled && <Badge tone="info">Automatic</Badge>}
+              <span className="flex w-40 gap-1.5">{r.full_scan && <Badge>Full scan</Badge>}{r.scheduled && <Badge tone="info">Automatic</Badge>}{!r.full_scan && !r.scheduled && <Badge>Manual</Badge>}</span>
               <span>{r.status === 'error' ? <span className="text-red">{r.error}</span> : r.status === 'running' ? 'Running…' : `${r.changed} new or changed · ${r.deleted} removed`}</span>
             </li>
           ))}</ul>
