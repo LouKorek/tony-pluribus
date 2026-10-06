@@ -1,0 +1,16 @@
+name: fetch media
+on:
+  push:
+    branches: [media-fetch]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p media
+          while read -r name url; do [ -n "$name" ] && curl -sSfL -o "media/$name" "$url"; done < urls.txt
+          git config user.name "Lou Korek"; git config user.email "lou.korek@gmail.com"
+          git add media && git commit -m "media [skip ci]" && git push
