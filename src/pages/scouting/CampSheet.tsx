@@ -139,7 +139,7 @@ export default function CampSheet() {
                 return (
                   <tr key={r.id} className={cx('border-b border-line last:border-0', r.decision === 'selected' ? 'bg-good-soft/50' : r.decision === 'see_again' ? 'bg-warn-soft/40' : r.status === 'absent' ? 'bg-black/[.03] text-muted' : '')}>
                     <td className="px-3 py-1.5">
-                      <button onClick={() => setOpenPlayer(r.player_id)} className="text-left font-semibold hover:text-red">{fullName(r.player)}</button>
+                      <button onClick={() => setOpenPlayer(r.player_id)} className="whitespace-nowrap text-left font-semibold hover:text-red">{fullName(r.player)}</button>
                       {r.player.age_status === 'doubtful' && <span className="ml-1.5"><Badge tone="warn">Age?</Badge></span>}
                       {r.submission_note && <div className="max-w-[220px] truncate text-xs text-muted" title={r.submission_note}>Coach: {r.submission_note}</div>}
                     </td>
