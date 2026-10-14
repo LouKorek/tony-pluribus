@@ -51,7 +51,15 @@ function boltLattice(W: number, H: number, scale: number, gap: number) {
 }
 
 export interface Partner { name: string; logo: string | null; show_in: ('certificates' | 'exports' | 'share')[] }
-export interface ProjectSettings { tagline?: string; partner?: Partner | null; languages?: string[]; currency?: string; geo_labels?: { region: string; district: string } }
+export interface ProjectSettings { tagline?: string; partner?: Partner | null; languages?: string[]; currency?: string; geo_labels?: { region: string; district: string }; points_name?: { one?: string; many?: string; short?: string } }
+
+/** What this project calls its points ("Tonys"): singular, plural and the short form for tables. */
+export function usePointsName(): { one: string; many: string; short: string; Many: string } {
+  const { project } = useAuth()
+  const n = (project?.settings as ProjectSettings | undefined)?.points_name
+  const many = n?.many?.trim() || 'points'
+  return { one: n?.one?.trim() || 'point', many, short: n?.short?.trim() || (n?.many?.trim() ? many : 'pts'), Many: many.charAt(0).toUpperCase() + many.slice(1) }
+}
 
 /** What this project calls its two geographic levels (Rwanda: Province and District). */
 export function useGeo(): { region: string; district: string; regions: string; districts: string } {

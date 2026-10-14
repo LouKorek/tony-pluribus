@@ -2,6 +2,7 @@ import { CalendarCheck, CalendarDays, Camera, ChevronRight, ClipboardList, MapPi
 import { useAuth } from '../../lib/auth'
 import { fmtDate } from '../../lib/scouting'
 import { Card, cx } from '../../components/ui'
+import { usePointsName } from '../../lib/brand'
 import { STAGE_T, useT } from './i18n'
 import { pendingInvites, useCoach } from './data'
 import { MiniStat, Section, fmtTime, name, useGo } from './shared'
@@ -14,6 +15,7 @@ export default function HomeScreen() {
   const { t, pick } = useT()
   const { academy, squad, standing, camps, schedule, sessions, matches, notifs, groups, preview, progress } = useCoach()
   const nav = useGo()
+  const pn = usePointsName()
   const invites = pendingInvites(squad)
   const campsWithRoom = camps.filter(c => eligibleFor(c, squad, groups).some(e => !e.already)).length
   const first = preview ? 'coach' : (profile?.full_name || profile?.username || '').split(' ')[0]
@@ -79,7 +81,7 @@ export default function HomeScreen() {
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neon text-ink"><Trophy size={22} /></span>
           <span className="min-w-0 flex-1">
             <span className="label-caps block text-[11px] text-neon">{t('yourLevel')} · {progress.level.label}</span>
-            <span className="mt-0.5 block font-display text-[26px] font-semibold leading-none">{progress.points} <span className="text-base font-medium text-white/60">{t('points')}</span></span>
+            <span className="mt-0.5 block font-display text-[26px] font-semibold leading-none">{progress.points} <span className="text-base font-medium text-white/60">{pn.many}</span></span>
             <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-white/15">
               <span className={cx('block h-full rounded-full bg-neon')} style={{ width: `${progress.level.next ? Math.min(100, Math.round(((progress.points - progress.level.min_points) / (progress.level.next.min_points - progress.level.min_points)) * 100)) : 100}%` }} />
             </span>

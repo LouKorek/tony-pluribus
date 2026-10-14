@@ -184,6 +184,10 @@ interface RuleRow { code: string; points: number; label: string; description: st
 interface LevelRow { code: string; label: string; min_points: number; sort: number }
 
 function PointsCard({ projectId }: { projectId: string | undefined }) {
+  const { project, refresh } = useAuth()
+  const pn0 = ((project?.settings ?? {}) as ProjectSettings).points_name
+  const [nm, setNm] = useState({ one: pn0?.one ?? '', many: pn0?.many ?? '', short: pn0?.short ?? '' })
+  useEffect(() => { const x = ((project?.settings ?? {}) as ProjectSettings).points_name; setNm({ one: x?.one ?? '', many: x?.many ?? '', short: x?.short ?? '' }) }, [project])
   const [rules, setRules] = useState<RuleRow[]>([])
   const [levels, setLevels] = useState<LevelRow[]>([])
   const [dirty, setDirty] = useState(false)
@@ -215,6 +219,12 @@ function PointsCard({ projectId }: { projectId: string | undefined }) {
       const { error } = await supabase.from('point_levels').update({ min_points: l.min_points }).eq('project_id', projectId).eq('code', l.code)
       if (error) { setBusy(false); return setMsg({ tone: 'bad', text: errMsg(error) }) }
     }
+    if (project) {
+      const points_name = nm.many.trim() ? { one: nm.one.trim() || nm.many.trim(), many: nm.many.trim(), short: nm.short.trim() || nm.many.trim() } : null
+      const { error } = await supabase.from('projects').update({ settings: { ...(project.settings ?? {}), points_name } }).eq('id', project.id)
+      if (error) { setBusy(false); return setMsg({ tone: 'bad', text: errMsg(error) }) }
+      await refresh()
+    }
     setBusy(false); setDirty(false); setMsg({ tone: 'good', text: 'Points and levels saved. They apply from the next award.' })
   }
 
@@ -228,6 +238,13 @@ function PointsCard({ projectId }: { projectId: string | undefined }) {
         <Button variant="primary" loading={busy} disabled={!dirty} onClick={save}><Save size={15} />Save</Button>
       </div>
       {msg && <div className="mt-3"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+
+      <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg bg-paper p-3" data-tour="points-name">
+        <div className="mr-2 text-sm"><div className="font-semibold">What the points are called</div><div className="text-xs text-muted">Empty = "points". Shown to coaches, in notifications and on the Coaches screen.</div></div>
+        <Field label="Plural" hint="e.g. Tonys"><Input value={nm.many} onChange={e => { setNm({ ...nm, many: e.target.value }); setDirty(true) }} className="w-32" placeholder="points" /></Field>
+        <Field label="Singular" hint="e.g. Tony"><Input value={nm.one} onChange={e => { setNm({ ...nm, one: e.target.value }); setDirty(true) }} className="w-32" placeholder="point" /></Field>
+        <Field label="Short" hint="tables"><Input value={nm.short} onChange={e => { setNm({ ...nm, short: e.target.value }); setDirty(true) }} className="w-24" placeholder="pts" /></Field>
+      </div>
 
       <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_280px]">
         <div className="overflow-x-auto">

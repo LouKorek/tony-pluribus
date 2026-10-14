@@ -4,7 +4,7 @@ import { Award, Eye, MessageSquare, Minus, Plus, Star, Trophy, Users2 } from 'lu
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useRefData, fmtDate } from '../../lib/scouting'
-import { useGeo } from '../../lib/brand'
+import { useGeo, usePointsName } from '../../lib/brand'
 import { fmtWhen } from '../../lib/notifications'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, MultiSelect, PageHeader, SearchInput, Segmented, Select, Spinner, Stat, Td, Textarea, Th, cx } from '../../components/ui'
 
@@ -30,6 +30,7 @@ export default function CoachesPage() {
   const { can } = useAuth()
   const ref = useRefData()
   const geo = useGeo()
+  const pn = usePointsName()
   const [rows, setRows] = useState<Row[] | null>(null)
   const [board, setBoard] = useState<BoardRow[] | null>(null)
   const [view, setView] = useState<'coaches' | 'board'>('coaches')
@@ -67,7 +68,7 @@ export default function CoachesPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Scouting" title="Coaches" description="Every coach in the programme: how active they are, what they earn, and what the staff think of them. The coach sees points, level, badges and rank; the reviews stay with the staff unless you share one." />
+      <PageHeader eyebrow="Scouting" title="Coaches" description={`Every coach in the programme: how active they are, what they earn, and what the staff think of them. The coach sees ${pn.many}, level, badges and rank; the reviews stay with the staff unless you share one.`} />
       {error && <div className="mb-4"><Alert>{error}</Alert></div>}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-tour="coach-stats">
@@ -85,7 +86,7 @@ export default function CoachesPage() {
             <MultiSelect options={ref.regions.map(r => ({ value: r.id, label: r.name }))} value={region} onChange={setRegion} placeholder={`All ${geo.regions.toLowerCase()}`} className="w-44" />
             <MultiSelect options={Object.entries(PROGRAMME).map(([v, [l]]) => ({ value: v, label: l }))} value={prog} onChange={setProg} placeholder="All statuses" className="w-40" />
             <Select value={sort} onChange={e => setSort(e.target.value as typeof sort)}>
-              <option value="points">Sort: season points</option><option value="name">Sort: name</option><option value="activity">Sort: last seen</option><option value="review">Sort: review</option>
+              <option value="points">Sort: season {pn.many}</option><option value="name">Sort: name</option><option value="activity">Sort: last seen</option><option value="review">Sort: review</option>
             </Select>
           </div>
         )}
@@ -96,7 +97,7 @@ export default function CoachesPage() {
           {list.length === 0 ? <Empty icon={<Users2 size={20} />} title="No coaches match">Change the filters or wait for coaches to sign up with the join link.</Empty> : (
             <table className="w-full text-sm">
               <thead className="border-b border-line bg-paper/60"><tr>
-                <Th>Coach</Th><Th>Academy</Th><Th>Status</Th><Th className="text-right">Players</Th><Th className="text-right">Training 30d</Th><Th className="text-right">Submitted</Th><Th className="text-right">Selected</Th><Th className="text-right">Season pts</Th><Th>Level</Th><Th>Review</Th><Th>Last seen</Th>
+                <Th>Coach</Th><Th>Academy</Th><Th>Status</Th><Th className="text-right">Players</Th><Th className="text-right">Training 30d</Th><Th className="text-right">Submitted</Th><Th className="text-right">Selected</Th><Th className="text-right">Season {pn.short}</Th><Th>Level</Th><Th>Review</Th><Th>Last seen</Th>
               </tr></thead>
               <tbody className="divide-y divide-line">
                 {list.map(r => (
@@ -120,9 +121,9 @@ export default function CoachesPage() {
         </Card>
       ) : (
         <Card className="mt-4 overflow-x-auto" data-tour="board">
-          {!board?.length ? <Empty icon={<Trophy size={20} />} title="No points yet this season">The board fills as coaches add players, log training and come to camps.</Empty> : (
+          {!board?.length ? <Empty icon={<Trophy size={20} />} title={`No ${pn.many} yet this season`}>The board fills as coaches add players, log training and come to camps.</Empty> : (
             <table className="w-full text-sm">
-              <thead className="border-b border-line bg-paper/60"><tr><Th className="w-16">Rank</Th><Th>Academy</Th><Th>{geo.district}</Th><Th>{geo.region}</Th><Th className="text-right">Season points</Th></tr></thead>
+              <thead className="border-b border-line bg-paper/60"><tr><Th className="w-16">Rank</Th><Th>Academy</Th><Th>{geo.district}</Th><Th>{geo.region}</Th><Th className="text-right">Season {pn.many}</Th></tr></thead>
               <tbody className="divide-y divide-line">
                 {board.map(r => (
                   <tr key={r.academy_id} className={cx(r.rank <= 3 && 'bg-neon/10')}>
@@ -145,6 +146,7 @@ export default function CoachesPage() {
 /* ───────────────────────── Drawer ───────────────────────── */
 
 function CoachDrawer({ row, canEdit, onClose, onChanged }: { row: Row; canEdit: boolean; onClose: () => void; onChanged: () => void }) {
+  const pn = usePointsName()
   const [d, setD] = useState<Detail | null>(null)
   const [tab, setTab] = useState<'overview' | 'review' | 'points' | 'message'>('overview')
   const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
@@ -161,13 +163,13 @@ function CoachDrawer({ row, canEdit, onClose, onChanged }: { row: Row; canEdit: 
       {!d ? <Spinner /> : (
         <div>
           <div className="grid grid-cols-4 gap-2">
-            <Stat accent label="Level" value={d.level.label} sub={`${d.points} pts${d.level.next ? ` · ${d.level.next.min_points - d.points} to ${d.level.next.label}` : ''}`} />
-            <Stat label="Season" value={d.season_points} sub="points" />
+            <Stat accent label="Level" value={d.level.label} sub={`${d.points} ${pn.short}${d.level.next ? ` · ${d.level.next.min_points - d.points} to ${d.level.next.label}` : ''}`} />
+            <Stat label="Season" value={d.season_points} sub={pn.many} />
             <Stat label="Visits 30d" value={d.visits_30d} sub={row.last_seen_at ? `last ${fmtWhen(row.last_seen_at)}` : 'never seen'} />
             <Stat label="Badges" value={d.badges.length} sub={d.badges.slice(-1)[0]?.label ?? '—'} />
           </div>
           <div className="mt-4 flex items-center justify-between gap-2">
-            <Segmented value={tab} onChange={setTab} options={[{ value: 'overview', label: 'Overview' }, { value: 'review', label: 'Reviews', count: d.reviews.length }, { value: 'points', label: 'Points', count: d.history.length }, { value: 'message', label: 'Message' }]} />
+            <Segmented value={tab} onChange={setTab} options={[{ value: 'overview', label: 'Overview' }, { value: 'review', label: 'Reviews', count: d.reviews.length }, { value: 'points', label: pn.Many, count: d.history.length }, { value: 'message', label: 'Message' }]} />
             {row.academy_id && <Link to={`/coach-preview/${row.academy_id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-royal hover:underline"><Eye size={14} />Open as coach</Link>}
           </div>
 
@@ -294,13 +296,14 @@ function ReviewsTab({ d, row, canEdit, onDone }: { d: Detail; row: Row; canEdit:
 }
 
 function PointsTab({ d, row, canEdit, onDone }: { d: Detail; row: Row; canEdit: boolean; onDone: () => void }) {
+  const pn = usePointsName()
   const [pts, setPts] = useState('')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   async function give(sign: 1 | -1) {
     const n = Math.abs(parseInt(pts, 10)) * sign
-    if (!n) return setErr('How many points?')
+    if (!n) return setErr(`How many ${pn.many}?`)
     setBusy(true); setErr(null)
     const { error } = await supabase.rpc('admin_award_points', { p_user: row.id, p_points: n, p_note: note })
     setBusy(false)
@@ -308,7 +311,7 @@ function PointsTab({ d, row, canEdit, onDone }: { d: Detail; row: Row; canEdit: 
     setPts(''); setNote(''); onDone()
   }
   async function voidEvent(id: string) {
-    if (!confirm('Void this award? The points are removed from the coach.')) return
+    if (!confirm(`Void this award? The ${pn.many} are removed from the coach.`)) return
     const { error } = await supabase.rpc('admin_void_points', { p_event: id })
     if (error) setErr(errMsg(error)); else onDone()
   }
@@ -319,14 +322,14 @@ function PointsTab({ d, row, canEdit, onDone }: { d: Detail; row: Row; canEdit: 
           <div className="label-caps mb-2 text-muted">Bonus or deduction</div>
           {err && <div className="mb-3"><Alert>{err}</Alert></div>}
           <div className="flex flex-wrap items-end gap-2">
-            <Field label="Points"><Input type="number" min={1} value={pts} onChange={e => setPts(e.target.value)} className="w-24" /></Field>
+            <Field label={pn.Many}><Input type="number" min={1} value={pts} onChange={e => setPts(e.target.value)} className="w-24" /></Field>
             <div className="min-w-[200px] flex-1"><Field label="Reason" hint="The coach sees it with the points."><Input value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Brought 12 players to the camp in the rain" /></Field></div>
             <Button variant="primary" loading={busy} onClick={() => give(1)}><Plus size={14} />Bonus</Button>
             <Button variant="danger" loading={busy} onClick={() => give(-1)}><Minus size={14} />Deduct</Button>
           </div>
         </Card>
       )}
-      {d.history.length === 0 ? <p className="text-sm text-faint">No points yet.</p> : (
+      {d.history.length === 0 ? <p className="text-sm text-faint">No {pn.many} yet.</p> : (
         <Card className="divide-y divide-line">
           {d.history.map(e => (
             <div key={e.id} className={cx('flex items-center gap-3 px-4 py-2', e.voided && 'opacity-50')}>

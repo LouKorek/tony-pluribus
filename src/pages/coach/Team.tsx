@@ -652,41 +652,47 @@ function StaffForm({ member, onClose }: { member: StaffMember | null; onClose: (
 function EquipmentCard() {
   const { t } = useT()
   const { academy, reload, preview } = useCoach()
-  const base = useMemo(() => { const m = new Map((academy?.equipment ?? []).map(e => [e.item, e])); return EQUIPMENT.map(item => m.get(item) ?? { item, quantity: 0, condition: 'good' as const, notes: null, updated_at: null }) }, [academy])
+  const base = useMemo(() => { const m = new Map((academy?.equipment ?? []).map(e => [e.item, e])); return EQUIPMENT.map(item => m.get(item) ?? { item, good: 0, worn: 0, needed: 0, quantity: 0, condition: 'good' as const, notes: null, updated_at: null }) }, [academy])
   const [rows, setRows] = useState<Equipment[]>(base)
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
   useEffect(() => { setRows(base); setDirty(false) }, [base])
-  const set = (item: EquipmentItem, patch: Partial<Equipment>) => { setRows(rs => rs.map(r => (r.item === item ? { ...r, ...patch } : r))); setDirty(true) }
+  const set = (item: EquipmentItem, k: 'good' | 'worn' | 'needed', v: number) => { setRows(rs => rs.map(r => (r.item === item ? { ...r, [k]: Math.max(0, Math.min(999, v)) } : r))); setDirty(true) }
   async function save() {
     setBusy(true); setMsg(null)
-    const { error } = await supabase.rpc('coach_save_equipment', { p: rows.map(r => ({ item: r.item, quantity: r.quantity, condition: r.condition, notes: r.notes })) })
+    const { error } = await supabase.rpc('coach_save_equipment', { p: rows.map(r => ({ item: r.item, good: r.good, worn: r.worn, needed: r.needed, notes: r.notes })) })
     setBusy(false)
     if (error) return setMsg({ tone: 'bad', text: error.message })
     setDirty(false); await reload(); setMsg({ tone: 'good', text: t('done') })
   }
+  const have = rows.reduce((a, r) => a + r.good + r.worn, 0), need = rows.reduce((a, r) => a + r.needed, 0)
+  const Counter = ({ r, k, cls }: { r: Equipment; k: 'good' | 'worn' | 'needed'; cls: string }) => (
+    <div className={cx('flex items-center rounded-md border', cls)}>
+      <button type="button" disabled={preview} onClick={() => set(r.item, k, r[k] - 1)} className="h-8 w-7 text-base font-bold leading-none disabled:opacity-40" aria-label="−">−</button>
+      <input inputMode="numeric" disabled={preview} value={r[k]} onChange={e => set(r.item, k, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)} onFocus={e => e.target.select()}
+        className="h-8 w-9 bg-transparent text-center text-sm font-semibold outline-none" aria-label={t(k === 'good' ? 'cGood' : k === 'worn' ? 'cWorn' : 'cNeeded')} />
+      <button type="button" disabled={preview} onClick={() => set(r.item, k, r[k] + 1)} className="h-8 w-7 text-base font-bold leading-none disabled:opacity-40" aria-label="+">+</button>
+    </div>
+  )
   return (
     <Card className="p-4" data-tour="academy-equipment">
       <div className="flex items-start justify-between gap-3">
         <div><div className="flex items-center gap-1.5 font-semibold"><Package size={16} />{t('equipmentTitle')}</div><p className="mt-0.5 text-sm text-muted">{t('equipmentHint')}</p>
-          {academy?.equipment_updated_at && <p className="mt-0.5 text-xs text-faint">{t('lastCounted')}: {fmtDate(academy.equipment_updated_at.slice(0, 10), false)}</p>}</div>
+          <p className="mt-0.5 text-xs text-faint">{academy?.equipment_updated_at ? `${t('lastCounted')}: ${fmtDate(academy.equipment_updated_at.slice(0, 10), false)} · ` : ''}{have} {t('eqHave')}{need > 0 ? ` · ${need} ${t('eqNeeded')}` : ''}</p></div>
         {!preview && <Button size="sm" variant="primary" loading={busy} disabled={!dirty} onClick={save}>{t('saveEquipment')}</Button>}
       </div>
       {msg && <div className="mt-2"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
-      <ul className="mt-3 divide-y divide-line">
+      <div className="mt-3 grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 text-[10px] font-semibold uppercase tracking-wide text-muted">
+        <span /><span className="w-[92px] text-center text-grass">{t('cGood')}</span><span className="w-[92px] text-center text-warn">{t('cWorn')}</span><span className="w-[92px] text-center text-royal">{t('cNeeded')}</span>
+      </div>
+      <ul className="divide-y divide-line">
         {rows.map(r => (
-          <li key={r.item} className="flex items-center gap-2 py-1.5 text-sm">
-            <span className="min-w-0 flex-1 truncate font-medium">{t(EQ_T[r.item])}</span>
-            <div className="flex items-center gap-1">
-              <button type="button" disabled={preview} onClick={() => set(r.item, { quantity: Math.max(0, r.quantity - 1) })} className="h-7 w-7 rounded border border-line-2 font-bold">−</button>
-              <input inputMode="numeric" disabled={preview} value={r.quantity} onChange={e => set(r.item, { quantity: Math.max(0, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0) })} className="h-7 w-12 rounded border border-line-2 bg-card text-center text-sm font-semibold" aria-label={t('quantity')} />
-              <button type="button" disabled={preview} onClick={() => set(r.item, { quantity: r.quantity + 1 })} className="h-7 w-7 rounded border border-line-2 font-bold">+</button>
-            </div>
-            <select disabled={preview} value={r.condition} onChange={e => set(r.item, { condition: e.target.value as Equipment['condition'] })} aria-label={t('condition')}
-              className={cx('h-7 rounded border bg-card px-1 text-xs font-semibold', r.condition === 'good' ? 'border-grass/40 text-grass' : r.condition === 'worn' ? 'border-warn/40 text-warn' : 'border-danger/40 text-danger')}>
-              <option value="good">{t('cGood')}</option><option value="worn">{t('cWorn')}</option><option value="missing">{t('cMissing')}</option>
-            </select>
+          <li key={r.item} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 py-1.5 text-sm">
+            <span className="min-w-0 truncate font-medium">{t(EQ_T[r.item])}{r.good + r.worn > 0 && <span className="ml-1 text-xs text-muted">· {r.good + r.worn}</span>}</span>
+            <Counter r={r} k="good" cls={r.good > 0 ? 'border-grass/50 bg-good-soft/40' : 'border-line-2'} />
+            <Counter r={r} k="worn" cls={r.worn > 0 ? 'border-warn/50 bg-warn-soft/40' : 'border-line-2'} />
+            <Counter r={r} k="needed" cls={r.needed > 0 ? 'border-royal/50 bg-royal-soft/40' : 'border-line-2'} />
           </li>
         ))}
       </ul>

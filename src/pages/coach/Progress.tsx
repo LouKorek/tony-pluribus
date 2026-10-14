@@ -4,7 +4,7 @@ import { fmtDate } from '../../lib/scouting'
 import { Card, Empty, cx } from '../../components/ui'
 import { useT } from './i18n'
 import { useCoach, type BadgeInfo, type Rule } from './data'
-import { useGeo } from '../../lib/brand'
+import { useGeo, usePointsName } from '../../lib/brand'
 import { ScreenTitle, Section } from './shared'
 
 const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users, camera: Camera, flame: Flame, star: Star, trophy: Trophy, medal: Medal, crown: Crown, clock: Clock, award: Award, 'id-card': IdCard, 'shield-check': ShieldCheck, shirt: Shirt, 'users-round': UsersRound, package: Package, 'clipboard-list': ClipboardList, sparkles: Sparkles, hand: Hand, 'check-check': CheckCheck, swords: Swords, goal: Goal, tent: Tent, eye: Eye, 'calendar-check': CalendarCheck }
@@ -13,6 +13,7 @@ export default function ProgressScreen() {
   const { t } = useT()
   const { progress, academy } = useCoach()
   const geo = useGeo()
+  const pn = usePointsName()
   const [allHistory, setAllHistory] = useState(false)
   const [allRules, setAllRules] = useState(false)
   if (!progress) return <Card><Empty icon={<Trophy size={20} />} title={t('progress')}>{t('noProgressYet')}</Empty></Card>
@@ -36,7 +37,7 @@ export default function ProgressScreen() {
           </div>
           <div className="text-right">
             <div className="font-display text-[40px] font-semibold leading-none text-neon">{points}</div>
-            <div className="text-xs text-white/60">{t('points')} · {season_points} {t('thisSeason')}</div>
+            <div className="text-xs text-white/60">{pn.many} · {season_points} {t('thisSeason')}</div>
           </div>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-neon transition-all" style={{ width: `${pct}%` }} /></div>
@@ -61,7 +62,7 @@ export default function ProgressScreen() {
         </div>
       </Section>
 
-      <Section title={t('howToEarn')} id="rules">
+      <Section title={`${t('howToEarn')} ${pn.many}`} id="rules">
         <Card className="divide-y divide-line">
           {shownRules.map(r => <RuleRow key={r.code} r={r} />)}
           {rules.length > 6 && (
@@ -72,7 +73,7 @@ export default function ProgressScreen() {
         </Card>
       </Section>
 
-      <Section title={t('history')} id="history">
+      <Section title={`${t('yourPts')} ${pn.many}`} id="history">
         {history.length === 0 ? (
           <Card><Empty icon={<Star size={20} />} title={t('noPointsYet')}>{t('noPointsHint')}</Empty></Card>
         ) : (
