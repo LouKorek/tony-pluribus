@@ -7,8 +7,9 @@ import { Bolts, Logo, usePartner, useTagline } from '../../lib/brand'
 import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Select, Textarea, cx, printArea } from '../../components/ui'
 import { STAGE_T, useT } from './i18n'
-import { EQUIPMENT, FOCUS, MATCH_KINDS, STAFF_ROLES, groupOf, uploadPhoto, useCoach, type Equipment, type EquipmentItem, type Focus, type JourneyItem, type LogItem, type Match, type MatchKind, type MyAcademy, type Session, type SquadPlayer, type StaffMember, type StaffRole } from './data'
+import { FOCUS, MATCH_KINDS, STAFF_ROLES, groupOf, uploadPhoto, useCoach, type Equipment, type Focus, type JourneyItem, type LogItem, type Match, type MatchKind, type MyAcademy, type Session, type SquadPlayer, type StaffMember, type StaffRole } from './data'
 import { Avatar, JourneyBadge, PendingDot, ScreenTitle, SubTabs, lastItem, name } from './shared'
+import { EQUIPMENT_GROUPS, customCode, equipmentName, isCustom } from '../../lib/equipment'
 
 type Tab = 'players' | 'training' | 'matches' | 'academy'
 
@@ -382,7 +383,6 @@ export function Certificate({ player, item, onClose }: { player: SquadPlayer; it
 const FOCUS_T: Record<Focus, 'fTechnical' | 'fTactical' | 'fPhysical' | 'fGoalkeeping' | 'fGames' | 'fSetPieces' | 'fMental' | 'fRecovery'> = { technical: 'fTechnical', tactical: 'fTactical', physical: 'fPhysical', goalkeeping: 'fGoalkeeping', games: 'fGames', set_pieces: 'fSetPieces', mental: 'fMental', recovery: 'fRecovery' }
 const KIND_T: Record<MatchKind, 'kInternal' | 'kFriendly' | 'kLeague' | 'kCup' | 'kTournament' | 'kTony'> = { internal: 'kInternal', friendly: 'kFriendly', league: 'kLeague', cup: 'kCup', tournament: 'kTournament', tony: 'kTony' }
 const ROLE_T: Record<StaffRole, 'rHeadCoach' | 'rAssistant' | 'rGkCoach' | 'rFitness' | 'rPhysio' | 'rManager' | 'rVolunteer' | 'rOther'> = { head_coach: 'rHeadCoach', assistant: 'rAssistant', gk_coach: 'rGkCoach', fitness: 'rFitness', physio: 'rPhysio', manager: 'rManager', volunteer: 'rVolunteer', other: 'rOther' }
-const EQ_T: Record<EquipmentItem, 'eqBalls' | 'eqBibs' | 'eqCones' | 'eqGoals' | 'eqNets' | 'eqFirstAid' | 'eqWater' | 'eqKits' | 'eqGkGloves' | 'eqPump' | 'eqWhistle' | 'eqOther'> = { balls: 'eqBalls', bibs: 'eqBibs', cones: 'eqCones', goals: 'eqGoals', nets: 'eqNets', first_aid: 'eqFirstAid', water: 'eqWater', kits: 'eqKits', gk_gloves: 'eqGkGloves', pump: 'eqPump', whistle: 'eqWhistle', other: 'eqOther' }
 
 function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
   const { t } = useT()
@@ -650,18 +650,27 @@ function StaffForm({ member, onClose }: { member: StaffMember | null; onClose: (
 }
 
 function EquipmentCard() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const { academy, reload, preview } = useCoach()
-  const base = useMemo(() => { const m = new Map((academy?.equipment ?? []).map(e => [e.item, e])); return EQUIPMENT.map(item => m.get(item) ?? { item, good: 0, worn: 0, needed: 0, quantity: 0, condition: 'good' as const, notes: null, updated_at: null }) }, [academy])
+  const base = useMemo(() => academy?.equipment ?? [], [academy])
   const [rows, setRows] = useState<Equipment[]>(base)
+  const [removed, setRemoved] = useState<string[]>([])
   const [dirty, setDirty] = useState(false)
+  const [picking, setPicking] = useState(false)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
-  useEffect(() => { setRows(base); setDirty(false) }, [base])
-  const set = (item: EquipmentItem, k: 'good' | 'worn' | 'needed', v: number) => { setRows(rs => rs.map(r => (r.item === item ? { ...r, [k]: Math.max(0, Math.min(999, v)) } : r))); setDirty(true) }
+  useEffect(() => { setRows(base); setRemoved([]); setDirty(false) }, [base])
+  const L = lang === 'rw' ? 'rw' : 'en'
+  const set = (item: string, k: 'good' | 'worn' | 'needed', v: number) => { setRows(rs => rs.map(r => (r.item === item ? { ...r, [k]: Math.max(0, Math.min(999, v)) } : r))); setDirty(true) }
+  const add = (codes: { code: string; label?: string }[]) => {
+    setRows(rs => [...rs, ...codes.filter(c => !rs.some(r => r.item === c.code)).map(c => ({ item: c.code, label: c.label ?? null, good: 1, worn: 0, needed: 0, quantity: 1, condition: 'good' as const, notes: null, updated_at: null }))])
+    setRemoved(x => x.filter(c => !codes.some(d => d.code === c))); setDirty(true); setPicking(false)
+  }
+  const remove = (item: string) => { setRows(rs => rs.filter(r => r.item !== item)); if (base.some(r => r.item === item)) setRemoved(x => [...x, item]); setDirty(true) }
   async function save() {
     setBusy(true); setMsg(null)
-    const { error } = await supabase.rpc('coach_save_equipment', { p: rows.map(r => ({ item: r.item, good: r.good, worn: r.worn, needed: r.needed, notes: r.notes })) })
+    const payload = [...rows.map(r => ({ item: r.item, label: r.label, good: r.good, worn: r.worn, needed: r.needed, notes: r.notes })), ...removed.map(item => ({ item, remove: true }))]
+    const { error } = await supabase.rpc('coach_save_equipment', { p: payload })
     setBusy(false)
     if (error) return setMsg({ tone: 'bad', text: error.message })
     setDirty(false); await reload(); setMsg({ tone: 'good', text: t('done') })
@@ -680,27 +689,70 @@ function EquipmentCard() {
       <div className="flex items-start justify-between gap-3">
         <div><div className="flex items-center gap-1.5 font-semibold"><Package size={16} />{t('equipmentTitle')}</div><p className="mt-0.5 text-sm text-muted">{t('equipmentHint')}</p>
           <p className="mt-0.5 text-xs text-faint">{academy?.equipment_updated_at ? `${t('lastCounted')}: ${fmtDate(academy.equipment_updated_at.slice(0, 10), false)} · ` : ''}{have} {t('eqHave')}{need > 0 ? ` · ${need} ${t('eqNeeded')}` : ''}</p></div>
-        {!preview && <Button size="sm" variant="primary" loading={busy} disabled={!dirty} onClick={save}>{t('saveEquipment')}</Button>}
+        {!preview && <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row"><Button size="sm" onClick={() => setPicking(true)}><Plus size={14} />{t('addEquipment')}</Button><Button size="sm" variant="primary" loading={busy} disabled={!dirty} onClick={save}>{t('saveEquipment')}</Button></div>}
       </div>
       {msg && <div className="mt-2"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
-      <div className="mt-3 grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 text-[10px] font-semibold uppercase tracking-wide text-muted">
-        <span /><span className="w-[92px] text-center text-grass">{t('cGood')}</span><span className="w-[92px] text-center text-warn">{t('cWorn')}</span><span className="w-[92px] text-center text-royal">{t('cNeeded')}</span>
-      </div>
-      <ul className="divide-y divide-line">
-        {rows.map(r => (
-          <li key={r.item} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 py-1.5 text-sm">
-            <span className="min-w-0 truncate font-medium">{t(EQ_T[r.item])}{r.good + r.worn > 0 && <span className="ml-1 text-xs text-muted">· {r.good + r.worn}</span>}</span>
-            <Counter r={r} k="good" cls={r.good > 0 ? 'border-grass/50 bg-good-soft/40' : 'border-line-2'} />
-            <Counter r={r} k="worn" cls={r.worn > 0 ? 'border-warn/50 bg-warn-soft/40' : 'border-line-2'} />
-            <Counter r={r} k="needed" cls={r.needed > 0 ? 'border-royal/50 bg-royal-soft/40' : 'border-line-2'} />
-          </li>
-        ))}
-      </ul>
+      {rows.length === 0 ? <p className="mt-3 text-sm text-faint">{t('noEquipment')}</p> : (<>
+        <div className="mt-3 grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-x-2 text-[10px] font-semibold uppercase tracking-wide text-muted">
+          <span /><span className="w-[92px] text-center text-grass">{t('cGood')}</span><span className="w-[92px] text-center text-warn">{t('cWorn')}</span><span className="w-[92px] text-center text-royal">{t('cNeeded')}</span><span className="w-6" />
+        </div>
+        <ul className="divide-y divide-line">
+          {rows.map(r => (
+            <li key={r.item} className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-x-2 py-1.5 text-sm">
+              <span className="min-w-0 truncate font-medium">{equipmentName(r.item, L, r.label)}{isCustom(r.item) && <span className="ml-1 text-[10px] text-faint">✎</span>}{r.good + r.worn > 0 && <span className="ml-1 text-xs text-muted">· {r.good + r.worn}</span>}</span>
+              <Counter r={r} k="good" cls={r.good > 0 ? 'border-grass/50 bg-good-soft/40' : 'border-line-2'} />
+              <Counter r={r} k="worn" cls={r.worn > 0 ? 'border-warn/50 bg-warn-soft/40' : 'border-line-2'} />
+              <Counter r={r} k="needed" cls={r.needed > 0 ? 'border-royal/50 bg-royal-soft/40' : 'border-line-2'} />
+              {!preview ? <button type="button" onClick={() => remove(r.item)} className="rounded p-1 text-faint hover:text-danger" aria-label={t('remove')}><Trash2 size={13} /></button> : <span className="w-6" />}
+            </li>
+          ))}
+        </ul>
+      </>)}
+      {picking && <EquipmentPicker have={rows.map(r => r.item)} onAdd={add} onClose={() => setPicking(false)} />}
     </Card>
   )
 }
 
-/* ───────────────────────── Academy ───────────────────────── */
+function EquipmentPicker({ have, onAdd, onClose }: { have: string[]; onAdd: (codes: { code: string; label?: string }[]) => void; onClose: () => void }) {
+  const { t, lang } = useT()
+  const L = lang === 'rw' ? 'rw' : 'en'
+  const [q, setQ] = useState('')
+  const [picked, setPicked] = useState<Set<string>>(new Set())
+  const [custom, setCustom] = useState('')
+  const toggle = (c: string) => setPicked(s => { const n = new Set(s); if (n.has(c)) n.delete(c); else n.add(c); return n })
+  const needle = q.trim().toLowerCase()
+  const groups = EQUIPMENT_GROUPS.map(g => ({ ...g, items: g.items.filter(i => !needle || i.en.toLowerCase().includes(needle) || i.rw.toLowerCase().includes(needle)) })).filter(g => g.items.length)
+  const done = () => {
+    const list: { code: string; label?: string }[] = [...picked].map(code => ({ code }))
+    if (custom.trim()) list.push({ code: customCode(custom), label: custom.trim() })
+    if (list.length) onAdd(list); else onClose()
+  }
+  return (
+    <Modal open onClose={onClose} title={t('addEquipment')}
+      footer={<><Button variant="ghost" onClick={onClose}>{t('cancel')}</Button><Button variant="primary" disabled={!picked.size && !custom.trim()} onClick={done}>{t('addSelected')}{picked.size + (custom.trim() ? 1 : 0) > 0 ? ` (${picked.size + (custom.trim() ? 1 : 0)})` : ''}</Button></>}>
+      <SearchInput value={q} onChange={setQ} placeholder={t('searchEquipment')} className="mb-3" />
+      <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+        {groups.map(g => (
+          <div key={g.code}>
+            <div className="label-caps mb-1.5 text-muted">{L === 'rw' ? g.rw : g.en}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {g.items.map(i => { const on = picked.has(i.code), has = have.includes(i.code); return (
+                <button key={i.code} type="button" disabled={has} onClick={() => toggle(i.code)} aria-pressed={on}
+                  className={cx('h-8 rounded-md border px-3 text-sm font-semibold', has ? 'border-line bg-paper text-faint line-through' : on ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{L === 'rw' ? i.rw : i.en}</button>
+              ) })}
+            </div>
+          </div>
+        ))}
+        {!groups.length && <p className="text-sm text-faint">{t('noEquipmentMatch')}</p>}
+      </div>
+      <div className="mt-3 border-t border-line pt-3">
+        <Field label={t('somethingElse')} hint={t('somethingElseHint')}><Input value={custom} onChange={e => setCustom(e.target.value)} maxLength={60} placeholder={t('somethingElsePh')} /></Field>
+      </div>
+    </Modal>
+  )
+}
+
+/* ───────────────────────── Academy ───────────────────────── *//* ───────────────────────── Academy ───────────────────────── */
 
 const DAYS: [string, 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'][] = [['Mon', 'mon'], ['Tue', 'tue'], ['Wed', 'wed'], ['Thu', 'thu'], ['Fri', 'fri'], ['Sat', 'sat'], ['Sun', 'sun']]
 

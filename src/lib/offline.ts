@@ -226,7 +226,7 @@ async function patchCache(method: string, path: string, body: string | null, mid
     } else if (n === 'coach_delete_staff') {
       await rewrite(r => r.url.includes('/rpc/coach_academy'), j => { if (isObj(j) && Array.isArray(j.staff)) j.staff = j.staff.filter(o => !(isObj(o) && o.id === args.p_id)); return j })
     } else if (n === 'coach_save_equipment') {
-      await rewrite(r => r.url.includes('/rpc/coach_academy'), j => (isObj(j) ? { ...j, equipment: Array.isArray(args.p) ? args.p.map((e: Json) => (isObj(e) ? { ...e, quantity: Number(e.good ?? 0) + Number(e.worn ?? 0), updated_at: now } : e)) : j.equipment, equipment_updated_at: now, pending: true } : undefined))
+      await rewrite(r => r.url.includes('/rpc/coach_academy'), j => (isObj(j) ? { ...j, equipment: Array.isArray(args.p) ? args.p.filter((e: Json) => isObj(e) && !e.remove).map((e: Json) => (isObj(e) ? { ...e, quantity: Number(e.good ?? 0) + Number(e.worn ?? 0), updated_at: now } : e)) : j.equipment, equipment_updated_at: now, pending: true } : undefined))
     } else if (n === 'coach_delete_session') {
       await rewrite(r => r.url.includes('/rpc/coach_sessions'), j => Array.isArray(j) ? j.filter(o => !(isObj(o) && o.id === args.p_id)) : undefined)
     } else if (n === 'coach_save_academy') {

@@ -44,9 +44,7 @@ export interface Match { id: string; played_on: string; kind: MatchKind; opponen
 export type StaffRole = 'head_coach' | 'assistant' | 'gk_coach' | 'fitness' | 'physio' | 'manager' | 'volunteer' | 'other'
 export const STAFF_ROLES: StaffRole[] = ['head_coach', 'assistant', 'gk_coach', 'fitness', 'physio', 'manager', 'volunteer', 'other']
 export interface StaffMember { id: string; name: string; role: StaffRole; phone: string | null; since_year: number | null; active: boolean; notes: string | null; pending?: boolean }
-export type EquipmentItem = 'balls' | 'bibs' | 'cones' | 'goals' | 'nets' | 'first_aid' | 'water' | 'kits' | 'gk_gloves' | 'pump' | 'whistle' | 'other'
-export const EQUIPMENT: EquipmentItem[] = ['balls', 'bibs', 'cones', 'goals', 'nets', 'first_aid', 'water', 'kits', 'gk_gloves', 'pump', 'whistle', 'other']
-export interface Equipment { item: EquipmentItem; good: number; worn: number; needed: number; quantity: number; condition: 'good' | 'worn' | 'missing'; notes: string | null; updated_at: string | null }
+export interface Equipment { item: string; label: string | null; good: number; worn: number; needed: number; quantity: number; condition: 'good' | 'worn' | 'missing'; notes: string | null; updated_at: string | null }
 export interface Standing { submitted: number; selected: number; rank: number | null; academies: number; region: string | null }
 export type ProgrammeStatus = 'registered' | 'observed' | 'partner' | 'official'
 export interface Level { code: string; label: string; min_points: number; next?: { code: string; label: string; min_points: number } | null }
