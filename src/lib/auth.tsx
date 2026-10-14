@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { Session } from '@supabase/supabase-js'
 import { stopViewAs, viewingAs } from './viewAs'
 import { supabase, type Profile, type Project, type Season } from './supabase'
+import { clearCache, clearOutbox } from './offline'
 
 interface AuthState {
   loading: boolean
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((evt, s) => {
       const prev = currentUser.current
       const next = s?.user.id ?? null
-      if (evt === 'SIGNED_OUT' || (evt === 'SIGNED_IN' && next !== prev)) { currentUser.current = next; setLoading(true); load(s) }
+      if (evt === 'SIGNED_OUT' || (evt === 'SIGNED_IN' && next !== prev)) { currentUser.current = next; setLoading(true); if (prev) { clearCache(); clearOutbox() } load(s) }
       else setSession(s)
     })
     return () => sub.subscription.unsubscribe()

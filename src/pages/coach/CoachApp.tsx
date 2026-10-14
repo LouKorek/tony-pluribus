@@ -60,7 +60,7 @@ function CoachTours({ children }: { children: ReactNode }) {
   const tab = new URLSearchParams(loc.search).get('tab')
   const screen = rel === '/' ? 'coach-home' : rel === '/team' ? (tab === 'training' ? 'coach-training' : tab === 'academy' ? 'coach-academy' : 'coach-team') : rel === '/schedule' ? 'coach-schedule' : rel === '/progress' ? 'coach-progress' : rel === '/updates' ? 'coach-updates' : null
   return (
-    <TourProvider tours={COACH_TOURS} screen={screen} lang={lang} seen={profile?.tours_seen ?? []}
+    <TourProvider tours={COACH_TOURS} screen={screen} lang={lang === 'rw' ? 'rw' : 'en'} seen={profile?.tours_seen ?? []}
       onSeen={key => { supabase.rpc('tour_seen', { p_key: key }).then(() => {}) }}>
       {children}
     </TourProvider>
@@ -80,7 +80,7 @@ function CoachHelp() {
 
 function Shell({ children }: { children: ReactNode }) {
   const { signOut } = useAuth()
-  const { t, lang, setLang } = useT()
+  const { t, lang, setLang, languages } = useT()
   const { loading, error, notifs, squad, schedule, preview, base, academy } = useCoach()
   const unread = notifs.filter(n => !n.read_at).length
   const today = new Date().toISOString().slice(0, 10)
@@ -104,12 +104,14 @@ function Shell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Brand compact />
           <div className="flex items-center gap-1">
-            <div data-tour="lang" className="mr-1 flex rounded-md bg-white/8 p-0.5 text-[12px] font-bold" role="group" aria-label={t('language')}>
-              {(['en', 'rw'] as const).map(l => (
-                <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l}
-                  className={cx('rounded px-2 py-1 uppercase', lang === l ? 'bg-neon text-ink' : 'text-white/60 hover:text-white')}>{l}</button>
-              ))}
-            </div>
+            {languages.length > 1 && (
+              <div data-tour="lang" className="mr-1 flex rounded-md bg-white/8 p-0.5 text-[12px] font-bold" role="group" aria-label={t('language')}>
+                {languages.map(l => (
+                  <button key={l.code} onClick={() => setLang(l.code)} aria-pressed={lang === l.code} title={l.label}
+                    className={cx('rounded px-2 py-1 uppercase', lang === l.code ? 'bg-neon text-ink' : 'text-white/60 hover:text-white')}>{l.code}</button>
+                ))}
+              </div>
+            )}
             {!preview && <SyncButton labels={{ offline: t('offline'), offlineHint: t('offlineHint'), savedCopy: t('savedCopy'), pending: t('pendingChanges'), failed: t('failedChanges'), sendNow: t('sendNow'), syncing: t('syncing'), allSent: t('allSent'), discard: t('discard'), retry: t('retry'), title: t('outboxTitle') }} />}
             <InstallButton variant="icon" label="Install the app" />
             <CoachHelp />

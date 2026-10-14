@@ -4,6 +4,7 @@ import { Award, Eye, MessageSquare, Minus, Plus, Star, Trophy, Users2 } from 'lu
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useRefData, fmtDate } from '../../lib/scouting'
+import { useGeo } from '../../lib/brand'
 import { fmtWhen } from '../../lib/notifications'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, MultiSelect, PageHeader, SearchInput, Segmented, Select, Spinner, Stat, Td, Textarea, Th, cx } from '../../components/ui'
 
@@ -28,6 +29,7 @@ const LEVEL_TONE: Record<string, string> = { Rookie: 'bg-black/5 text-muted', Br
 export default function CoachesPage() {
   const { can } = useAuth()
   const ref = useRefData()
+  const geo = useGeo()
   const [rows, setRows] = useState<Row[] | null>(null)
   const [board, setBoard] = useState<BoardRow[] | null>(null)
   const [view, setView] = useState<'coaches' | 'board'>('coaches')
@@ -80,7 +82,7 @@ export default function CoachesPage() {
         {view === 'coaches' && (
           <div className="flex flex-1 flex-wrap items-center gap-2" data-tour="filters">
             <SearchInput value={q} onChange={setQ} placeholder="Coach, academy, district, phone" className="min-w-[220px] flex-1" />
-            <MultiSelect options={ref.regions.map(r => ({ value: r.id, label: r.name }))} value={region} onChange={setRegion} placeholder="All provinces" className="w-44" />
+            <MultiSelect options={ref.regions.map(r => ({ value: r.id, label: r.name }))} value={region} onChange={setRegion} placeholder={`All ${geo.regions.toLowerCase()}`} className="w-44" />
             <MultiSelect options={Object.entries(PROGRAMME).map(([v, [l]]) => ({ value: v, label: l }))} value={prog} onChange={setProg} placeholder="All statuses" className="w-40" />
             <Select value={sort} onChange={e => setSort(e.target.value as typeof sort)}>
               <option value="points">Sort: season points</option><option value="name">Sort: name</option><option value="activity">Sort: last seen</option><option value="review">Sort: review</option>
@@ -120,7 +122,7 @@ export default function CoachesPage() {
         <Card className="mt-4 overflow-x-auto" data-tour="board">
           {!board?.length ? <Empty icon={<Trophy size={20} />} title="No points yet this season">The board fills as coaches add players, log training and come to camps.</Empty> : (
             <table className="w-full text-sm">
-              <thead className="border-b border-line bg-paper/60"><tr><Th className="w-16">Rank</Th><Th>Academy</Th><Th>District</Th><Th>Province</Th><Th className="text-right">Season points</Th></tr></thead>
+              <thead className="border-b border-line bg-paper/60"><tr><Th className="w-16">Rank</Th><Th>Academy</Th><Th>{geo.district}</Th><Th>{geo.region}</Th><Th className="text-right">Season points</Th></tr></thead>
               <tbody className="divide-y divide-line">
                 {board.map(r => (
                   <tr key={r.academy_id} className={cx(r.rank <= 3 && 'bg-neon/10')}>

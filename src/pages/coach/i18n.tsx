@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/auth'
+import { LANGUAGE_NAMES, type ProjectSettings } from '../../lib/brand'
 
 // English is the master text. The Kinyarwanda column is a first draft and needs a review by a native speaker.
 const S = {
@@ -211,6 +214,7 @@ const S = {
   noPointsYet: ['No points yet', 'Nta manota uragira'],
   noPointsHint: ['Add your players, log your training and come to the camps. Every step counts.', "Ongeramo abakinnyi bawe, andika imyitozo yawe, uze mu makambi. Buri ntambwe ibarwa."],
   provinceBoard: ['Academies in your province', "Amashuri yo mu ntara yawe"],
+  academiesIn: ['Academies in your', 'Amashuri yo mu'],
   boardEmpty: ['No academy in your province has points yet. Be the first.', "Nta shuri ryo mu ntara yawe rirabona amanota. Ba uwa mbere."],
   you: ['you', 'wowe'],
   staffFeedback: ['Feedback from Tony staff', "Ibitekerezo by'abakozi ba Tony"],
@@ -241,7 +245,8 @@ const S = {
 } as const
 
 export type Key = keyof typeof S
-export type Lang = 'en' | 'rw'
+/** 'en', 'rw', or any code the project configures; unknown codes fall back to English plus the project's own strings. */
+export type Lang = string
 
 export const STATUS_T: Record<string, [string, string]> = {
   submitted: ['Submitted', 'Yoherejwe'], invited: ['Invited', 'Yatumiwe'], confirmed: ['Coming', 'Azaza'],
@@ -254,20 +259,30 @@ export const STAGE_T: Record<string, [string, string]> = {
   district: ['District camp', "Ikambi y'akarere"], province_final: ['Province final', "Irushanwa rya nyuma ry'intara"], national_final: ['National final', "Irushanwa rya nyuma ry'igihugu"],
 }
 
-interface LangCtx { lang: Lang; setLang: (l: Lang) => void; t: (k: Key) => string; pick: (pair: readonly [string, string] | undefined) => string }
+interface LangCtx { lang: Lang; setLang: (l: Lang) => void; t: (k: Key) => string; pick: (pair: readonly [string, string] | undefined) => string; languages: { code: string; label: string }[] }
 const Ctx = createContext<LangCtx | null>(null)
 
 function readLang(): Lang {
-  try { return localStorage.getItem('tonynext.lang') === 'rw' ? 'rw' : 'en' } catch { return 'en' }
+  try { return localStorage.getItem('tonynext.lang') || 'en' } catch { return 'en' }
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
+  const { project } = useAuth()
+  const codes = ((project?.settings as ProjectSettings | undefined)?.languages ?? ['en', 'rw']).filter(Boolean)
+  const languages = (codes.length ? codes : ['en']).map(c => ({ code: c, label: LANGUAGE_NAMES[c] ?? c.toUpperCase() }))
   const [lang, set] = useState<Lang>(readLang)
+  const [over, setOver] = useState<Record<string, Record<string, string>>>({})
+  // the project's own wording per language (Settings › Portal languages); cached for offline like every read
+  useEffect(() => { supabase.rpc('portal_strings').then(({ data }) => setOver((data as Record<string, Record<string, string>>) ?? {})) }, [project?.id])
+  const active = languages.some(l => l.code === lang) ? lang : languages[0].code
   const setLang = (l: Lang) => { set(l); try { localStorage.setItem('tonynext.lang', l) } catch { /* private mode */ } }
-  const i = lang === 'rw' ? 1 : 0
-  const value: LangCtx = { lang, setLang, t: k => S[k][i], pick: p => (p ? p[i] : '') }
+  const i = active === 'rw' ? 1 : 0
+  const t = (k: Key) => over[active]?.[k] ?? S[k][i]
+  const value: LangCtx = { lang: active, setLang, t, pick: p => (p ? p[i] : ''), languages }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
+/** Every portal string with its English and Kinyarwanda base text, for the Settings editor. */
+export const BASE_STRINGS = S
 
 export function useT() {
   const c = useContext(Ctx)

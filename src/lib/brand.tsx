@@ -53,6 +53,21 @@ function boltLattice(W: number, H: number, scale: number, gap: number) {
 export interface Partner { name: string; logo: string | null; show_in: ('certificates' | 'exports' | 'share')[] }
 export interface ProjectSettings { tagline?: string; partner?: Partner | null; languages?: string[]; currency?: string; geo_labels?: { region: string; district: string } }
 
+/** What this project calls its two geographic levels (Rwanda: Province and District). */
+export function useGeo(): { region: string; district: string; regions: string; districts: string } {
+  const { project } = useAuth()
+  const g = (project?.settings as ProjectSettings | undefined)?.geo_labels
+  const region = g?.region || 'Province', district = g?.district || 'District'
+  const plural = (w: string) => (/[sxz]$|[^aeiou]y$/.test(w) ? (w.endsWith('y') ? w.slice(0, -1) + 'ies' : w + 'es') : w + 's')
+  return { region, district, regions: plural(region), districts: plural(district) }
+}
+/** Currency code of the project (RWF for Rwanda). */
+export function useCurrency(): string {
+  const { project } = useAuth()
+  return (project?.settings as ProjectSettings | undefined)?.currency || 'USD'
+}
+export const LANGUAGE_NAMES: Record<string, string> = { en: 'English', rw: 'Kinyarwanda', fr: 'Français', sw: 'Kiswahili', pt: 'Português', es: 'Español', ar: 'العربية', am: 'አማርኛ', he: 'עברית' }
+
 /** The partner of the current project, if any, and where it is shown. */
 export function usePartner(where: Partner['show_in'][number]): Partner | null {
   const { project } = useAuth()

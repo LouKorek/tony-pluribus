@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Check, CircleHelp, LogOut, Menu, X, ChevronsUpDown } from 'lucide-react'
 import { NAV, BUILD_STAGE } from '../lib/nav'
 import { useAuth } from '../lib/auth'
@@ -12,15 +12,28 @@ import { InstallButton } from '../lib/install'
 import { APP_NAME, Logo } from '../lib/brand'
 import { NotificationBell } from '../components/NotificationBell'
 import { SYNC_EN, SyncButton } from '../components/SyncStatus'
+import { clearCache } from '../lib/offline'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return <Logo variant="wordmark" color="neon" className={compact ? 'h-[18px]' : 'h-[22px]'} />
 }
 
 /** Project and the scouting season the screens show. A custom list, readable on the dark sidebar. */
+interface MyProject { id: string; name: string; slug: string; country: string | null; current: boolean }
 function SeasonPicker() {
-  const { project, seasons, scoutingSeason, viewSeason, setViewSeason } = useAuth()
+  const { project, seasons, scoutingSeason, viewSeason, setViewSeason, refresh } = useAuth()
+  const nav = useNavigate()
   const [open, setOpen] = useState(false)
+  const [projects, setProjects] = useState<MyProject[]>([])
+  const [switching, setSwitching] = useState(false)
+  useEffect(() => { supabase.rpc('my_projects').then(({ data }) => setProjects((data as MyProject[]) ?? [])) }, [project?.id])
+  async function switchTo(id: string) {
+    if (id === project?.id) { setOpen(false); return }
+    setSwitching(true)
+    const { error } = await supabase.rpc('switch_project', { p_project: id })
+    if (!error) { await clearCache(); try { sessionStorage.removeItem('tonynext.viewSeason') } catch { /* storage blocked */ } await refresh(); nav('/') }
+    setSwitching(false); setOpen(false)
+  }
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
@@ -42,6 +55,18 @@ function SeasonPicker() {
       </button>
       {open && (
         <div role="listbox" className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-white/10 bg-ink-3 py-1 shadow-2xl">
+          {projects.length > 1 && (
+            <div className="border-b border-white/10 pb-1">
+              <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-white/40">Project</div>
+              {projects.map(p => (
+                <button key={p.id} type="button" disabled={switching} onClick={() => switchTo(p.id)}
+                  className={cx('flex w-full items-center gap-2 px-3 py-2 text-left text-sm', p.current ? 'bg-white/10 font-semibold text-white' : 'text-white/80 hover:bg-white/5 hover:text-white')}>
+                  <span className="flex-1 truncate">{p.name}{p.country ? <span className="font-normal text-white/50"> · {p.country}</span> : ''}</span>
+                  {p.current ? <Check size={14} className="text-neon" /> : <span className="w-3.5" />}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-white/40">Scouting season</div>
           {[...seasons].reverse().map(s => {
             const on = s.id === viewSeason?.id

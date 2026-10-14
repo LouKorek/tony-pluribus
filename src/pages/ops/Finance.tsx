@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FileText, Plus, Wallet } from 'lucide-react'
 import { supabase, errMsg } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
+import { useCurrency } from '../../lib/brand'
 import { useFileLinks } from '../../lib/teams'
 import { Alert, Button, Card, DeleteButton, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Stat, cx, useDebounced } from '../../components/ui'
 
@@ -12,6 +13,7 @@ const monthLabel = (m: string) => new Date(m + '-01T00:00:00').toLocaleDateStrin
 
 export default function FinancePage() {
   const { can } = useAuth()
+  const cur = useCurrency()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [acc, setAcc] = useState<string[]>([])
   const [months, setMonths] = useState<string[]>([])
@@ -56,7 +58,7 @@ export default function FinancePage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Operations" title="Finance" description="Every expense and income of the mobile-money account and the staff cash books, with the receipt from the Finance folder. Amounts in RWF."
+      <PageHeader eyebrow="Operations" title="Finance" description={`Every expense and income of the mobile-money account and the staff cash books, with the receipt from the Finance folder. Amounts in ${cur}.`}
         actions={canEdit ? <Button variant="primary" onClick={() => setEditing('new')}><Plus size={16} /> New entry</Button> : undefined} />
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <Select data-tour="fin-month" className="lg:w-52" value={month} onChange={e => setMonth(e.target.value)}>
@@ -67,8 +69,8 @@ export default function FinancePage() {
         <SearchInput className="lg:ml-auto lg:w-64" value={q} onChange={setQ} placeholder="Search description or payee" />
       </div>
       <div data-tour="fin-totals" className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat accent label="Spent" value={rwf(totals.out)} sub="RWF" />
-        <Stat label="Received" value={rwf(totals.inn)} sub="RWF" />
+        <Stat accent label="Spent" value={rwf(totals.out)} sub={cur} />
+        <Stat label="Received" value={rwf(totals.inn)} sub={cur} />
         <Stat label="Entries" value={shown.length} />
         <Stat label="With receipt" value={shown.filter(r => r.file_id || r.invoice_ref).length} sub={`of ${shown.length}`} />
       </div>
@@ -113,6 +115,7 @@ export default function FinancePage() {
 
 function TxModal({ tx, accounts, types, onClose, onDone }: { tx: Tx | null; accounts: Account[]; types: string[]; onClose: () => void; onDone: () => void }) {
   const { profile } = useAuth()
+  const cur = useCurrency()
   const [f, setF] = useState({ account_id: tx?.account_id ?? accounts[0]?.id ?? '', day: tx?.day ?? new Date().toISOString().slice(0, 10), out: tx ? String(Number(tx.amount_out) || '') : '', inn: tx ? String(Number(tx.amount_in) || '') : '', description: tx?.description ?? '', type: tx?.type ?? '', subtype: tx?.subtype ?? '', payee: tx?.payee ?? '', invoice_ref: tx?.invoice_ref ?? '' })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -134,8 +137,8 @@ function TxModal({ tx, accounts, types, onClose, onDone }: { tx: Tx | null; acco
         <div className="grid gap-3 sm:grid-cols-4">
           <Field label="Account"><Select value={f.account_id} onChange={e => setF({ ...f, account_id: e.target.value })}>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</Select></Field>
           <Field label="Date"><Input type="date" value={f.day} onChange={e => setF({ ...f, day: e.target.value })} /></Field>
-          <Field label="Out (RWF)"><Input inputMode="numeric" value={f.out} onChange={e => setF({ ...f, out: e.target.value.replace(/[^\d.]/g, '') })} /></Field>
-          <Field label="In (RWF)"><Input inputMode="numeric" value={f.inn} onChange={e => setF({ ...f, inn: e.target.value.replace(/[^\d.]/g, '') })} /></Field>
+          <Field label={`Out (${cur})`}><Input inputMode="numeric" value={f.out} onChange={e => setF({ ...f, out: e.target.value.replace(/[^\d.]/g, '') })} /></Field>
+          <Field label={`In (${cur})`}><Input inputMode="numeric" value={f.inn} onChange={e => setF({ ...f, inn: e.target.value.replace(/[^\d.]/g, '') })} /></Field>
         </div>
         <Field label="Description"><Input value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></Field>
         <div className="grid gap-3 sm:grid-cols-3">

@@ -16,7 +16,7 @@ export const STAFF_TOURS: TourMap = {
   overview: [
     { title: 'Welcome to Tony Next', body: 'This is the home of the Tony programme. Every screen has a short tour like this one the first time you open it. You can skip it at any step.' },
     { target: 'nav', title: 'The menu', body: 'Everything lives here, grouped by area. Items marked "Soon" are already planned and open in a later stage of the build.' },
-    { target: 'project-box', title: 'Project and season', body: 'The project you work in and the scouting season the screens show. Click it to switch to an earlier season and see its camps, finals and pool.' },
+    { target: 'project-box', title: 'Project and season', body: 'The project (country) you work in and the scouting season the screens show. Click it to look at an earlier season, or to switch to another project you belong to.' },
     { target: 'overview-stats', title: 'At a glance', body: 'The season, the academy register, players and camps planned. The numbers update as the staff work.' },
     { target: 'help', title: 'Need the tour again?', body: 'Press the "?" button on any screen to replay the tour of that screen.' },
     { title: 'Works without network', body: 'Tony Next keeps a copy of what you have seen on this device. With no network, screens show the last saved copy and anything you save (camp sheet marks, bookings, decisions) waits in an outbox and is sent when the network is back. A pill at the bottom of the menu shows what is waiting.' },
@@ -168,5 +168,9 @@ export const STAFF_TOURS: TourMap = {
     { target: 'age-groups', title: 'Age groups', body: 'The birth years of each age group for the scouting season. Camps and pools use them everywhere.' },
     { target: 'brand', title: 'Brand and partner', body: 'Tony is the brand everywhere. The partner of this project appears only where you tick: certificates, reports and shared pages.' },
     { target: 'points', title: 'Points and levels', body: 'What each action earns the coach, the daily or weekly caps, and the points each level needs. Change a value and it applies from the next award.' },
+    { target: 'locale', title: 'Country words', body: 'What this country calls its geography levels, and the currency. Screens, filters and the coach portal use these words.' },
+    { target: 'languages', title: 'Coach portal languages', body: 'The languages coaches can switch between. Add a language and set the wording text by text; English stays the fallback.' },
+    { target: 'projects', title: 'Projects', body: 'Owners open Tony Next in another country from here: a new project with its own season, geography and users. Data never crosses between projects.' },
+    { target: 'geo', title: 'Geography', body: 'The provinces and districts of this project. Add more with one line per province.' },
   ],
 }

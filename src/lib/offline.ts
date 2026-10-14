@@ -268,3 +268,4 @@ export const outboxList = () => db.outbox.orderBy('at').toArray()
 export async function discardOutbox(id: string) { await db.outbox.delete(id); await recount() }
 export async function retryOutbox(id: string) { await db.outbox.update(id, { error: null }); await recount(); return flush() }
 export const clearCache = () => db.cache.clear()
+export const clearOutbox = async () => { await db.outbox.clear(); await recount() }

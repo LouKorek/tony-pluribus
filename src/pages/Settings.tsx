@@ -2,11 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { Save, Trophy } from 'lucide-react'
 import { supabase, errMsg, type AgeGroup, type District, type Region } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { Alert, Badge, Button, Card, Field, Input, PageHeader, Select, cx } from '../components/ui'
-import { Logo, type Partner, type ProjectSettings } from '../lib/brand'
+import { Alert, Badge, Button, Card, Field, Input, Modal, PageHeader, SearchInput, Select, Textarea, cx } from '../components/ui'
+import { LANGUAGE_NAMES, Logo, useGeo, type Partner, type ProjectSettings } from '../lib/brand'
+import { clearCache } from '../lib/offline'
+import { BASE_STRINGS } from './coach/i18n'
+import { useNavigate } from 'react-router-dom'
 
 export default function SettingsPage() {
-  const { project, seasons, scoutingSeason, refresh } = useAuth()
+  const { project, seasons, scoutingSeason, refresh, profile } = useAuth()
+  const geo = useGeo()
   const [groups, setGroups] = useState<AgeGroup[]>([])
   const [regions, setRegions] = useState<Region[]>([])
   const [districts, setDistricts] = useState<District[]>([])
@@ -91,9 +95,15 @@ export default function SettingsPage() {
 
         <BrandCard project={project} onSaved={refresh} />
         <PointsCard projectId={project?.id} />
+        <LocaleCard project={project} onSaved={refresh} />
+        <LanguagesCard project={project} onSaved={refresh} />
+        {profile?.role === 'owner' && <ProjectsCard onSwitched={refresh} />}
 
-        <Card className="p-5 lg:col-span-2">
-          <div className="label-caps text-muted">Provinces and districts</div>
+        <Card className="p-5 lg:col-span-2" data-tour="geo">
+          <div className="flex items-start justify-between gap-3">
+            <div className="label-caps text-muted">{geo.regions} and {geo.districts.toLowerCase()}</div>
+            <GeoImport projectId={project?.id} geo={geo} onDone={load} />
+          </div>
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {regions.map(r => (
               <div key={r.id}>
@@ -256,5 +266,252 @@ function PointsCard({ projectId }: { projectId: string | undefined }) {
         </div>
       </div>
     </Card>
+  )
+}
+
+/* ───────────────────────── Locale: currency, geography words ───────────────────────── */
+
+function LocaleCard({ project, onSaved }: { project: ReturnType<typeof useAuth>['project']; onSaved: () => Promise<void> }) {
+  const st = (project?.settings ?? {}) as ProjectSettings
+  const [currency, setCurrency] = useState(st.currency ?? 'USD')
+  const [region, setRegion] = useState(st.geo_labels?.region ?? 'Province')
+  const [district, setDistrict] = useState(st.geo_labels?.district ?? 'District')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
+  useEffect(() => { const x = (project?.settings ?? {}) as ProjectSettings; setCurrency(x.currency ?? 'USD'); setRegion(x.geo_labels?.region ?? 'Province'); setDistrict(x.geo_labels?.district ?? 'District') }, [project])
+  async function save() {
+    if (!project) return
+    setBusy(true); setMsg(null)
+    const settings = { ...(project.settings ?? {}), currency: currency.trim().toUpperCase() || 'USD', geo_labels: { region: region.trim() || 'Province', district: district.trim() || 'District' } }
+    const { error } = await supabase.from('projects').update({ settings }).eq('id', project.id)
+    setBusy(false)
+    if (error) return setMsg({ tone: 'bad', text: errMsg(error) })
+    await onSaved(); setMsg({ tone: 'good', text: 'Saved.' })
+  }
+  return (
+    <Card data-tour="locale" className="p-5">
+      <div className="label-caps text-muted">Country words</div>
+      <p className="mt-1 text-sm text-muted">What this country calls its two levels of geography, and the currency of its finance.</p>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <Field label="Upper level" hint="e.g. Province, Region, State"><Input value={region} onChange={e => setRegion(e.target.value)} /></Field>
+        <Field label="Lower level" hint="e.g. District, County"><Input value={district} onChange={e => setDistrict(e.target.value)} /></Field>
+        <Field label="Currency" hint="ISO code"><Input value={currency} maxLength={3} onChange={e => setCurrency(e.target.value)} className="w-24 uppercase" /></Field>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        {msg ? <Alert tone={msg.tone}>{msg.text}</Alert> : <span />}
+        <Button variant="primary" loading={busy} onClick={save}><Save size={15} />Save</Button>
+      </div>
+    </Card>
+  )
+}
+
+/* ───────────────────────── Portal languages and wording ───────────────────────── */
+
+function LanguagesCard({ project, onSaved }: { project: ReturnType<typeof useAuth>['project']; onSaved: () => Promise<void> }) {
+  const st = (project?.settings ?? {}) as ProjectSettings
+  const [codes, setCodes] = useState<string[]>(st.languages ?? ['en', 'rw'])
+  const [add, setAdd] = useState('')
+  const [editing, setEditing] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
+  useEffect(() => { setCodes(((project?.settings ?? {}) as ProjectSettings).languages ?? ['en', 'rw']) }, [project])
+  async function save(next: string[]) {
+    if (!project) return
+    setBusy(true); setMsg(null)
+    const { error } = await supabase.from('projects').update({ settings: { ...(project.settings ?? {}), languages: next } }).eq('id', project.id)
+    setBusy(false)
+    if (error) return setMsg({ tone: 'bad', text: errMsg(error) })
+    setCodes(next); await onSaved()
+  }
+  const addLang = () => { const c = add.trim().toLowerCase(); if (!/^[a-z]{2,3}$/.test(c)) return setMsg({ tone: 'bad', text: 'Use a two-letter language code, e.g. fr.' }); if (codes.includes(c)) return; save([...codes, c]); setAdd('') }
+  return (
+    <Card data-tour="languages" className="p-5">
+      <div className="label-caps text-muted">Coach portal languages</div>
+      <p className="mt-1 text-sm text-muted">Coaches switch between these in the portal. English and Kinyarwanda are built in; for any language you can set the project's own wording, word by word.</p>
+      {msg && <div className="mt-2"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+      <ul className="mt-3 divide-y divide-line rounded-lg border border-line">
+        {codes.map(c => (
+          <li key={c} className="flex items-center gap-2 px-3 py-2 text-sm">
+            <span className="w-10 rounded bg-ink px-1.5 py-0.5 text-center text-[11px] font-bold uppercase text-neon">{c}</span>
+            <span className="flex-1 font-semibold">{LANGUAGE_NAMES[c] ?? c}</span>
+            <span className="text-xs text-muted">{c === 'en' ? 'base' : c === 'rw' ? 'built in' : 'English until translated'}</span>
+            <button onClick={() => setEditing(c)} className="text-xs font-semibold text-royal hover:underline">Wording</button>
+            {c !== 'en' && <button onClick={() => save(codes.filter(x => x !== c))} disabled={busy} className="text-xs font-semibold text-danger hover:underline">Remove</button>}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex items-end gap-2">
+        <Field label="Add a language" hint="ISO code, e.g. fr, sw, pt"><Input value={add} onChange={e => setAdd(e.target.value)} className="w-28" placeholder="fr" /></Field>
+        <Button onClick={addLang} loading={busy}>Add</Button>
+      </div>
+      {editing && project && <StringsModal projectId={project.id} lang={editing} onClose={() => setEditing(null)} />}
+    </Card>
+  )
+}
+
+function StringsModal({ projectId, lang, onClose }: { projectId: string; lang: string; onClose: () => void }) {
+  const [over, setOver] = useState<Record<string, string>>({})
+  const [draft, setDraft] = useState<Record<string, string>>({})
+  const [q, setQ] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  useEffect(() => { supabase.from('portal_strings').select('key,text').eq('project_id', projectId).eq('lang', lang).then(({ data }) => { const m: Record<string, string> = {}; (data ?? []).forEach((r: { key: string; text: string }) => { m[r.key] = r.text }); setOver(m); setDraft(m) }) }, [projectId, lang])
+  const keys = (Object.keys(BASE_STRINGS) as (keyof typeof BASE_STRINGS)[]).filter(k => !q || k.toLowerCase().includes(q.toLowerCase()) || BASE_STRINGS[k][0].toLowerCase().includes(q.toLowerCase()))
+  const base = (k: keyof typeof BASE_STRINGS) => (lang === 'rw' ? BASE_STRINGS[k][1] : BASE_STRINGS[k][0])
+  const changed = Object.keys(draft).filter(k => (draft[k] ?? '') !== (over[k] ?? ''))
+  async function save() {
+    setBusy(true); setMsg(null)
+    for (const k of changed) {
+      const v = draft[k]?.trim()
+      const { error } = v ? await supabase.from('portal_strings').upsert({ project_id: projectId, lang, key: k, text: v, updated_at: new Date().toISOString() }) : await supabase.from('portal_strings').delete().eq('project_id', projectId).eq('lang', lang).eq('key', k)
+      if (error) { setBusy(false); return setMsg(errMsg(error)) }
+    }
+    await clearCache()
+    setOver({ ...draft }); setBusy(false); setMsg(`Saved ${changed.length} change${changed.length === 1 ? '' : 's'}. Coaches see them after their next refresh.`)
+  }
+  return (
+    <Modal open onClose={onClose} title={`Wording · ${LANGUAGE_NAMES[lang] ?? lang.toUpperCase()}`} wide
+      footer={<><span className="mr-auto text-xs text-muted">{changed.length ? `${changed.length} unsaved` : ''}</span><Button variant="ghost" onClick={onClose}>Close</Button><Button variant="primary" loading={busy} disabled={!changed.length} onClick={save}>Save</Button></>}>
+      <p className="mb-3 text-sm text-muted">Every text of the coach portal. Leave a line empty to keep the built-in text ({lang === 'rw' ? 'Kinyarwanda draft' : 'English'}).</p>
+      {msg && <div className="mb-3"><Alert tone={msg.startsWith('Saved') ? 'good' : 'bad'}>{msg}</Alert></div>}
+      <SearchInput value={q} onChange={setQ} placeholder="Find a text" className="mb-3" />
+      <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-line">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-paper text-left text-xs text-muted"><tr><th className="px-3 py-2">Key</th><th className="px-3 py-2">Built in</th><th className="px-3 py-2">This project</th></tr></thead>
+          <tbody className="divide-y divide-line">
+            {keys.map(k => (
+              <tr key={k}>
+                <td className="px-3 py-1.5 align-top text-xs text-faint">{k}</td>
+                <td className="px-3 py-1.5 align-top text-muted">{base(k)}</td>
+                <td className="px-3 py-1.5 align-top"><Input value={draft[k] ?? ''} placeholder={BASE_STRINGS[k][0]} onChange={e => setDraft(d => ({ ...d, [k]: e.target.value }))} className={cx('h-8 text-sm', (draft[k] ?? '') && 'border-ink')} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Modal>
+  )
+}
+
+/* ───────────────────────── Projects (owner): list, switch, create ───────────────────────── */
+
+interface MyProject { id: string; name: string; slug: string; country: string | null; is_active: boolean; current: boolean }
+
+function ProjectsCard({ onSwitched }: { onSwitched: () => Promise<void> }) {
+  const nav = useNavigate()
+  const [list, setList] = useState<MyProject[]>([])
+  const [creating, setCreating] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const load = useCallback(() => supabase.rpc('my_projects').then(({ data }) => setList((data as MyProject[]) ?? [])), [])
+  useEffect(() => { load() }, [load])
+  async function switchTo(id: string) {
+    setBusy(true)
+    const { error } = await supabase.rpc('switch_project', { p_project: id })
+    if (!error) { await clearCache(); try { sessionStorage.removeItem('tonynext.viewSeason') } catch { /* storage blocked */ } await onSwitched(); nav('/') }
+    setBusy(false)
+  }
+  return (
+    <Card data-tour="projects" className="p-5 lg:col-span-2">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="label-caps text-muted">Projects · countries</div>
+          <p className="mt-1 text-sm text-muted">One Tony Next for every country. Each project has its own seasons, geography, academies, players, users, points and brand line; nothing crosses over. You switch projects from the box at the top of the menu.</p>
+        </div>
+        <Button variant="primary" onClick={() => setCreating(true)}>New project</Button>
+      </div>
+      <ul className="mt-3 divide-y divide-line rounded-lg border border-line">
+        {list.map(p => (
+          <li key={p.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+            <span className="flex-1"><span className="font-semibold">{p.name}</span><span className="text-muted"> · {p.country ?? '—'} · /join/{p.slug}</span></span>
+            {p.current ? <Badge tone="neon">Current</Badge> : <Button size="sm" loading={busy} onClick={() => switchTo(p.id)}>Open</Button>}
+          </li>
+        ))}
+      </ul>
+      {creating && <NewProjectModal onClose={() => setCreating(false)} onCreated={async id => { setCreating(false); await load(); await switchTo(id) }} />}
+    </Card>
+  )
+}
+
+function NewProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const year = new Date().getFullYear()
+  const [step, setStep] = useState(1)
+  const [f, setF] = useState({ name: '', slug: '', country: '', timezone: 'UTC', currency: 'USD', tagline: 'The global stars of tomorrow', region: 'Province', district: 'District', languages: 'en', partner: '',
+    season: `${year}-${year + 1}`, season_start: '', season_end: '', groups: 'U11:' + (year - 11) + '-' + (year - 10) + '\nU13:' + (year - 13) + '-' + (year - 12) + '\nU15:' + (year - 15) + '-' + (year - 14), geo: '' })
+  const set = (k: keyof typeof f, v: string) => setF(s => ({ ...s, [k]: v }))
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  async function create() {
+    setBusy(true); setErr(null)
+    const age_groups = f.groups.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [code, yrs] = l.split(':'); const [a, b] = (yrs ?? '').split('-').map(x => parseInt(x.trim(), 10)); return { code: code.trim(), from: a, to: b || a } }).filter(g => g.code && g.from)
+    const { data, error } = await supabase.rpc('admin_create_project', { p: {
+      name: f.name, slug: f.slug, country: f.country, timezone: f.timezone, currency: f.currency, tagline: f.tagline, geo_labels: { region: f.region, district: f.district },
+      languages: f.languages.split(',').map(x => x.trim().toLowerCase()).filter(Boolean), partner: f.partner ? { name: f.partner } : null,
+      season: f.season, season_start: f.season_start || null, season_end: f.season_end || null, age_groups,
+    } })
+    if (error) { setBusy(false); return setErr(errMsg(error)) }
+    if (f.geo.trim()) { const { error: e2 } = await supabase.rpc('admin_import_geo', { p_project: data, p_text: f.geo }); if (e2) { setBusy(false); return setErr(errMsg(e2)) } }
+    setBusy(false); onCreated(data as string)
+  }
+  return (
+    <Modal open onClose={onClose} title={`New project · step ${step} of 3`} wide
+      footer={<>{step > 1 && <Button variant="ghost" onClick={() => setStep(s => s - 1)}>Back</Button>}<Button variant="ghost" onClick={onClose}>Cancel</Button>
+        {step < 3 ? <Button variant="primary" disabled={step === 1 && !f.name.trim()} onClick={() => setStep(s => s + 1)}>Next</Button> : <Button variant="primary" loading={busy} onClick={create}>Create project</Button>}</>}>
+      {err && <div className="mb-3"><Alert>{err}</Alert></div>}
+      {step === 1 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Project name" required><Input value={f.name} onChange={e => set('name', e.target.value)} placeholder="Tony Kenya" /></Field>
+          <Field label="Join link slug" hint="letters and dashes; coaches sign up at /join/<slug>"><Input value={f.slug} onChange={e => set('slug', e.target.value)} placeholder="tony-kenya" /></Field>
+          <Field label="Country"><Input value={f.country} onChange={e => set('country', e.target.value)} placeholder="Kenya" /></Field>
+          <Field label="Time zone" hint="IANA name"><Input value={f.timezone} onChange={e => set('timezone', e.target.value)} placeholder="Africa/Nairobi" /></Field>
+          <Field label="Currency"><Input value={f.currency} onChange={e => set('currency', e.target.value.toUpperCase())} maxLength={3} className="w-24" /></Field>
+          <Field label="Project line" hint="shown under the Tony logo"><Input value={f.tagline} onChange={e => set('tagline', e.target.value)} /></Field>
+          <Field label="Partner" hint="optional; appears only on certificates, reports and shared pages"><Input value={f.partner} onChange={e => set('partner', e.target.value)} /></Field>
+          <Field label="Coach portal languages" hint="codes, comma separated; en is always first"><Input value={f.languages} onChange={e => set('languages', e.target.value)} placeholder="en, sw" /></Field>
+        </div>
+      )}
+      {step === 2 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="First scouting season" required><Input value={f.season} onChange={e => set('season', e.target.value)} /></Field>
+          <div />
+          <Field label="Starts"><Input type="date" value={f.season_start} onChange={e => set('season_start', e.target.value)} /></Field>
+          <Field label="Ends"><Input type="date" value={f.season_end} onChange={e => set('season_end', e.target.value)} /></Field>
+          <div className="sm:col-span-2"><Field label="Age groups" hint="one per line: CODE:first birth year-last birth year"><Textarea rows={4} value={f.groups} onChange={e => set('groups', e.target.value)} /></Field></div>
+        </div>
+      )}
+      {step === 3 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Upper geography level" hint="e.g. Province, Region, County"><Input value={f.region} onChange={e => set('region', e.target.value)} /></Field>
+          <Field label="Lower geography level" hint="e.g. District, Sub-county"><Input value={f.district} onChange={e => set('district', e.target.value)} /></Field>
+          <div className="sm:col-span-2"><Field label={`${f.region}s and ${f.district.toLowerCase()}s`} hint={`one ${f.region.toLowerCase()} per line: Name: ${f.district} A, ${f.district} B. You can add more later.`}><Textarea rows={8} value={f.geo} onChange={e => set('geo', e.target.value)} placeholder={`Nairobi: Westlands, Kasarani, Embakasi\nMombasa: Nyali, Likoni`} /></Field></div>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+function GeoImport({ projectId, geo, onDone }: { projectId: string | undefined; geo: ReturnType<typeof useGeo>; onDone: () => Promise<void> }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
+  async function run() {
+    if (!projectId) return
+    setBusy(true); setMsg(null)
+    const { data, error } = await supabase.rpc('admin_import_geo', { p_project: projectId, p_text: text })
+    setBusy(false)
+    if (error) return setMsg({ tone: 'bad', text: errMsg(error) })
+    setMsg({ tone: 'good', text: `${data} ${geo.districts.toLowerCase()} added or confirmed.` }); setText(''); await onDone()
+  }
+  return (
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>Add {geo.regions.toLowerCase()}</Button>
+      {open && (
+        <Modal open onClose={() => setOpen(false)} title={`Add ${geo.regions.toLowerCase()} and ${geo.districts.toLowerCase()}`}
+          footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Close</Button><Button variant="primary" loading={busy} disabled={!text.trim()} onClick={run}>Add</Button></>}>
+          {msg && <div className="mb-3"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+          <Field label={`One ${geo.region.toLowerCase()} per line`} hint={`Name: ${geo.district} A, ${geo.district} B. Existing names are kept.`}><Textarea rows={8} value={text} onChange={e => setText(e.target.value)} /></Field>
+        </Modal>
+      )}
+    </>
   )
 }

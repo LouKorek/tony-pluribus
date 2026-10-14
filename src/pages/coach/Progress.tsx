@@ -4,6 +4,7 @@ import { fmtDate } from '../../lib/scouting'
 import { Card, Empty, cx } from '../../components/ui'
 import { useT } from './i18n'
 import { useCoach, type BadgeInfo, type Rule } from './data'
+import { useGeo } from '../../lib/brand'
 import { ScreenTitle, Section } from './shared'
 
 const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users, camera: Camera, flame: Flame, star: Star, trophy: Trophy, medal: Medal, crown: Crown, clock: Clock, award: Award }
@@ -11,6 +12,7 @@ const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users,
 export default function ProgressScreen() {
   const { t } = useT()
   const { progress, academy } = useCoach()
+  const geo = useGeo()
   const [allHistory, setAllHistory] = useState(false)
   const [allRules, setAllRules] = useState(false)
   if (!progress) return <Card><Empty icon={<Trophy size={20} />} title={t('progress')}>{t('noProgressYet')}</Empty></Card>
@@ -45,7 +47,7 @@ export default function ProgressScreen() {
       </Card>
 
       <div className="mt-3 grid grid-cols-3 gap-3" data-tour="ranks">
-        {([['district', t('rankDistrict')], ['province', t('rankProvince')], ['national', t('rankNational')]] as const).map(([k, l]) => (
+        {([['district', geo.district], ['province', geo.region], ['national', t('rankNational')]] as const).map(([k, l]) => (
           <Card key={k} className="p-3 text-center">
             <div className="label-caps text-[10px] text-muted">{l}</div>
             <div className="mt-1 font-display text-[28px] font-semibold leading-none">{rank[k] ? `#${rank[k]}` : '—'}</div>
@@ -94,7 +96,7 @@ export default function ProgressScreen() {
         )}
       </Section>
 
-      <Section title={t('provinceBoard')} id="board">
+      <Section title={`${t('academiesIn')} ${geo.region.toLowerCase()}`} id="board">
         {province_board.length === 0 ? (
           <Card><div className="px-4 py-4 text-sm text-muted">{t('boardEmpty')}</div></Card>
         ) : (
