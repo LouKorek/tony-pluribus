@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Circle, Clock } from 'lucide-react'
 import { supabase, type AgeGroup } from '../lib/supabase'
 import { useAuth, isAdmin } from '../lib/auth'
+import { useTagline } from '../lib/brand'
 import { BUILD_STAGE, STAGE_NAME } from '../lib/nav'
 import { Card, PageHeader, Stat } from '../components/ui'
 
@@ -10,6 +11,7 @@ interface Counts { users: number; pending: number; academies: number; players: n
 
 export default function Overview() {
   const { profile, project, scoutingSeason } = useAuth()
+  const tagline = useTagline()
   const [c, setC] = useState<Counts | null>(null)
   const [groups, setGroups] = useState<AgeGroup[]>([])
   const admin = isAdmin(profile)
@@ -33,7 +35,7 @@ export default function Overview() {
   const stages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   return (
     <div>
-      <PageHeader eyebrow={`${project?.name ?? ''} · ${project?.partner ?? ''}`} title={`${greet}, ${first}`} description={`Scouting season ${scoutingSeason?.label ?? ''}. District camps, provincial finals and the national final all live here.`} />
+      <PageHeader eyebrow={`${project?.name ?? ''} · ${tagline}`} title={`${greet}, ${first}`} description={`Scouting season ${scoutingSeason?.label ?? ''}. District camps, provincial finals and the national final all live here.`} />
 
       {admin && c && c.pending > 0 && (
         <Link to="/users" className="mb-6 flex items-center gap-3 rounded-xl border border-warn/30 bg-warn-soft px-4 py-3 text-warn hover:border-warn/60">
