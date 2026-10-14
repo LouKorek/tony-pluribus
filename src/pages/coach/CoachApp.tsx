@@ -58,7 +58,7 @@ function CoachTours({ children }: { children: ReactNode }) {
   const loc = useLocation()
   const rel = loc.pathname.slice(base.length) || '/'
   const tab = new URLSearchParams(loc.search).get('tab')
-  const screen = rel === '/' ? 'coach-home' : rel === '/team' ? (tab === 'training' ? 'coach-training' : tab === 'academy' ? 'coach-academy' : 'coach-team') : rel === '/schedule' ? 'coach-schedule' : rel === '/progress' ? 'coach-progress' : rel === '/updates' ? 'coach-updates' : null
+  const screen = rel === '/' ? 'coach-home' : rel === '/team' ? (tab === 'training' ? 'coach-training' : tab === 'matches' ? 'coach-matches' : tab === 'academy' ? 'coach-academy' : 'coach-team') : rel === '/schedule' ? 'coach-schedule' : rel === '/progress' ? 'coach-progress' : rel === '/updates' ? 'coach-updates' : null
   return (
     <TourProvider tours={COACH_TOURS} screen={screen} lang={lang === 'rw' ? 'rw' : 'en'} seen={profile?.tours_seen ?? []}
       onSeen={key => { supabase.rpc('tour_seen', { p_key: key }).then(() => {}) }}>

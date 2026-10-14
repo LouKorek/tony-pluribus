@@ -18,7 +18,7 @@ export interface NavItem {
 }
 export interface NavGroup { label: string; items: NavItem[] }
 
-export const BUILD_STAGE = 17
+export const BUILD_STAGE = 18
 
 const STAFF: Role[] = ['owner', 'admin', 'staff', 'scout', 'observer']
 const ADMIN: Role[] = ['owner', 'admin']
@@ -82,7 +82,7 @@ export const NAV: NavGroup[] = [
 
 export const STAGE_NAME: Record<number, string> = {
   2: 'Scouting', 3: 'Coach portal', 4: 'Dashboards & reports', 5: 'History & files', 6: 'SharePoint sync',
-  7: 'Squads', 8: 'Football', 9: 'Player files', 10: 'Operations', 11: 'Scale', 12: 'Identity', 13: 'Notifications', 14: 'Coach portal 2.0', 15: 'Points & coaches', 16: 'Offline', 17: 'Global',
+  7: 'Squads', 8: 'Football', 9: 'Player files', 10: 'Operations', 11: 'Scale', 12: 'Identity', 13: 'Notifications', 14: 'Coach portal 2.0', 15: 'Points & coaches', 16: 'Offline', 17: 'Global', 18: 'Academy life',
 }
 
 export function findNav(path: string): NavItem | undefined {

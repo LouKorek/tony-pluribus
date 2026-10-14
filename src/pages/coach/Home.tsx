@@ -1,4 +1,4 @@
-import { CalendarCheck, CalendarDays, Camera, ChevronRight, ClipboardList, MapPin, Trophy, UserPlus } from 'lucide-react'
+import { CalendarCheck, CalendarDays, Camera, ChevronRight, ClipboardList, MapPin, Package, Swords, Trophy, UserPlus } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 import { fmtDate } from '../../lib/scouting'
 import { Card, cx } from '../../components/ui'
@@ -12,7 +12,7 @@ import { NotifRow } from './CoachApp'
 export default function HomeScreen() {
   const { profile, scoutingSeason } = useAuth()
   const { t, pick } = useT()
-  const { academy, squad, standing, camps, schedule, sessions, notifs, groups, preview, progress } = useCoach()
+  const { academy, squad, standing, camps, schedule, sessions, matches, notifs, groups, preview, progress } = useCoach()
   const nav = useGo()
   const invites = pendingInvites(squad)
   const campsWithRoom = camps.filter(c => eligibleFor(c, squad, groups).some(e => !e.already)).length
@@ -33,6 +33,9 @@ export default function HomeScreen() {
   if (campsWithRoom > 0) actions.push({ key: 'open', icon: CalendarDays, iconCls: 'bg-neon text-ink', title: `${t('openCampsCta')}: ${campsWithRoom}`, to: '/schedule' })
   if (squad.length === 0) actions.push({ key: 'add', icon: UserPlus, iconCls: 'bg-ink text-neon', title: t('addPlayer'), sub: t('emptySquadHint'), to: '/team?add=1' })
   if (squad.length > 0 && !loggedThisWeek && !preview) actions.push({ key: 'log', icon: ClipboardList, iconCls: 'bg-grass-soft text-grass', title: t('logThisWeek'), sub: t('noSessionsHint'), to: '/team?tab=training' })
+  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
+  if (squad.length >= 8 && !matches.some(m => m.played_on >= monthAgo) && !preview) actions.push({ key: 'match', icon: Swords, iconCls: 'bg-royal-soft text-royal', title: t('logMatch'), sub: t('noMatchesHint'), to: '/team?tab=matches' })
+  if (academy && !academy.equipment_updated_at && squad.length > 0 && !preview) actions.push({ key: 'equip', icon: Package, iconCls: 'bg-paper text-muted', title: t('equipmentTitle'), sub: t('equipmentHint'), to: '/team?tab=academy' })
   if (academy && !academy.complete && !preview) actions.push({ key: 'acad', icon: MapPin, iconCls: 'bg-paper text-muted', title: t('completeAcademy'), sub: t('academyProfileHint'), to: '/team?tab=academy' })
   if (noPhoto > 0 && squad.length > 0 && !preview) actions.push({ key: 'photo', icon: Camera, iconCls: 'bg-paper text-muted', title: `${t('completeProfiles')}: ${noPhoto}`, sub: t('profileIncomplete'), to: '/team' })
 

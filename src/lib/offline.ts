@@ -203,6 +203,30 @@ async function patchCache(method: string, path: string, body: string | null, mid
         else { j.push({ id, ...p, present: players.length, players, pending: true }); j.sort((a, b) => String(isObj(b) ? b.held_on : '').localeCompare(String(isObj(a) ? a.held_on : ''))) }
         return j
       })
+    } else if (n === 'coach_save_match') {
+      const p = args.p ?? {}, id = args.p_id
+      await rewrite(r => r.url.includes('/rpc/coach_matches'), j => {
+        if (!Array.isArray(j)) return
+        const row = { id, ...p, goals_for: p.goals_for === '' ? null : Number(p.goals_for), goals_against: p.goals_against === '' ? null : Number(p.goals_against), players: Array.isArray(p.players) ? p.players : [], pending: true }
+        const cur = j.find(o => isObj(o) && o.id === id)
+        if (cur && isObj(cur)) Object.assign(cur, row)
+        else { j.push(row); j.sort((a, b) => String(isObj(b) ? b.played_on : '').localeCompare(String(isObj(a) ? a.played_on : ''))) }
+        return j
+      })
+    } else if (n === 'coach_delete_match') {
+      await rewrite(r => r.url.includes('/rpc/coach_matches'), j => Array.isArray(j) ? j.filter(o => !(isObj(o) && o.id === args.p_id)) : undefined)
+    } else if (n === 'coach_save_staff') {
+      const p = args.p ?? {}, id = args.p_id
+      await rewrite(r => r.url.includes('/rpc/coach_academy'), j => {
+        if (!isObj(j) || !Array.isArray(j.staff)) return
+        const cur = j.staff.find(o => isObj(o) && o.id === id)
+        if (cur && isObj(cur)) Object.assign(cur, p, { pending: true }); else j.staff.push({ id, active: true, ...p, since_year: p.since_year ? Number(p.since_year) : null, pending: true })
+        return j
+      })
+    } else if (n === 'coach_delete_staff') {
+      await rewrite(r => r.url.includes('/rpc/coach_academy'), j => { if (isObj(j) && Array.isArray(j.staff)) j.staff = j.staff.filter(o => !(isObj(o) && o.id === args.p_id)); return j })
+    } else if (n === 'coach_save_equipment') {
+      await rewrite(r => r.url.includes('/rpc/coach_academy'), j => (isObj(j) ? { ...j, equipment: Array.isArray(args.p) ? args.p.map((e: Json) => (isObj(e) ? { ...e, updated_at: now } : e)) : j.equipment, equipment_updated_at: now, pending: true } : undefined))
     } else if (n === 'coach_delete_session') {
       await rewrite(r => r.url.includes('/rpc/coach_sessions'), j => Array.isArray(j) ? j.filter(o => !(isObj(o) && o.id === args.p_id)) : undefined)
     } else if (n === 'coach_save_academy') {

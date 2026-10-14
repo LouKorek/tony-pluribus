@@ -35,11 +35,22 @@ export interface ScheduleCamp {
   id: string; name: string; stage: Stage; status: string; starts_on: string | null; ends_on: string | null; venue: string | null; age_groups: string[] | null
   district: string | null; own_district: boolean; submissions_open: boolean; days: CampDay[]; booking: Booking | null; my_players: number; my_invited: number
 }
-export interface Session { id: string; held_on: string; topic: string | null; duration_min: number | null; notes: string | null; present: number; players: string[]; pending?: boolean }
+export type Focus = 'technical' | 'tactical' | 'physical' | 'goalkeeping' | 'games' | 'set_pieces' | 'mental' | 'recovery'
+export const FOCUS: Focus[] = ['technical', 'tactical', 'physical', 'goalkeeping', 'games', 'set_pieces', 'mental', 'recovery']
+export interface Session { id: string; held_on: string; topic: string | null; focus: Focus[]; intensity: 'light' | 'normal' | 'hard' | null; duration_min: number | null; notes: string | null; present: number; players: string[]; pending?: boolean }
+export type MatchKind = 'internal' | 'friendly' | 'league' | 'cup' | 'tournament' | 'tony'
+export const MATCH_KINDS: MatchKind[] = ['internal', 'friendly', 'league', 'cup', 'tournament', 'tony']
+export interface Match { id: string; played_on: string; kind: MatchKind; opponent: string | null; venue: 'home' | 'away' | 'neutral' | null; age_group: string | null; goals_for: number | null; goals_against: number | null; notes: string | null; players: { player_id: string; goals: number }[]; pending?: boolean }
+export type StaffRole = 'head_coach' | 'assistant' | 'gk_coach' | 'fitness' | 'physio' | 'manager' | 'volunteer' | 'other'
+export const STAFF_ROLES: StaffRole[] = ['head_coach', 'assistant', 'gk_coach', 'fitness', 'physio', 'manager', 'volunteer', 'other']
+export interface StaffMember { id: string; name: string; role: StaffRole; phone: string | null; since_year: number | null; active: boolean; notes: string | null; pending?: boolean }
+export type EquipmentItem = 'balls' | 'bibs' | 'cones' | 'goals' | 'nets' | 'first_aid' | 'water' | 'kits' | 'gk_gloves' | 'pump' | 'whistle' | 'other'
+export const EQUIPMENT: EquipmentItem[] = ['balls', 'bibs', 'cones', 'goals', 'nets', 'first_aid', 'water', 'kits', 'gk_gloves', 'pump', 'whistle', 'other']
+export interface Equipment { item: EquipmentItem; quantity: number; condition: 'good' | 'worn' | 'missing'; notes: string | null; updated_at: string | null }
 export interface Standing { submitted: number; selected: number; rank: number | null; academies: number; region: string | null }
 export type ProgrammeStatus = 'registered' | 'observed' | 'partner' | 'official'
 export interface Level { code: string; label: string; min_points: number; next?: { code: string; label: string; min_points: number } | null }
-export interface BadgeInfo { code: string; label: string; description: string; icon: string; earned_at: string | null }
+export interface BadgeInfo { code: string; label: string; description: string; icon: string; family: string | null; tier: number; earned_at: string | null }
 export interface Rule { code: string; points: number; label: string; description: string; cap: number | null; cap_period: 'day' | 'week' | 'season' | 'once' | null }
 export interface PointEvent { id: string; at: string; rule: string; points: number; label: string; note: string | null }
 export interface BoardRow { academy_id: string; name: string; district: string | null; region: string | null; points: number; rank: number; mine: boolean }
@@ -53,11 +64,12 @@ export interface MyAcademy {
   id: string; name: string; district: string | null; region: string | null; contact_name: string | null; contact_phone: string | null
   venue: string | null; training_days: string[]; training_time: string | null; players_count: number | null; age_groups: string[]
   photo_path: string | null; programme_status: ProgrammeStatus; profile_updated_at: string | null; complete: boolean; pending?: boolean
+  equipment_updated_at: string | null; staff: StaffMember[]; equipment: Equipment[]
 }
 
 interface CoachData {
   loading: boolean; error: string | null
-  academy: MyAcademy | null; squad: SquadPlayer[]; camps: OpenCamp[]; schedule: ScheduleCamp[]; sessions: Session[]
+  academy: MyAcademy | null; squad: SquadPlayer[]; camps: OpenCamp[]; schedule: ScheduleCamp[]; sessions: Session[]; matches: Match[]
   standing: Standing | null; notifs: Notif[]; groups: AgeGroup[]
   progress: Progress | null
   /** signed links of the photos in the squad and the academy, by storage path */
@@ -77,7 +89,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
   const { profile, scoutingSeason } = useAuth()
   const notifications = useNotifications()
   const [state, setState] = useState<Omit<CoachData, 'reload' | 'markRead' | 'preview' | 'base' | 'notifs' | 'photoUrl'>>({
-    loading: true, error: null, academy: null, squad: [], camps: [], schedule: [], sessions: [], standing: null, groups: [], photos: {}, progress: null,
+    loading: true, error: null, academy: null, squad: [], camps: [], schedule: [], sessions: [], matches: [], standing: null, groups: [], photos: {}, progress: null,
   })
   const photoCache = useRef<Record<string, { url: string; at: number }>>({})
 
@@ -92,7 +104,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
 
   const reload = useCallback(async () => {
     const args = previewAcademy ? { p_academy: previewAcademy } : {}
-    const [sq, ca, sc, se, st, ac, gr, pg] = await Promise.all([
+    const [sq, ca, sc, se, st, ac, gr, pg, ma] = await Promise.all([
       supabase.rpc('coach_squad', args),
       supabase.rpc('coach_camps', args),
       supabase.rpc('coach_schedule', args),
@@ -101,6 +113,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
       supabase.rpc('coach_academy', args),
       scoutingSeason ? supabase.from('age_groups').select('*').eq('season_id', scoutingSeason.id).order('sort') : Promise.resolve({ data: [], error: null }),
       supabase.rpc('coach_progress', args),
+      supabase.rpc('coach_matches', args),
     ])
     const err = sq.error || ca.error || sc.error || se.error || st.error || ac.error || gr.error
     const squad = (sq.data as SquadPlayer[]) ?? []
@@ -109,7 +122,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
     const photos = paths.length ? await signAll(paths) : {}
     setState({
       loading: false, error: err ? err.message : null,
-      squad, camps: (ca.data as OpenCamp[]) ?? [], schedule: (sc.data as ScheduleCamp[]) ?? [], sessions: (se.data as Session[]) ?? [],
+      squad, camps: (ca.data as OpenCamp[]) ?? [], schedule: (sc.data as ScheduleCamp[]) ?? [], sessions: (se.data as Session[]) ?? [], matches: (ma.data as Match[]) ?? [],
       standing: (st.data as Standing) ?? null, academy, groups: (gr.data as AgeGroup[]) ?? [], photos, progress: (pg.data as Progress) ?? null,
     })
   }, [scoutingSeason, previewAcademy, signAll])

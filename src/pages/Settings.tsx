@@ -237,9 +237,9 @@ function PointsCard({ projectId }: { projectId: string | undefined }) {
               {rules.map(r => (
                 <tr key={r.code} className={cx(!r.active && 'opacity-50')}>
                   <td className="py-1.5 pr-2"><div className="font-semibold">{r.label}</div><div className="text-xs text-muted">{r.description}</div></td>
-                  <td className="py-1.5 pr-2 text-right">{r.code.startsWith('staff.') ? <span className="text-xs text-faint">set each time</span> : <Input type="number" value={r.points} onChange={e => setRule(r.code, { points: parseInt(e.target.value, 10) || 0 })} className="w-20 text-right" />}</td>
+                  <td className="py-1.5 pr-2 text-right">{['staff.bonus', 'staff.penalty'].includes(r.code) ? <span className="text-xs text-faint">set each time</span> : <Input type="number" value={r.points} onChange={e => setRule(r.code, { points: parseInt(e.target.value, 10) || 0 })} className="w-20 text-right" />}</td>
                   <td className="py-1.5 pr-2">
-                    {r.code.startsWith('staff.') ? null : (
+                    {['staff.bonus', 'staff.penalty'].includes(r.code) ? null : (
                       <div className="flex items-center gap-1">
                         <Input type="number" min={0} value={r.cap ?? ''} placeholder="—" onChange={e => setRule(r.code, { cap: e.target.value === '' ? null : Math.max(0, parseInt(e.target.value, 10) || 0) || null })} className="w-16" />
                         <Select value={r.cap_period ?? 'day'} disabled={!r.cap} onChange={e => setRule(r.code, { cap_period: e.target.value })} className="w-24"><option value="day">a day</option><option value="week">a week</option><option value="season">a season</option><option value="once">once</option></Select>
@@ -262,7 +262,7 @@ function PointsCard({ projectId }: { projectId: string | undefined }) {
               </div>
             ))}
           </div>
-          <div className="mt-4 rounded-lg bg-paper p-3 text-xs text-muted">Badges (first player, full squad, four-week streak, first selection, finals, Tony squad, always on time) are earned automatically; they are not edited here.</div>
+          <div className="mt-4 rounded-lg bg-paper p-3 text-xs text-muted">Badges come in families with tiers (squad, profiles, academy, streaks, sessions, method, matches, competition, pathway, camps, habit) and are earned automatically; they are not edited here.</div>
         </div>
       </div>
     </Card>

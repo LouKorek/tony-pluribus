@@ -68,6 +68,11 @@ export const COACH_TOURS: TourMap = {
       target: 'sessions', title: ['Your sessions', 'Imyitozo yawe'],
       body: ['The bar shows attendance. Tap a session to edit it.', 'Umurongo werekana abitabiriye. Kanda ku mwitozo kugira ngo uwuhindure.'],
     },
+    {
+      title: ['Focus and intensity', "Icyo imyitozo yibanzeho n'ubukana"],
+      body: ['When you log a session, pick what it focused on (technical, tactical, physical, goalkeeping, games, set pieces…) and how hard it was. Five different focuses in a season earn the All-rounder badge; strong attendance earns extra points.',
+             "Iyo wandika imyitozo, hitamo icyo yibanzeho (tekiniki, amayeri, umubiri, abanyezamu, imikino…) n'ubukana bwayo. Ibyibandwaho bitanu mu gihembwe bitanga ikirango All-rounder; ubwitabire bwinshi butanga amanota y'inyongera."],
+    },
   ],
   'coach-academy': [
     {
@@ -79,6 +84,16 @@ export const COACH_TOURS: TourMap = {
       target: 'academy-profile', title: ['Academy profile', "Umwirondoro w'ishuri"],
       body: ['Where and when you train, how many players, which age groups. This is what the staff sees about your academy.',
              "Aho mwitorera n'igihe, umubare w'abakinnyi, ibyiciro by'imyaka. Ibi ni byo abakozi babona ku ishuri ryawe."],
+    },
+    {
+      target: 'academy-staff', title: ['Academy staff', "Abakozi b'ishuri"],
+      body: ['Add the people who run the academy with you. Each one earns points, and three or more earn a badge.',
+             "Ongeraho abakorana nawe mu ishuri. Buri wese atanga amanota, batatu cyangwa barenga batanga ikirango."],
+    },
+    {
+      target: 'academy-equipment', title: ['Equipment', 'Ibikoresho'],
+      body: ['Count the balls, bibs, cones, goals and first-aid kit and mark their condition. Tony sees what is missing; counting once a season earns points.',
+             "Bara imipira, amakoti, utubumbe, izamu n'agasanduku k'ubutabazi, werekane uko bimeze. Tony abona ibibura; kubara rimwe mu gihembwe bitanga amanota."],
     },
   ],
   'coach-schedule': [
@@ -123,6 +138,18 @@ export const COACH_TOURS: TourMap = {
       target: 'board', title: ['Your province', 'Intara yawe'],
       body: ['The academies of your province ranked by points. Your academy is highlighted.',
              "Amashuri yo mu ntara yawe ashyizwe ku murongo hakurikijwe amanota. Ishuri ryawe rigaragazwa."],
+    },
+  ],
+  'coach-matches': [
+    {
+      target: 'log-match', title: ['Log a match', 'Andika umukino'],
+      body: ['Every match your academy plays: internal games, friendlies, league, cup, tournaments. Choose who played and who scored. Each match earns points; official matches earn more.',
+             "Buri mukino ishuri ryawe rikina: imikino y'imbere, iyo gukina gusa, shampiyona, igikombe, amarushanwa. Hitamo abakinnye n'abatsinze. Buri mukino utanga amanota; iy'ubutegetsi itanga menshi."],
+    },
+    {
+      target: 'matches', title: ['Your matches', 'Imikino yawe'],
+      body: ['The list with the score, the kind of match and the scorers. Tap a match to edit it.',
+             "Urutonde n'ibitego, ubwoko bw'umukino n'abatsinze. Kanda ku mukino kugira ngo uwuhindure."],
     },
   ],
   'coach-updates': [

@@ -1,39 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Camera, CalendarCheck, ImageOff, MapPin, Plus, Printer, Share2, Trash2, Trophy, Users } from 'lucide-react'
+import { Camera, CalendarCheck, ImageOff, MapPin, Package, Pencil, Plus, Printer, Share2, Swords, Trash2, Trophy, Users, UsersRound } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { Bolts, Logo, usePartner, useTagline } from '../../lib/brand'
 import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Select, Textarea, cx, printArea } from '../../components/ui'
 import { STAGE_T, useT } from './i18n'
-import { groupOf, uploadPhoto, useCoach, type JourneyItem, type LogItem, type MyAcademy, type Session, type SquadPlayer } from './data'
+import { EQUIPMENT, FOCUS, MATCH_KINDS, STAFF_ROLES, groupOf, uploadPhoto, useCoach, type Equipment, type EquipmentItem, type Focus, type JourneyItem, type LogItem, type Match, type MatchKind, type MyAcademy, type Session, type SquadPlayer, type StaffMember, type StaffRole } from './data'
 import { Avatar, JourneyBadge, PendingDot, ScreenTitle, SubTabs, lastItem, name } from './shared'
 
-type Tab = 'players' | 'training' | 'academy'
+type Tab = 'players' | 'training' | 'matches' | 'academy'
 
 export default function TeamScreen() {
   const { t } = useT()
-  const { squad, sessions, academy, preview } = useCoach()
+  const { squad, sessions, matches, academy, preview } = useCoach()
   const [params, setParams] = useSearchParams()
   const tab = (params.get('tab') as Tab) || 'players'
   const setTab = (v: Tab) => setParams(p => { const n = new URLSearchParams(p); n.set('tab', v); n.delete('player'); n.delete('add'); return n }, { replace: true })
   const [editing, setEditing] = useState<SquadPlayer | 'new' | null>(params.get('add') ? 'new' : null)
   const [logging, setLogging] = useState<Session | 'new' | null>(null)
+  const [matching, setMatching] = useState<Match | 'new' | null>(null)
   const active = squad.filter(p => p.squad_status === 'active').length
   const action = preview ? null
     : tab === 'players' ? <Button data-tour="add-player" variant="primary" onClick={() => setEditing('new')}><Plus size={16} />{t('addPlayer')}</Button>
     : tab === 'training' ? <Button data-tour="log-session" variant="primary" onClick={() => setLogging('new')}><Plus size={16} />{t('logSession')}</Button>
+    : tab === 'matches' ? <Button data-tour="log-match" variant="primary" onClick={() => setMatching('new')}><Plus size={16} />{t('logMatch')}</Button>
     : null
   return (
     <div>
       <ScreenTitle title={t('team')} eyebrow={academy?.name} action={action} />
-      <SubTabs id="team-tabs" value={tab} onChange={setTab} items={[['players', t('players'), active], ['training', t('training'), sessions.length], ['academy', t('academy')]]} />
+      <SubTabs id="team-tabs" value={tab} onChange={setTab} items={[['players', t('players'), active], ['training', t('training'), sessions.length], ['matches', t('matches'), matches.length], ['academy', t('academy')]]} />
       {tab === 'players' && <PlayersPanel onEdit={setEditing} />}
       {tab === 'training' && <TrainingPanel onEdit={setLogging} />}
+      {tab === 'matches' && <MatchesPanel onEdit={setMatching} />}
       {tab === 'academy' && <AcademyPanel />}
       {editing && <PlayerForm player={editing === 'new' ? null : editing} onClose={() => { setEditing(null); if (params.get('add')) setParams(p => { const n = new URLSearchParams(p); n.delete('add'); return n }, { replace: true }) }} />}
       {logging && <SessionForm session={logging === 'new' ? null : logging} onClose={() => setLogging(null)} />}
+      {matching && <MatchForm match={matching === 'new' ? null : matching} onClose={() => setMatching(null)} />}
     </div>
   )
 }
@@ -375,7 +379,10 @@ export function Certificate({ player, item, onClose }: { player: SquadPlayer; it
 
 /* ───────────────────────── Training ───────────────────────── */
 
-const TOPICS: [string, string][] = [['Technique', 'topicTechnique'], ['Tactics', 'topicTactics'], ['Fitness', 'topicFitness'], ['Match', 'topicMatch'], ['Other', 'topicOther']]
+const FOCUS_T: Record<Focus, 'fTechnical' | 'fTactical' | 'fPhysical' | 'fGoalkeeping' | 'fGames' | 'fSetPieces' | 'fMental' | 'fRecovery'> = { technical: 'fTechnical', tactical: 'fTactical', physical: 'fPhysical', goalkeeping: 'fGoalkeeping', games: 'fGames', set_pieces: 'fSetPieces', mental: 'fMental', recovery: 'fRecovery' }
+const KIND_T: Record<MatchKind, 'kInternal' | 'kFriendly' | 'kLeague' | 'kCup' | 'kTournament' | 'kTony'> = { internal: 'kInternal', friendly: 'kFriendly', league: 'kLeague', cup: 'kCup', tournament: 'kTournament', tony: 'kTony' }
+const ROLE_T: Record<StaffRole, 'rHeadCoach' | 'rAssistant' | 'rGkCoach' | 'rFitness' | 'rPhysio' | 'rManager' | 'rVolunteer' | 'rOther'> = { head_coach: 'rHeadCoach', assistant: 'rAssistant', gk_coach: 'rGkCoach', fitness: 'rFitness', physio: 'rPhysio', manager: 'rManager', volunteer: 'rVolunteer', other: 'rOther' }
+const EQ_T: Record<EquipmentItem, 'eqBalls' | 'eqBibs' | 'eqCones' | 'eqGoals' | 'eqNets' | 'eqFirstAid' | 'eqWater' | 'eqKits' | 'eqGkGloves' | 'eqPump' | 'eqWhistle' | 'eqOther'> = { balls: 'eqBalls', bibs: 'eqBibs', cones: 'eqCones', goals: 'eqGoals', nets: 'eqNets', first_aid: 'eqFirstAid', water: 'eqWater', kits: 'eqKits', gk_gloves: 'eqGkGloves', pump: 'eqPump', whistle: 'eqWhistle', other: 'eqOther' }
 
 function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
   const { t } = useT()
@@ -383,7 +390,7 @@ function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
   const active = squad.filter(p => p.squad_status === 'active').length
   const [del, setDel] = useState<string | null>(null)
   async function remove(id: string) { await supabase.rpc('coach_delete_session', { p_id: id }); setDel(null); await reload() }
-  const topicLabel = (s: string | null) => { const k = TOPICS.find(x => x[0] === s)?.[1]; return k ? t(k as 'topicTechnique') : s ?? '' }
+  const topicLabel = (s: Session) => (s.focus?.length ? s.focus.map(f => t(FOCUS_T[f])).join(' · ') : s.topic ?? '')
   if (sessions.length === 0) return <Card><Empty icon={<CalendarCheck size={20} />} title={t('noSessions')}>{t('noSessionsHint')}</Empty></Card>
   return (
     <Card className="divide-y divide-line" data-tour="sessions">
@@ -391,7 +398,7 @@ function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
         <div key={s.id} className="flex items-center gap-3 px-4 py-3">
           <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(s.held_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{new Date(s.held_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })}</div></div>
           <button className="min-w-0 flex-1 text-left" onClick={() => !preview && onEdit(s)} disabled={preview}>
-            <div className="flex items-center gap-1.5"><span className="truncate font-semibold">{topicLabel(s.topic) || t('training')}{s.duration_min ? <span className="font-normal text-muted"> · {s.duration_min} min</span> : ''}</span>{s.pending && <PendingDot />}</div>
+            <div className="flex items-center gap-1.5"><span className="truncate font-semibold">{topicLabel(s) || t('training')}{s.duration_min ? <span className="font-normal text-muted"> · {s.duration_min} min</span> : ''}{s.intensity === 'hard' ? <span className="font-normal text-danger"> · {t('intHard')}</span> : s.intensity === 'light' ? <span className="font-normal text-muted"> · {t('intLight')}</span> : ''}</span>{s.pending && <PendingDot />}</div>
             <div className="text-sm text-muted">{s.present}/{active} {t('present')}{s.notes ? ` · ${s.notes}` : ''}</div>
           </button>
           <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-black/8"><div className="h-full bg-grass" style={{ width: `${active ? Math.min(100, Math.round((s.present / active) * 100)) : 0}%` }} /></div>
@@ -409,14 +416,17 @@ function SessionForm({ session, onClose }: { session: Session | null; onClose: (
   const { squad, reload } = useCoach()
   const active = squad.filter(p => p.squad_status === 'active')
   const today = new Date().toISOString().slice(0, 10)
-  const [f, setF] = useState({ held_on: session?.held_on ?? today, topic: session?.topic ?? 'Technique', duration_min: session?.duration_min ? String(session.duration_min) : '90', notes: session?.notes ?? '' })
+  const [f, setF] = useState({ held_on: session?.held_on ?? today, topic: session?.topic ?? '', duration_min: session?.duration_min ? String(session.duration_min) : '90', notes: session?.notes ?? '', intensity: session?.intensity ?? 'normal' })
+  const [focus, setFocus] = useState<Focus[]>(session?.focus ?? ['technical'])
+  const toggleFocus = (x: Focus) => setFocus(fs => (fs.includes(x) ? fs.filter(y => y !== x) : [...fs, x]))
   const [present, setPresent] = useState<Set<string>>(new Set(session?.players ?? active.map(p => p.id)))
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const toggle = (id: string) => setPresent(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
   async function save() {
     setBusy(true); setErr(null)
-    const { error } = await supabase.rpc('coach_save_session', { p_id: session?.id ?? crypto.randomUUID(), p: { ...f, players: [...present] } })
+    if (!focus.length) { setBusy(false); return setErr(t('focusHint')) }
+    const { error } = await supabase.rpc('coach_save_session', { p_id: session?.id ?? crypto.randomUUID(), p: { ...f, focus, topic: focus.map(x => t(FOCUS_T[x])).join(', '), players: [...present] } })
     setBusy(false)
     if (error) return setErr(error.message)
     await reload(); onClose()
@@ -431,9 +441,15 @@ function SessionForm({ session, onClose }: { session: Session | null; onClose: (
           <Field label={t('duration')}><Input inputMode="numeric" value={f.duration_min} onChange={e => setF({ ...f, duration_min: e.target.value.replace(/\D/g, '') })} /></Field>
         </div>
         <div>
-          <div className="mb-1.5 text-[13px] font-semibold">{t('topic')}</div>
-          <div className="flex flex-wrap gap-1.5">
-            {TOPICS.map(([k, l]) => <button key={k} type="button" onClick={() => setF({ ...f, topic: k })} aria-pressed={f.topic === k} className={cx('h-8 rounded-md border px-3 text-sm font-semibold', f.topic === k ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(l as 'topicTechnique')}</button>)}
+          <div className="mb-1.5 flex items-baseline justify-between"><span className="text-[13px] font-semibold">{t('focus')}</span><span className="text-xs text-muted">{t('focusHint')}</span></div>
+          <div className="flex flex-wrap gap-1.5" data-tour="focus">
+            {FOCUS.map(k => <button key={k} type="button" onClick={() => toggleFocus(k)} aria-pressed={focus.includes(k)} className={cx('h-8 rounded-md border px-3 text-sm font-semibold', focus.includes(k) ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(FOCUS_T[k])}</button>)}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-[13px] font-semibold">{t('intensity')}</div>
+          <div className="flex gap-1.5">
+            {(['light', 'normal', 'hard'] as const).map(k => <button key={k} type="button" onClick={() => setF({ ...f, intensity: k })} aria-pressed={f.intensity === k} className={cx('h-8 rounded-md border px-3 text-sm font-semibold', f.intensity === k ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(k === 'light' ? 'intLight' : k === 'normal' ? 'intNormal' : 'intHard')}</button>)}
           </div>
         </div>
         <div>
@@ -453,6 +469,228 @@ function SessionForm({ session, onClose }: { session: Session | null; onClose: (
         <Field label={`${t('notes')} (${t('optional')})`}><Textarea rows={2} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></Field>
       </div>
     </Modal>
+  )
+}
+
+/* ───────────────────────── Matches ───────────────────────── */
+
+function MatchesPanel({ onEdit }: { onEdit: (m: Match) => void }) {
+  const { t } = useT()
+  const { matches, squad, reload, preview } = useCoach()
+  const [del, setDel] = useState<string | null>(null)
+  const byId = new Map(squad.map(p => [p.id, p]))
+  async function remove(id: string) { await supabase.rpc('coach_delete_match', { p_id: id }); setDel(null); await reload() }
+  if (matches.length === 0) return <Card><Empty icon={<Swords size={20} />} title={t('noMatches')}>{t('noMatchesHint')}</Empty></Card>
+  const tone = (m: Match) => m.goals_for == null || m.goals_against == null ? 'bg-black/8 text-muted' : m.goals_for > m.goals_against ? 'bg-grass text-white' : m.goals_for < m.goals_against ? 'bg-danger-soft text-danger' : 'bg-platinum/40 text-text'
+  return (
+    <Card className="divide-y divide-line" data-tour="matches">
+      {matches.map(m => {
+        const scorers = m.players.filter(x => x.goals > 0).map(x => `${byId.get(x.player_id)?.first_name ?? '?'} ${x.goals > 1 ? `×${x.goals}` : ''}`.trim())
+        return (
+          <div key={m.id} className="flex items-center gap-3 px-4 py-3">
+            <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(m.played_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{new Date(m.played_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })}</div></div>
+            <button className="min-w-0 flex-1 text-left" onClick={() => !preview && onEdit(m)} disabled={preview}>
+              <div className="flex items-center gap-1.5"><span className="truncate font-semibold">{m.opponent || t(KIND_T[m.kind])}</span><Badge tone={m.kind === 'internal' ? 'neutral' : m.kind === 'friendly' ? 'info' : 'neon'}>{t(KIND_T[m.kind])}</Badge>{m.pending && <PendingDot />}</div>
+              <div className="truncate text-sm text-muted">{[m.age_group, m.venue ? t(m.venue === 'home' ? 'vHome' : m.venue === 'away' ? 'vAway' : 'vNeutral') : null, `${m.players.length} ${t('players').toLowerCase()}`, scorers.length ? scorers.join(', ') : null].filter(Boolean).join(' · ')}</div>
+            </button>
+            <span className={cx('shrink-0 rounded-md px-2 py-1 font-display text-base font-semibold tabular-nums', tone(m))}>{m.goals_for ?? '–'}:{m.goals_against ?? '–'}</span>
+            {!preview && (del === m.id
+              ? <Button size="sm" variant="danger" onClick={() => remove(m.id)}>{t('deleteMatch')}</Button>
+              : <button onClick={() => setDel(m.id)} className="rounded p-1.5 text-faint hover:text-danger" aria-label={t('deleteMatch')}><Trash2 size={14} /></button>)}
+          </div>
+        )
+      })}
+    </Card>
+  )
+}
+
+function MatchForm({ match, onClose }: { match: Match | null; onClose: () => void }) {
+  const { t } = useT()
+  const { squad, groups, reload } = useCoach()
+  const active = squad.filter(p => p.squad_status === 'active')
+  const today = new Date().toISOString().slice(0, 10)
+  const [f, setF] = useState({ played_on: match?.played_on ?? today, kind: (match?.kind ?? 'friendly') as MatchKind, opponent: match?.opponent ?? '', venue: match?.venue ?? 'home', age_group: match?.age_group ?? '', goals_for: match?.goals_for != null ? String(match.goals_for) : '', goals_against: match?.goals_against != null ? String(match.goals_against) : '', notes: match?.notes ?? '' })
+  const [played, setPlayed] = useState<Map<string, number>>(new Map((match?.players ?? []).map(x => [x.player_id, x.goals])))
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const toggle = (id: string) => setPlayed(m => { const n = new Map(m); if (n.has(id)) n.delete(id); else n.set(id, 0); return n })
+  const goal = (id: string, d: number) => setPlayed(m => { const n = new Map(m); n.set(id, Math.max(0, (n.get(id) ?? 0) + d)); return n })
+  const goalsSum = [...played.values()].reduce((a, b) => a + b, 0)
+  async function save() {
+    setBusy(true); setErr(null)
+    const { error } = await supabase.rpc('coach_save_match', { p_id: match?.id ?? crypto.randomUUID(), p: { ...f, players: [...played].map(([player_id, goals]) => ({ player_id, goals })) } })
+    setBusy(false)
+    if (error) return setErr(error.message)
+    await reload(); onClose()
+  }
+  return (
+    <Modal open onClose={onClose} title={match ? t('editMatch') : t('logMatch')}
+      footer={<><Button variant="ghost" onClick={onClose}>{t('cancel')}</Button><Button variant="primary" loading={busy} onClick={save}>{t('save')}</Button></>}>
+      <div className="space-y-4">
+        {err && <Alert>{err}</Alert>}
+        <div>
+          <div className="mb-1.5 text-[13px] font-semibold">{t('matchKind')}</div>
+          <div className="flex flex-wrap gap-1.5" data-tour="match-kind">
+            {MATCH_KINDS.map(k => <button key={k} type="button" onClick={() => setF({ ...f, kind: k })} aria-pressed={f.kind === k} className={cx('h-8 rounded-md border px-3 text-sm font-semibold', f.kind === k ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(KIND_T[k])}</button>)}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('matchDay')} required><Input type="date" max={today} value={f.played_on} onChange={e => setF({ ...f, played_on: e.target.value })} /></Field>
+          <Field label={t('ageGroupPlayed')}><Select value={f.age_group} onChange={e => setF({ ...f, age_group: e.target.value })}><option value="">—</option>{(groups.length ? groups.map(g => g.code) : ['U11', 'U13', 'U15', 'U17']).map(g => <option key={g} value={g}>{g}</option>)}</Select></Field>
+          <Field label={t('opponent')}><Input value={f.opponent} onChange={e => setF({ ...f, opponent: e.target.value })} /></Field>
+          <Field label={t('matchVenue')}><Select value={f.venue ?? 'home'} onChange={e => setF({ ...f, venue: e.target.value as 'home' | 'away' | 'neutral' })}><option value="home">{t('vHome')}</option><option value="away">{t('vAway')}</option><option value="neutral">{t('vNeutral')}</option></Select></Field>
+        </div>
+        <div>
+          <div className="mb-1.5 text-[13px] font-semibold">{t('score')}</div>
+          <div className="flex items-center gap-2">
+            <Input inputMode="numeric" value={f.goals_for} placeholder={t('scoreUs')} onChange={e => setF({ ...f, goals_for: e.target.value.replace(/\D/g, '') })} className="w-20 text-center" />
+            <span className="font-display text-xl font-semibold">:</span>
+            <Input inputMode="numeric" value={f.goals_against} placeholder={t('scoreThem')} onChange={e => setF({ ...f, goals_against: e.target.value.replace(/\D/g, '') })} className="w-20 text-center" />
+            {goalsSum > 0 && f.goals_for && goalsSum > Number(f.goals_for) && <span className="text-xs text-warn">{goalsSum} {t('goalsBy')} &gt; {f.goals_for}</span>}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 flex items-center justify-between"><span className="text-[13px] font-semibold">{t('whoPlayed')} · {played.size}/{active.length}</span>
+            <button type="button" className="text-xs font-semibold text-royal" onClick={() => setPlayed(played.size === active.length ? new Map() : new Map(active.map(p => [p.id, played.get(p.id) ?? 0])))}>{played.size === active.length ? t('clear') : t('selectAll')}</button></div>
+          <ul className="grid max-h-72 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
+            {active.map(p => (
+              <li key={p.id}>
+                <div className={cx('flex items-center gap-2 rounded-lg border px-2 py-1.5 text-sm', played.has(p.id) ? 'border-ink bg-ink/5' : 'border-line')}>
+                  <input type="checkbox" className="h-4 w-4 accent-royal" checked={played.has(p.id)} onChange={() => toggle(p.id)} />
+                  <Avatar player={p} size={26} /><span className="min-w-0 flex-1 truncate font-medium">{name(p)}</span>
+                  {played.has(p.id) && (
+                    <span className="flex items-center gap-1 text-xs">
+                      <button type="button" onClick={() => goal(p.id, -1)} className="h-6 w-6 rounded border border-line-2 font-bold">−</button>
+                      <span className="w-6 text-center font-semibold">{played.get(p.id) ?? 0}⚽</span>
+                      <button type="button" onClick={() => goal(p.id, 1)} className="h-6 w-6 rounded border border-line-2 font-bold">+</button>
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <Field label={`${t('notes')} (${t('optional')})`}><Textarea rows={2} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></Field>
+      </div>
+    </Modal>
+  )
+}
+
+/* ───────────────────────── Staff and equipment ───────────────────────── */
+
+function StaffCard() {
+  const { t } = useT()
+  const { academy, reload, preview } = useCoach()
+  const [editing, setEditing] = useState<StaffMember | 'new' | null>(null)
+  const [del, setDel] = useState<string | null>(null)
+  async function remove(id: string) { await supabase.rpc('coach_delete_staff', { p_id: id }); setDel(null); await reload() }
+  const staff = academy?.staff ?? []
+  return (
+    <Card className="p-4" data-tour="academy-staff">
+      <div className="flex items-start justify-between gap-3">
+        <div><div className="flex items-center gap-1.5 font-semibold"><UsersRound size={16} />{t('staffTitle')}</div><p className="mt-0.5 text-sm text-muted">{t('staffHint')}</p></div>
+        {!preview && <Button size="sm" variant="primary" onClick={() => setEditing('new')}><Plus size={14} />{t('addStaff')}</Button>}
+      </div>
+      {staff.length === 0 ? <p className="mt-3 text-sm text-faint">{t('noStaff')}</p> : (
+        <ul className="mt-3 divide-y divide-line">
+          {staff.map(m => (
+            <li key={m.id} className={cx('flex items-center gap-3 py-2', !m.active && 'opacity-60')}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-semibold uppercase text-neon">{m.name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('')}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5"><span className="truncate font-semibold">{m.name}</span>{m.pending && <PendingDot />}</span>
+                <span className="block truncate text-sm text-muted">{t(ROLE_T[m.role])}{m.phone ? ` · ${m.phone}` : ''}{m.since_year ? ` · ${t('sinceYear')} ${m.since_year}` : ''}</span>
+              </span>
+              {!preview && (del === m.id
+                ? <Button size="sm" variant="danger" onClick={() => remove(m.id)}>{t('remove')}</Button>
+                : <><button onClick={() => setEditing(m)} className="rounded p-1.5 text-faint hover:text-text" aria-label={t('edit')}><Pencil size={14} /></button><button onClick={() => setDel(m.id)} className="rounded p-1.5 text-faint hover:text-danger" aria-label={t('remove')}><Trash2 size={14} /></button></>)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {editing && <StaffForm member={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+    </Card>
+  )
+}
+
+function StaffForm({ member, onClose }: { member: StaffMember | null; onClose: () => void }) {
+  const { t } = useT()
+  const { reload } = useCoach()
+  const [f, setF] = useState({ name: member?.name ?? '', role: (member?.role ?? 'assistant') as StaffRole, phone: member?.phone ?? '', since_year: member?.since_year ? String(member.since_year) : '', active: member?.active ?? true, notes: member?.notes ?? '' })
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  async function save() {
+    if (!f.name.trim()) return setErr(t('staffTitle'))
+    setBusy(true); setErr(null)
+    const { error } = await supabase.rpc('coach_save_staff', { p_id: member?.id ?? crypto.randomUUID(), p: f })
+    setBusy(false)
+    if (error) return setErr(error.message)
+    await reload(); onClose()
+  }
+  return (
+    <Modal open onClose={onClose} title={member ? t('editStaff') : t('addStaff')}
+      footer={<><Button variant="ghost" onClick={onClose}>{t('cancel')}</Button><Button variant="primary" loading={busy} onClick={save}>{t('save')}</Button></>}>
+      <div className="space-y-3">
+        {err && <Alert>{err}</Alert>}
+        <Field label={t('firstName') + ' / ' + t('lastName')} required><Input value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></Field>
+        <div>
+          <div className="mb-1.5 text-[13px] font-semibold">{t('role')}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {STAFF_ROLES.map(r => <button key={r} type="button" onClick={() => setF({ ...f, role: r })} aria-pressed={f.role === r} className={cx('h-8 rounded-md border px-3 text-sm font-semibold', f.role === r ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(ROLE_T[r])}</button>)}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('phone')}><Input type="tel" value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} placeholder="07…" /></Field>
+          <Field label={t('sinceYear')}><Input inputMode="numeric" value={f.since_year} onChange={e => setF({ ...f, since_year: e.target.value.replace(/\D/g, '').slice(0, 4) })} placeholder="2022" /></Field>
+        </div>
+        {member && <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-ink" checked={f.active} onChange={e => setF({ ...f, active: e.target.checked })} />{t('stillActive')}</label>}
+        <Field label={`${t('notes')} (${t('optional')})`}><Textarea rows={2} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></Field>
+      </div>
+    </Modal>
+  )
+}
+
+function EquipmentCard() {
+  const { t } = useT()
+  const { academy, reload, preview } = useCoach()
+  const base = useMemo(() => { const m = new Map((academy?.equipment ?? []).map(e => [e.item, e])); return EQUIPMENT.map(item => m.get(item) ?? { item, quantity: 0, condition: 'good' as const, notes: null, updated_at: null }) }, [academy])
+  const [rows, setRows] = useState<Equipment[]>(base)
+  const [dirty, setDirty] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
+  useEffect(() => { setRows(base); setDirty(false) }, [base])
+  const set = (item: EquipmentItem, patch: Partial<Equipment>) => { setRows(rs => rs.map(r => (r.item === item ? { ...r, ...patch } : r))); setDirty(true) }
+  async function save() {
+    setBusy(true); setMsg(null)
+    const { error } = await supabase.rpc('coach_save_equipment', { p: rows.map(r => ({ item: r.item, quantity: r.quantity, condition: r.condition, notes: r.notes })) })
+    setBusy(false)
+    if (error) return setMsg({ tone: 'bad', text: error.message })
+    setDirty(false); await reload(); setMsg({ tone: 'good', text: t('done') })
+  }
+  return (
+    <Card className="p-4" data-tour="academy-equipment">
+      <div className="flex items-start justify-between gap-3">
+        <div><div className="flex items-center gap-1.5 font-semibold"><Package size={16} />{t('equipmentTitle')}</div><p className="mt-0.5 text-sm text-muted">{t('equipmentHint')}</p>
+          {academy?.equipment_updated_at && <p className="mt-0.5 text-xs text-faint">{t('lastCounted')}: {fmtDate(academy.equipment_updated_at.slice(0, 10), false)}</p>}</div>
+        {!preview && <Button size="sm" variant="primary" loading={busy} disabled={!dirty} onClick={save}>{t('saveEquipment')}</Button>}
+      </div>
+      {msg && <div className="mt-2"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+      <ul className="mt-3 divide-y divide-line">
+        {rows.map(r => (
+          <li key={r.item} className="flex items-center gap-2 py-1.5 text-sm">
+            <span className="min-w-0 flex-1 truncate font-medium">{t(EQ_T[r.item])}</span>
+            <div className="flex items-center gap-1">
+              <button type="button" disabled={preview} onClick={() => set(r.item, { quantity: Math.max(0, r.quantity - 1) })} className="h-7 w-7 rounded border border-line-2 font-bold">−</button>
+              <input inputMode="numeric" disabled={preview} value={r.quantity} onChange={e => set(r.item, { quantity: Math.max(0, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0) })} className="h-7 w-12 rounded border border-line-2 bg-card text-center text-sm font-semibold" aria-label={t('quantity')} />
+              <button type="button" disabled={preview} onClick={() => set(r.item, { quantity: r.quantity + 1 })} className="h-7 w-7 rounded border border-line-2 font-bold">+</button>
+            </div>
+            <select disabled={preview} value={r.condition} onChange={e => set(r.item, { condition: e.target.value as Equipment['condition'] })} aria-label={t('condition')}
+              className={cx('h-7 rounded border bg-card px-1 text-xs font-semibold', r.condition === 'good' ? 'border-grass/40 text-grass' : r.condition === 'worn' ? 'border-warn/40 text-warn' : 'border-danger/40 text-danger')}>
+              <option value="good">{t('cGood')}</option><option value="worn">{t('cWorn')}</option><option value="missing">{t('cMissing')}</option>
+            </select>
+          </li>
+        ))}
+      </ul>
+    </Card>
   )
 }
 
@@ -523,6 +761,8 @@ function AcademyPanel() {
           {msg && <Alert tone={msg.tone}>{msg.text}</Alert>}
         </div>
       </Card>
+      <StaffCard />
+      <EquipmentCard />
     </div>
   )
 }

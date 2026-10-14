@@ -7,7 +7,7 @@ import { useRefData, fmtDate } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, MultiSelect, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx } from '../../components/ui'
 
 const PROGRAMME: [Academy['programme_status'], string][] = [['registered', 'Registered'], ['observed', 'Observed by Tony'], ['partner', 'Partner academy'], ['official', 'Official academy']]
-interface Activity { sessions_30d: number; sessions_90d: number; last_session: string | null; players: number; with_photo: number; coaches: { id: string; name: string; last_seen_at: string | null }[] }
+interface Activity { sessions_30d: number; sessions_90d: number; last_session: string | null; matches_90d: number; last_match: string | null; players: number; with_photo: number; staff: { name: string; role: string; phone: string | null }[]; equipment: { item: string; quantity: number; condition: string }[]; equipment_updated_at: string | null; coaches: { id: string; name: string; last_seen_at: string | null }[] }
 interface AcSeason { academy_id: string; season_id: string; visit_date: string | null; scouted: number | null; selected: number | null; obs: string | null; rating: string | null; status: string | null }
 
 export default function AcademiesPage() {
@@ -200,6 +200,16 @@ function AcademyDrawer({ academy, history, canEdit, onClose, onSaved }: { academ
               </div>
             )}
             {!!activity?.coaches.length && <p className="mt-2 text-xs text-muted">Coach{activity.coaches.length > 1 ? 'es' : ''}: {activity.coaches.map(c => `${c.name}${c.last_seen_at ? ` (seen ${fmtDate(c.last_seen_at.slice(0, 10), false)})` : ''}`).join(', ')}</p>}
+            {activity && (
+              <div className="mt-3 grid gap-3 text-xs sm:grid-cols-3">
+                <div><div className="font-semibold">Matches · 90 days: {activity.matches_90d}</div><div className="text-muted">last {activity.last_match ? fmtDate(activity.last_match, false) : '—'}</div></div>
+                <div><div className="font-semibold">Staff ({activity.staff.length})</div><div className="text-muted">{activity.staff.length ? activity.staff.map(s => `${s.name} (${s.role.replace(/_/g, ' ')})`).join(', ') : 'none listed'}</div></div>
+                <div><div className="font-semibold">Equipment{activity.equipment_updated_at ? ` · counted ${fmtDate(activity.equipment_updated_at.slice(0, 10), false)}` : ''}</div>
+                  <div className="text-muted">{activity.equipment.length ? activity.equipment.map(e => `${e.item.replace(/_/g, ' ')} ${e.quantity}${e.condition !== 'good' ? ` (${e.condition})` : ''}`).join(', ') : 'not counted yet'}</div>
+                  {activity.equipment.some(e => e.condition === 'missing' || e.quantity === 0) && <div className="mt-0.5 text-danger">Missing: {activity.equipment.filter(e => e.condition === 'missing' || e.quantity === 0).map(e => e.item.replace(/_/g, ' ')).join(', ')}</div>}
+                </div>
+              </div>
+            )}
             {(academy.venue || academy.training_days?.length) && <p className="mt-2 text-xs text-muted">{academy.venue ? `Trains at ${academy.venue}` : ''}{academy.training_days?.length ? ` · ${academy.training_days.join(', ')}${academy.training_time ? ` ${academy.training_time}` : ''}` : ''}{academy.age_groups?.length ? ` · ${academy.age_groups.join(', ')}` : ''}</p>}
           </div>
         )}

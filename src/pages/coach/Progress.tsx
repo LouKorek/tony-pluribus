@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Award, Camera, ChevronDown, ChevronUp, Clock, Crown, Flame, Lock, Medal, Star, Trophy, UserPlus, Users, type LucideIcon } from 'lucide-react'
+import { Award, CalendarCheck, Camera, CheckCheck, ChevronDown, ChevronUp, ClipboardList, Clock, Crown, Eye, Flame, Goal, Hand, IdCard, Lock, Medal, Package, ShieldCheck, Shirt, Sparkles, Star, Swords, Tent, Trophy, UserPlus, Users, UsersRound, type LucideIcon } from 'lucide-react'
 import { fmtDate } from '../../lib/scouting'
 import { Card, Empty, cx } from '../../components/ui'
 import { useT } from './i18n'
@@ -7,7 +7,7 @@ import { useCoach, type BadgeInfo, type Rule } from './data'
 import { useGeo } from '../../lib/brand'
 import { ScreenTitle, Section } from './shared'
 
-const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users, camera: Camera, flame: Flame, star: Star, trophy: Trophy, medal: Medal, crown: Crown, clock: Clock, award: Award }
+const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users, camera: Camera, flame: Flame, star: Star, trophy: Trophy, medal: Medal, crown: Crown, clock: Clock, award: Award, 'id-card': IdCard, 'shield-check': ShieldCheck, shirt: Shirt, 'users-round': UsersRound, package: Package, 'clipboard-list': ClipboardList, sparkles: Sparkles, hand: Hand, 'check-check': CheckCheck, swords: Swords, goal: Goal, tent: Tent, eye: Eye, 'calendar-check': CalendarCheck }
 
 export default function ProgressScreen() {
   const { t } = useT()
@@ -56,8 +56,8 @@ export default function ProgressScreen() {
       </div>
 
       <Section title={`${t('badges')} · ${earned.length}/${badges.length}`} id="badges">
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-          {badges.map(b => <BadgeTile key={b.code} b={b} />)}
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {families(badges).map(f => <FamilyTile key={f.key} badges={f.badges} />)}
         </div>
       </Section>
 
@@ -134,17 +134,35 @@ export default function ProgressScreen() {
   )
 }
 
-function BadgeTile({ b }: { b: BadgeInfo }) {
-  const Icon = ICONS[b.icon] ?? Award
-  const on = !!b.earned_at
+/** Badges of one family (squad, streak, matches…) shown as one tile: the highest tier earned, and the next one to reach. */
+function families(badges: BadgeInfo[]) {
+  const map = new Map<string, BadgeInfo[]>()
+  for (const b of badges) { const k = b.family ?? b.code; if (!map.has(k)) map.set(k, []); map.get(k)!.push(b) }
+  return [...map].map(([key, bs]) => ({ key, badges: bs.sort((a, b) => a.tier - b.tier) }))
+}
+
+function FamilyTile({ badges }: { badges: BadgeInfo[] }) {
+  const { t } = useT()
+  const earned = badges.filter(b => b.earned_at)
+  const top = earned[earned.length - 1]
+  const next = badges.find(b => !b.earned_at)
+  const show = top ?? badges[0]
+  const Icon = ICONS[show.icon] ?? Award
+  const on = !!top
+  const title = `${badges.map(b => `${b.earned_at ? '✓' : '○'} ${b.label} – ${b.description}`).join('\n')}`
   return (
-    <div title={b.description} className={cx('flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center', on ? 'border-ink bg-ink text-white' : 'border-line bg-card text-faint')}>
+    <div title={title} className={cx('flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center', on ? 'border-ink bg-ink text-white' : 'border-line bg-card text-faint')}>
       <span className={cx('relative flex h-11 w-11 items-center justify-center rounded-full', on ? 'bg-neon text-ink' : 'bg-paper')}>
         <Icon size={20} />
         {!on && <Lock size={11} className="absolute -bottom-0.5 -right-0.5 rounded-full bg-card p-0.5 text-faint" />}
       </span>
-      <span className={cx('text-[12px] font-semibold leading-tight', on ? 'text-white' : 'text-muted')}>{b.label}</span>
-      {on && <span className="text-[10px] text-white/60">{fmtDate(b.earned_at!.slice(0, 10), false)}</span>}
+      <span className={cx('text-[12px] font-semibold leading-tight', on ? 'text-white' : 'text-muted')}>{show.label}</span>
+      {badges.length > 1 && (
+        <span className="flex gap-0.5">{badges.map(b => <span key={b.code} className={cx('h-1.5 w-3 rounded-full', b.earned_at ? 'bg-neon' : on ? 'bg-white/25' : 'bg-black/10')} />)}</span>
+      )}
+      {on && next ? <span className="text-[10px] leading-tight text-white/60">{t('nextBadge')}: {next.label}</span>
+        : on ? <span className="text-[10px] text-white/60">{fmtDate(top.earned_at!.slice(0, 10), false)}</span>
+        : <span className="text-[10px] leading-tight text-faint">{badges[0].description}</span>}
     </div>
   )
 }
