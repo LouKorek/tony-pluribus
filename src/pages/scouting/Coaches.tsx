@@ -321,11 +321,15 @@ function PointsTab({ d, row, canEdit, onDone }: { d: Detail; row: Row; canEdit: 
         <Card className="p-4" data-tour="bonus">
           <div className="label-caps mb-2 text-muted">Bonus or deduction</div>
           {err && <div className="mb-3"><Alert>{err}</Alert></div>}
-          <div className="flex flex-wrap items-end gap-2">
-            <Field label={pn.Many}><Input type="number" min={1} value={pts} onChange={e => setPts(e.target.value)} className="w-24" /></Field>
-            <div className="min-w-[200px] flex-1"><Field label="Reason" hint="The coach sees it with the points."><Input value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Brought 12 players to the camp in the rain" /></Field></div>
-            <Button variant="primary" loading={busy} onClick={() => give(1)}><Plus size={14} />Bonus</Button>
-            <Button variant="danger" loading={busy} onClick={() => give(-1)}><Minus size={14} />Deduct</Button>
+          <div className="grid grid-cols-[6rem_1fr] gap-x-2 gap-y-1 sm:grid-cols-[6rem_1fr_auto_auto]">
+            <label className="text-[13px] font-semibold" htmlFor="bonus-pts">{pn.Many}</label>
+            <label className="text-[13px] font-semibold" htmlFor="bonus-note">Reason</label>
+            <span className="hidden sm:block" /><span className="hidden sm:block" />
+            <Input id="bonus-pts" type="number" min={1} value={pts} onChange={e => setPts(e.target.value)} />
+            <Input id="bonus-note" value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Brought 12 players to the camp in the rain" />
+            <Button variant="primary" loading={busy} onClick={() => give(1)} className="col-start-1 mt-1 sm:col-start-auto sm:mt-0"><Plus size={14} />Bonus</Button>
+            <Button variant="danger" loading={busy} onClick={() => give(-1)} className="mt-1 sm:mt-0"><Minus size={14} />Deduct</Button>
+            <p className="col-span-2 text-xs text-muted sm:col-span-4">The coach sees the reason together with the {pn.many}.</p>
           </div>
         </Card>
       )}
