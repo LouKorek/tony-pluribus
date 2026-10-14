@@ -13,6 +13,10 @@ if (typeof window !== 'undefined') {
   window.addEventListener('appinstalled', () => { deferred = null; notify() })
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}) })
+    // A new version took over (after a deploy): reload once so the page runs the version the worker now holds.
+    const hadController = !!navigator.serviceWorker.controller
+    let refreshing = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !refreshing) { refreshing = true; window.location.reload() } })
   }
 }
 export const isInstalled = () => typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true)
