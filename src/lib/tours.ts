@@ -7,7 +7,7 @@ export function staffTourKey(path: string): string | null {
   const map: Record<string, string> = {
     '/scouting': 'scouting-home', '/scouting/plan': 'plan', '/scouting/academies': 'academies', '/scouting/camps': 'camps',
     '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool',
-    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/player-files': 'player-files', '/staff-reports': 'staff-reports', '/finance': 'finance', '/partners': 'partners', '/transfers': 'transfers', '/club-portal': 'club-portal', '/assistant': 'assistant', '/sync': 'sync', '/users': 'users', '/settings': 'settings',
+    '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/player-files': 'player-files', '/staff-reports': 'staff-reports', '/finance': 'finance', '/partners': 'partners', '/transfers': 'transfers', '/club-portal': 'club-portal', '/assistant': 'assistant', '/sync': 'sync', '/users': 'users', '/settings': 'settings', '/notifications': 'notifications',
   }
   return map[path] ?? null
 }
@@ -148,6 +148,11 @@ export const STAFF_TOURS: TourMap = {
     { target: 'main table', title: 'Manage a user', body: 'Edit the role and academy, lock an account, send a new invite link or set a password, open "Access" to choose what the user sees and can change, or use "View as" to see the system exactly as that user does.' },
     { target: 'page-actions', title: 'New user', body: 'Create an account and copy its invite link: the person opens it, chooses a password and is in. The link works for 7 days.' },
     { target: 'join-link', title: 'Coach join link', body: 'The sign-up link of this project for academy coaches, with a QR code you can print and hang at the academies.' },
+  ],
+  notifications: [
+    { target: 'notif-tabs', title: 'Inbox and settings', body: 'The inbox lists everything the system told you. "My settings" decides what reaches you and where; admins also set the defaults for the whole project.' },
+    { target: 'notif-list', title: 'Open a notification', body: 'Tap one to jump to the screen it is about: a camp sheet, a coach waiting for approval, Sync Center. Unread ones are highlighted.' },
+    { target: 'bell', title: 'The bell', body: 'The bell at the bottom of the menu shows what is new and opens the latest notifications from any screen.' },
   ],
   settings: [
     { target: 'project', title: 'Project', body: 'The project details and the link to the shared Talent folder.' },

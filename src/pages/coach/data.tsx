@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase, type AgeGroup } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
+import { useNotifications, type Notif } from '../../lib/notifications'
 import type { Decision, PStatus, Stage } from '../../lib/scouting'
 
 export interface JourneyItem {
@@ -17,7 +18,6 @@ export interface OpenCamp {
   district: string | null; own_district: boolean; submitted: number
 }
 export interface Standing { submitted: number; selected: number; rank: number | null; academies: number; region: string | null }
-export interface Notif { id: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
 export interface MyAcademy { id: string; name: string; district: { name: string; region: { name: string } | null } | null }
 
 interface CoachData {
@@ -34,37 +34,33 @@ const Ctx = createContext<CoachData | null>(null)
 
 export function CoachDataProvider({ children, previewAcademy }: { children: ReactNode; previewAcademy?: string }) {
   const { profile, scoutingSeason } = useAuth()
-  const [state, setState] = useState<Omit<CoachData, 'reload' | 'markRead' | 'preview' | 'base'>>({ loading: true, error: null, academy: null, squad: [], camps: [], standing: null, notifs: [], groups: [] })
+  const notifications = useNotifications()
+  const [state, setState] = useState<Omit<CoachData, 'reload' | 'markRead' | 'preview' | 'base' | 'notifs'>>({ loading: true, error: null, academy: null, squad: [], camps: [], standing: null, groups: [] })
 
   const reload = useCallback(async () => {
     const args = previewAcademy ? { p_academy: previewAcademy } : {}
     const academyId = previewAcademy ?? profile?.academy_id ?? ''
-    const [sq, ca, st, no, ac, gr] = await Promise.all([
+    const [sq, ca, st, ac, gr] = await Promise.all([
       supabase.rpc('coach_squad', args),
       supabase.rpc('coach_camps', args),
       supabase.rpc('coach_standing', args),
-      previewAcademy ? Promise.resolve({ data: [], error: null }) : supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(60),
       supabase.from('academies').select('id, name, district:districts(name, region:regions(name))').eq('id', academyId).maybeSingle(),
       scoutingSeason ? supabase.from('age_groups').select('*').eq('season_id', scoutingSeason.id).order('sort') : Promise.resolve({ data: [], error: null }),
     ])
-    const err = sq.error || ca.error || st.error || no.error || ac.error || gr.error
+    const err = sq.error || ca.error || st.error || ac.error || gr.error
     setState({
       loading: false, error: err ? err.message : null,
       squad: (sq.data as SquadPlayer[]) ?? [], camps: (ca.data as OpenCamp[]) ?? [], standing: (st.data as Standing) ?? null,
-      notifs: (no.data as Notif[]) ?? [], academy: (ac.data as unknown as MyAcademy) ?? null, groups: (gr.data as AgeGroup[]) ?? [],
+      academy: (ac.data as unknown as MyAcademy) ?? null, groups: (gr.data as AgeGroup[]) ?? [],
     })
   }, [profile?.academy_id, scoutingSeason, previewAcademy])
 
   useEffect(() => { reload() }, [reload])
 
-  const markRead = useCallback(async () => {
-    if (previewAcademy) return
-    await supabase.rpc('mark_notifications_read')
-    setState(s => ({ ...s, notifs: s.notifs.map(n => n.read_at ? n : { ...n, read_at: new Date().toISOString() }) }))
-  }, [previewAcademy])
+  const markRead = useCallback(async () => { if (!previewAcademy) await notifications.markAllRead() }, [previewAcademy, notifications])
 
   const base = previewAcademy ? `/coach-preview/${previewAcademy}` : ''
-  return <Ctx.Provider value={{ ...state, reload, markRead, preview: !!previewAcademy, base }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ ...state, notifs: previewAcademy ? [] : notifications.list, reload, markRead, preview: !!previewAcademy, base }}>{children}</Ctx.Provider>
 }
 
 export function useCoach() {

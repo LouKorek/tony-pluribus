@@ -10,6 +10,7 @@ import { STAFF_TOURS, staffTourKey } from '../lib/tours'
 import { supabase } from '../lib/supabase'
 import { InstallButton } from '../lib/install'
 import { APP_NAME, Logo } from '../lib/brand'
+import { NotificationBell } from '../components/NotificationBell'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return <Logo variant="wordmark" color="neon" className={compact ? 'h-[18px]' : 'h-[22px]'} />
@@ -114,6 +115,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="truncate text-sm font-semibold">{profile?.full_name || profile?.username}</div>
             <div className="truncate text-xs text-white/50">{profile ? ROLE_LABEL[profile.role] : ''}</div>
           </div>
+          <NotificationBell />
           <HelpButton />
           <button onClick={signOut} className="rounded-md p-2 text-white/50 hover:bg-white/10 hover:text-white" title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>
         </div>
@@ -163,7 +165,7 @@ function Shell() {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-ink px-4 text-white lg:hidden">
           <button onClick={() => setOpen(true)} className="rounded-md p-1.5 hover:bg-white/10" aria-label="Open menu"><Menu size={20} /></button>
           <Brand compact />
-          <HelpButton className="text-white/70" />
+          <div className="flex items-center"><NotificationBell className="text-white/70" placement="down" /><HelpButton className="text-white/70" /></div>
         </header>
         <main key={loc.pathname} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
           <Suspense fallback={<Spinner />}><Outlet /></Suspense>

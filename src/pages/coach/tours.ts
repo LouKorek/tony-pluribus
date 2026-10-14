@@ -61,5 +61,10 @@ export const COACH_TOURS: TourMap = {
       body: ['Invitations and results from Tony staff arrive here. Tap one to open it.',
              "Ubutumire n'ibisubizo bivuye ku bakozi ba Tony biza hano. Kanda kuri kimwe ukifungure."],
     },
+    {
+      target: 'notif-settings', title: ['Notification settings', "Igenamiterere ry'amakuru"],
+      body: ['Turn on notifications on this phone to hear about camps, invitations and decisions even when the app is closed, and choose what you want to receive.',
+             "Fungura amakuru kuri iyi telefoni kugira ngo umenye amakambi, ubutumire n'ibyemezo n'iyo porogaramu ifunze, kandi uhitemo ibyo ushaka kubona."],
+    },
   ],
 }

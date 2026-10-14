@@ -47,6 +47,7 @@ const ClubPortalPage = page(() => import('./pages/ops/ClubPortal'))
 const AssistantPage = page(() => import('./pages/ops/Assistant'))
 const SharePage = page(() => import('./pages/Share'))
 const SyncCenterPage = page(() => import('./pages/SyncCenter'))
+const NotificationsPage = page(() => import('./pages/Notifications'))
 
 export default function App() {
   const { loading, session, profile } = useAuth()
@@ -113,6 +114,7 @@ export default function App() {
         <Route path="transfers" element={<Need area="transfers"><TransfersPage /></Need>} />
         <Route path="club-portal" element={<Need area="club_portal"><ClubPortalPage /></Need>} />
         <Route path="assistant" element={<Need area="assistant"><AssistantPage /></Need>} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="sync" element={admin ? <SyncCenterPage /> : <Navigate to="/" replace />} />
         <Route path="users" element={admin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="settings" element={admin ? <SettingsPage /> : <Navigate to="/" replace />} />

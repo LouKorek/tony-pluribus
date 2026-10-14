@@ -1,7 +1,7 @@
 import {
   LayoutGrid, Radar, CalendarRange, School, Tent, Trophy, Users2, Sparkles,
   Shirt, ClipboardCheck, Dumbbell, Swords, Timer, Star, FolderLock, FileText, Wallet, Handshake,
-  ArrowLeftRight, Building2, Bot, BarChart3, FileSpreadsheet, FolderTree, RefreshCcw, UserCog, Settings,
+  ArrowLeftRight, Building2, Bot, BarChart3, FileSpreadsheet, FolderTree, RefreshCcw, UserCog, Settings, Bell,
   type LucideIcon,
 } from 'lucide-react'
 import type { Role } from './supabase'
@@ -18,7 +18,7 @@ export interface NavItem {
 }
 export interface NavGroup { label: string; items: NavItem[] }
 
-export const BUILD_STAGE = 11
+export const BUILD_STAGE = 13
 
 const STAFF: Role[] = ['owner', 'admin', 'staff', 'scout', 'observer']
 const ADMIN: Role[] = ['owner', 'admin']
@@ -70,6 +70,7 @@ export const NAV: NavGroup[] = [
   {
     label: 'System',
     items: [
+      { to: '/notifications', label: 'Notifications', icon: Bell, stage: 13, roles: STAFF },
       { to: '/files', label: 'Files', icon: FolderTree, stage: 5, roles: STAFF, area: 'files' },
       { to: '/sync', label: 'Sync Center', icon: RefreshCcw, stage: 6, roles: ADMIN },
       { to: '/users', label: 'Users', icon: UserCog, stage: 1, roles: ADMIN },
@@ -80,7 +81,7 @@ export const NAV: NavGroup[] = [
 
 export const STAGE_NAME: Record<number, string> = {
   2: 'Scouting', 3: 'Coach portal', 4: 'Dashboards & reports', 5: 'History & files', 6: 'SharePoint sync',
-  7: 'Squads', 8: 'Football', 9: 'Player files', 10: 'Operations', 11: 'Scale',
+  7: 'Squads', 8: 'Football', 9: 'Player files', 10: 'Operations', 11: 'Scale', 12: 'Identity', 13: 'Notifications',
 }
 
 export function findNav(path: string): NavItem | undefined {

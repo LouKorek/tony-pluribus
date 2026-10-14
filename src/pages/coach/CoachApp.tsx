@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Bell, CalendarDays, Check, ChevronRight, CircleHelp, Home as HomeIcon, LogOut, MapPin, Plus, Printer, Share2, Trophy, Undo2, UserPlus, Users, X,
+  Bell, CalendarDays, Check, ChevronRight, CircleHelp, Home as HomeIcon, LogOut, MapPin, Plus, Printer, Share2, SlidersHorizontal, Trophy, Undo2, UserPlus, Users, X,
 } from 'lucide-react'
 import { InstallButton } from '../../lib/install'
 import { useAuth } from '../../lib/auth'
@@ -14,6 +14,8 @@ import { DECISION_T, LangProvider, STAGE_T, STATUS_T, useT } from './i18n'
 import { TourProvider, useTour } from '../../lib/tour'
 import { COACH_TOURS } from './tours'
 import { CoachDataProvider, groupOf, openInvites, pendingInvites, useCoach, type JourneyItem, type OpenCamp, type SquadPlayer } from './data'
+import { notifTarget, useNotifications } from '../../lib/notifications'
+import { PrefsMatrix, PushCard } from '../../components/NotificationPrefs'
 
 export default function CoachApp({ previewAcademy }: { previewAcademy?: string }) {
   return (
@@ -701,12 +703,20 @@ function InviteCard({ player, item }: { player: SquadPlayer; item: JourneyItem }
 function UpdatesScreen() {
   const { t } = useT()
   const { notifs, markRead } = useCoach()
+  const { markSeen } = useNotifications()
+  const [settings, setSettings] = useState(false)
   // Keep the "new" marks visible while the screen is open, then mark everything read in the background.
   const unreadAtOpen = useRef(new Set(notifs.filter(n => !n.read_at).map(n => n.id)))
-  useEffect(() => { if (unreadAtOpen.current.size) markRead() }, [markRead])
+  useEffect(() => { markSeen(); if (unreadAtOpen.current.size) markRead() }, [markRead, markSeen])
   return (
     <div>
-      <ScreenTitle title={t('updates')} />
+      <ScreenTitle title={t('updates')} action={<Button size="sm" variant={settings ? 'dark' : 'secondary'} data-tour="notif-settings" onClick={() => setSettings(s => !s)}><SlidersHorizontal size={14} />{t('notifSettings')}</Button>} />
+      {settings && (
+        <div className="mb-6 space-y-4">
+          <PushCard t={{ title: t('pushTitle'), on: t('pushOn'), off: t('pushOff'), enable: t('pushEnable'), disable: t('pushDisable'), unsupported: t('pushUnsupported'), blocked: t('pushBlocked') }} />
+          <PrefsMatrix mode="user" labels={{ inApp: t('inApp'), push: t('pushCol'), reset: t('resetPrefs'), hint: t('prefsHint') }} />
+        </div>
+      )}
       {notifs.length === 0 ? (
         <Card><Empty icon={<Bell size={20} />} title={t('noUpdates')}>{t('noUpdatesHint')}</Empty></Card>
       ) : (
@@ -718,21 +728,19 @@ function UpdatesScreen() {
 
 function NotifRow({ n, fresh }: { n: ReturnType<typeof useCoach>['notifs'][number]; fresh?: boolean }) {
   const nav = useGo()
-  const go = () => {
-    if (!n.link) return
-    if (n.link === 'invites') nav('/camps')
-    else if (n.link.startsWith('player:')) nav(`/squad?player=${n.link.slice(7)}`)
-  }
+  const { markRead } = useNotifications()
+  const target = notifTarget(n, true)
+  const go = () => { markRead(n.id); if (target) nav(target) }
   const isNew = fresh ?? !n.read_at
   return (
-    <button onClick={go} className={cx('flex w-full gap-3 px-4 py-3 text-left', n.link ? 'hover:bg-paper' : 'cursor-default')}>
+    <button onClick={go} className={cx('flex w-full gap-3 px-4 py-3 text-left', target ? 'hover:bg-paper' : 'cursor-default')}>
       <span className={cx('mt-1.5 h-2 w-2 shrink-0 rounded-full', isNew ? 'bg-royal' : 'bg-transparent')} />
       <span className="min-w-0 flex-1">
         <span className="block font-semibold">{n.title}</span>
         {n.body && <span className="block whitespace-pre-line text-sm text-muted">{n.body}</span>}
         <span className="mt-0.5 block text-xs text-faint">{fmtDate(n.created_at.slice(0, 10))}</span>
       </span>
-      {n.link && <ChevronRight size={18} className="mt-1 shrink-0 text-faint" />}
+      {target && <ChevronRight size={18} className="mt-1 shrink-0 text-faint" />}
     </button>
   )
 }
