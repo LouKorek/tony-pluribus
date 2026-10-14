@@ -11,6 +11,7 @@ import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, SearchInput, Se
 import { CampFormModal } from './campForm'
 import { STATUS_LABEL, stageTone, statusTone } from './Camps'
 import { PlayerDrawer } from './Players'
+import { CampDaysPanel } from './CampDays'
 
 type Row = Participant & { player: Player }
 const NEXT: Partial<Record<Stage, Stage>> = { district: 'province_final', province_final: 'national_final' }
@@ -116,6 +117,8 @@ export default function CampSheet() {
           </Card>
         ))}
       </div>
+
+      <CampDaysPanel camp={camp} rows={rows} canEdit={canEdit} academyName={id => ref.academy(id)?.name ?? '—'} />
 
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Segmented value={group} onChange={setGroup} options={[{ value: 'all', label: 'All', count: rows.length }, ...groups.map(g => ({ value: g, label: g, count: rows.filter(r => r.age_group === g).length })), ...(rows.some(r => !r.age_group || !groups.includes(r.age_group)) ? [{ value: 'Other', label: 'Other age', count: rows.filter(r => !r.age_group || !groups.includes(r.age_group)).length }] : [])]} />

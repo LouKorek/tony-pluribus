@@ -34,7 +34,7 @@ export const STAFF_TOURS: TourMap = {
     { target: 'academy-stats', title: 'The register', body: 'Active academies, how many the scouts visited this season, players seen and selected, as recorded in the Talent folder.' },
     { target: 'filters', title: 'Find academies', body: 'Search by name, contact or district, and filter by province, district or visit status.' },
     { target: 'season', title: 'Season', body: 'Switch the season to see the visits and results of earlier years.' },
-    { target: 'main table', title: 'Open an academy', body: 'Click a row to edit its details, see its scouting history and open the portal its coach sees.' },
+    { target: 'main table', title: 'Open an academy', body: 'Click a row to edit its details, set its status in the programme (registered, observed, partner, official), see what the coach keeps up to date, its scouting history, and open the portal its coach sees.' },
     { target: 'page-actions', title: 'New academy', body: 'Add an academy that is not in the register yet.' },
   ],
   camps: [
@@ -45,6 +45,7 @@ export const STAFF_TOURS: TourMap = {
   ],
   'camp-sheet': [
     { target: 'camp-stats', title: 'Camp numbers', body: 'Players, attendance, graded players and decisions update as you type.' },
+    { target: 'camp-days', title: 'Days and academies', body: 'Split the camp into days and give each academy its day and report time. The coach gets a notification, confirms in the portal, and you mark the academy as arrived on the day.' },
     { target: 'add-player', title: 'Add players', body: 'Players submitted by coaches appear by themselves. Add walk-ins here: find an existing player or create a new one.' },
     { target: 'main table', title: 'The sheet', body: 'Enter attendance, sprint and jump results, the OBS grade, the decision and comments. Everything saves as you go. "Message to coach" is what the academy coach reads.' },
     { target: 'promote', title: 'Next stage', body: 'Invite the selected players to the next stage. Their coaches get the invitation in the portal.' },

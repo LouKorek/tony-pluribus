@@ -6,6 +6,8 @@ import { useAuth } from '../../lib/auth'
 import { useRefData, fmtDate } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, MultiSelect, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx } from '../../components/ui'
 
+const PROGRAMME: [Academy['programme_status'], string][] = [['registered', 'Registered'], ['observed', 'Observed by Tony'], ['partner', 'Partner academy'], ['official', 'Official academy']]
+interface Activity { sessions_30d: number; sessions_90d: number; last_session: string | null; players: number; with_photo: number; coaches: { id: string; name: string; last_seen_at: string | null }[] }
 interface AcSeason { academy_id: string; season_id: string; visit_date: string | null; scouted: number | null; selected: number | null; obs: string | null; rating: string | null; status: string | null }
 
 export default function AcademiesPage() {
@@ -133,20 +135,25 @@ function AcademyDrawer({ academy, history, canEdit, onClose, onSaved }: { academ
   const [f, setF] = useState({
     name: academy?.name ?? '', district_id: academy?.district_id ?? '', contact_name: academy?.contact_name ?? '',
     contact_phone: academy?.contact_phone ?? '', notes: academy?.notes ?? '', is_active: academy?.is_active ?? true,
+    programme_status: academy?.programme_status ?? 'registered',
   })
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [players, setPlayers] = useState<number | null>(null)
+  const [activity, setActivity] = useState<Activity | null>(null)
 
   useEffect(() => {
-    if (academy) supabase.from('players').select('id', { count: 'exact', head: true }).eq('academy_id', academy.id).then(({ count }) => setPlayers(count ?? 0))
+    if (academy) {
+      supabase.from('players').select('id', { count: 'exact', head: true }).eq('academy_id', academy.id).then(({ count }) => setPlayers(count ?? 0))
+      supabase.rpc('academy_activity', { p_academy: academy.id }).then(({ data }) => setActivity((data as Activity) ?? null))
+    }
   }, [academy])
 
   async function save() {
     setErr(null)
     if (!f.name.trim() || !f.district_id) return setErr('Name and district are required.')
     setBusy(true)
-    const payload = { name: f.name.trim().toUpperCase(), district_id: f.district_id, contact_name: f.contact_name.trim() || null, contact_phone: f.contact_phone.trim() || null, notes: f.notes.trim() || null, is_active: f.is_active }
+    const payload = { name: f.name.trim().toUpperCase(), district_id: f.district_id, contact_name: f.contact_name.trim() || null, contact_phone: f.contact_phone.trim() || null, notes: f.notes.trim() || null, is_active: f.is_active, programme_status: f.programme_status }
     const { error } = academy ? await supabase.from('academies').update(payload).eq('id', academy.id) : await supabase.from('academies').insert({ ...payload, project_id: project?.id })
     setBusy(false)
     if (error) return setErr(error.code === '23505' ? 'This district already has an academy with that name.' : errMsg(error))
@@ -171,8 +178,31 @@ function AcademyDrawer({ academy, history, canEdit, onClose, onSaved }: { academ
           <Field label="Phone"><div className="flex gap-2"><Input value={f.contact_phone} onChange={e => setF({ ...f, contact_phone: e.target.value })} disabled={!canEdit} />{f.contact_phone && <a href={`tel:${f.contact_phone}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line-2 text-muted hover:text-text" title="Call"><Phone size={15} /></a>}</div></Field>
         </div>
         <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} disabled={!canEdit} /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.is_active} onChange={e => setF({ ...f, is_active: e.target.checked })} disabled={!canEdit} className="h-4 w-4 accent-royal" /> Active academy</label>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Status in the programme" hint="The coach sees this in the portal.">
+            <Select value={f.programme_status} onChange={e => setF({ ...f, programme_status: e.target.value as Academy['programme_status'] })} disabled={!canEdit}>
+              {PROGRAMME.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </Select>
+          </Field>
+          <label className="flex items-center gap-2 pt-7 text-sm"><input type="checkbox" checked={f.is_active} onChange={e => setF({ ...f, is_active: e.target.checked })} disabled={!canEdit} className="h-4 w-4 accent-royal" /> Active academy</label>
+        </div>
         {err && <Alert>{err}</Alert>}
+
+        {academy && (
+          <div className="rounded-lg border border-line bg-paper/60 p-3" data-tour="academy-activity">
+            <div className="label-caps mb-2 text-muted">What the coach keeps up to date</div>
+            {!activity ? <p className="text-sm text-muted">Loading…</p> : (
+              <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                <div><div className="font-display text-2xl font-semibold leading-none">{activity.players}</div><div className="text-xs text-muted">active players · {activity.with_photo} with photo</div></div>
+                <div><div className="font-display text-2xl font-semibold leading-none">{activity.sessions_30d}</div><div className="text-xs text-muted">training sessions · 30 days</div></div>
+                <div><div className="font-display text-2xl font-semibold leading-none">{activity.sessions_90d}</div><div className="text-xs text-muted">sessions · 90 days</div></div>
+                <div><div className="font-display text-2xl font-semibold leading-none">{activity.last_session ? fmtDate(activity.last_session, false) : '—'}</div><div className="text-xs text-muted">last session</div></div>
+              </div>
+            )}
+            {!!activity?.coaches.length && <p className="mt-2 text-xs text-muted">Coach{activity.coaches.length > 1 ? 'es' : ''}: {activity.coaches.map(c => `${c.name}${c.last_seen_at ? ` (seen ${fmtDate(c.last_seen_at.slice(0, 10), false)})` : ''}`).join(', ')}</p>}
+            {(academy.venue || academy.training_days?.length) && <p className="mt-2 text-xs text-muted">{academy.venue ? `Trains at ${academy.venue}` : ''}{academy.training_days?.length ? ` · ${academy.training_days.join(', ')}${academy.training_time ? ` ${academy.training_time}` : ''}` : ''}{academy.age_groups?.length ? ` · ${academy.age_groups.join(', ')}` : ''}</p>}
+          </div>
+        )}
 
         {academy && (
           <div className="pt-2">
