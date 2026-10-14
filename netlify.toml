@@ -1,0 +1,9 @@
+# The old address of the system. Everything moves to tonynext.netlify.app.
+[build]
+  publish = "site"
+
+[[redirects]]
+  from = "/*"
+  to = "https://tonynext.netlify.app/:splat"
+  status = 301
+  force = true
