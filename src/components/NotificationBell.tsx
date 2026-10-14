@@ -5,7 +5,7 @@ import { cx } from './ui'
 import { CATEGORY_LABEL, fmtWhen, notifTarget, useNotifications, type Notif } from '../lib/notifications'
 
 /** The bell of the staff shell: unread dot, a small panel with the latest notifications, a link to the inbox. */
-export function NotificationBell({ className, light = true, placement = 'up' }: { className?: string; light?: boolean; placement?: 'up' | 'down' }) {
+export function NotificationBell({ className, light = true, placement = 'up' }: { className?: string; light?: boolean; placement?: 'up' | 'down' | 'down-end' }) {
   const { list, unread, unseen, markSeen, markRead, markAllRead } = useNotifications()
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -28,7 +28,7 @@ export function NotificationBell({ className, light = true, placement = 'up' }: 
         {unseen === 0 && unread > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-neon" />}
       </button>
       {open && (
-        <div className={cx('absolute z-50 w-[340px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-line bg-card text-text shadow-2xl', placement === 'up' ? 'bottom-full left-0 mb-2' : 'right-0 top-full mt-2')}>
+        <div className={cx('absolute z-50 w-[340px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-line bg-card text-text shadow-2xl', placement === 'up' ? 'bottom-full left-0 mb-2' : placement === 'down' ? 'left-0 top-full mt-2' : 'right-0 top-full mt-2')}>
           <div className="flex items-center justify-between border-b border-line px-3 py-2">
             <span className="text-sm font-semibold">Notifications{unread > 0 && <span className="ml-1.5 rounded-full bg-neon px-1.5 text-[11px] font-bold text-ink">{unread}</span>}</span>
             {unread > 0 && <button onClick={markAllRead} className="flex items-center gap-1 text-xs font-semibold text-muted hover:text-text"><CheckCheck size={13} /> Mark all read</button>}
