@@ -85,7 +85,7 @@ export default function HomeScreen() {
             <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-white/15">
               <span className={cx('block h-full rounded-full bg-neon')} style={{ width: `${progress.level.next ? Math.min(100, Math.round(((progress.points - progress.level.min_points) / (progress.level.next.min_points - progress.level.min_points)) * 100)) : 100}%` }} />
             </span>
-            <span className="mt-1 block text-xs text-white/60">{progress.level.next ? `${progress.level.next.min_points - progress.points} ${t('toNext')} ${progress.level.next.label}` : t('topLevel')}{progress.rank.province ? ` · ${t('rankProvince')} #${progress.rank.province}` : ''}</span>
+            <span className="mt-1 block text-xs text-white/60">{progress.level.next ? `${progress.level.next.min_points - progress.points} ${pn.many} ${t('toNext')} ${progress.level.next.label}` : t('topLevel')}{progress.rank.province ? ` · ${t('rankProvince')} #${progress.rank.province}` : ''}</span>
           </span>
           <ChevronRight size={18} className="text-white/60" />
         </button>

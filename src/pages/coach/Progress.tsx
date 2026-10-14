@@ -43,7 +43,7 @@ export default function ProgressScreen() {
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-neon transition-all" style={{ width: `${pct}%` }} /></div>
         <div className="mt-2 flex justify-between text-xs text-white/60">
           <span>{level.label} · {level.min_points}</span>
-          <span>{next ? `${next.min_points - points} ${t('toNext')} ${next.label}` : t('topLevel')}</span>
+          <span>{next ? `${next.min_points - points} ${pn.many} ${t('toNext')} ${next.label}` : t('topLevel')}</span>
         </div>
       </Card>
 

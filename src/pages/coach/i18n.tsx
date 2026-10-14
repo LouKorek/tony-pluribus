@@ -200,7 +200,7 @@ const S = {
   level: ['Level', 'Urwego'],
   points: ['points', 'amanota'],
   thisSeason: ['this season', 'iki gihembwe'],
-  toNext: ['points to', 'amanota asigaye kugera kuri'],
+  toNext: ['to', 'kugera kuri'],
   topLevel: ['Top level reached', "Urwego rwo hejuru rwagezweho"],
   rankDistrict: ['District', 'Akarere'],
   rankProvince: ['Province', 'Intara'],
