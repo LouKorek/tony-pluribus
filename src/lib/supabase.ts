@@ -31,6 +31,9 @@ export interface Profile {
   approved_at: string | null
   last_seen_at: string | null
   tours_seen?: string[]
+  invite_token?: string | null
+  invite_expires_at?: string | null
+  invite_accepted_at?: string | null
   created_at: string
 }
 

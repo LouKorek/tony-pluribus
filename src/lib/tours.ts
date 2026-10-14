@@ -145,12 +145,14 @@ export const STAFF_TOURS: TourMap = {
   ],
   users: [
     { target: 'tabs', title: 'Accounts', body: 'Coaches who sign up through the link wait under "pending" until you approve them.' },
-    { target: 'main table', title: 'Manage a user', body: 'Edit the role and academy, lock an account, set a new password, open "Access" to choose what the user sees and can change, or use "View as" to see the system exactly as that user does.' },
-    { target: 'page-actions', title: 'New user', body: 'Create staff accounts with a username and password.' },
+    { target: 'main table', title: 'Manage a user', body: 'Edit the role and academy, lock an account, send a new invite link or set a password, open "Access" to choose what the user sees and can change, or use "View as" to see the system exactly as that user does.' },
+    { target: 'page-actions', title: 'New user', body: 'Create an account and copy its invite link: the person opens it, chooses a password and is in. The link works for 7 days.' },
+    { target: 'join-link', title: 'Coach join link', body: 'The sign-up link of this project for academy coaches, with a QR code you can print and hang at the academies.' },
   ],
   settings: [
     { target: 'project', title: 'Project', body: 'The project details and the link to the shared Talent folder.' },
     { target: 'seasons', title: 'Seasons', body: 'Which season is being scouted and which one is running.' },
     { target: 'age-groups', title: 'Age groups', body: 'The birth years of each age group for the scouting season. Camps and pools use them everywhere.' },
+    { target: 'brand', title: 'Brand and partner', body: 'Tony is the brand everywhere. The partner of this project appears only where you tick: certificates, reports and shared pages.' },
   ],
 }

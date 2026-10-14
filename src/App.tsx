@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-do
 import { useAuth, isAdmin } from './lib/auth'
 import { Spinner } from './components/ui'
 import AppShell from './layouts/AppShell'
-import { LoginPage, OwnerSetupPage, PendingPage, SignupPage } from './pages/auth'
+import { LoginPage, OwnerSetupPage, PendingPage, SignupPage, WelcomePage } from './pages/auth'
 // After a new deploy, a tab that was already open asks for page files that no longer exist.
 // Reload once to pick up the new version instead of showing a blank screen.
 function page<T extends ComponentType<any>>(load: () => Promise<{ default: T }>) {
@@ -56,6 +56,9 @@ export default function App() {
   if (pathname.startsWith('/share/')) return (
     <Suspense fallback={<Spinner />}><Routes><Route path="/share/:token" element={<SharePage />} /></Routes></Suspense>
   )
+  // Invite links and project join links work before sign-in (and for someone signed in as another user).
+  if (pathname.startsWith('/welcome/')) return <Routes><Route path="/welcome/:token" element={<WelcomePage />} /></Routes>
+  if (pathname.startsWith('/join/') && !session) return <Routes><Route path="/join/:slug" element={<SignupPage />} /></Routes>
 
   if (loading) return <Spinner />
 

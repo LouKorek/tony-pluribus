@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, Eye, KeyRound, ShieldCheck, Pencil, Plus, Search, UserPlus, Users as UsersIcon, Wand2 } from 'lucide-react'
+import { Check, Copy, Download, Eye, KeyRound, Link2, MessageSquareShare, QrCode, Share2, ShieldCheck, Pencil, Plus, Search, UserPlus, Users as UsersIcon, Wand2 } from 'lucide-react'
+import QRCode from 'qrcode'
+import { canShare, copyText, inviteMessage, inviteUrl, issueInvite, joinUrl, shareText } from '../lib/invite'
+import { APP_NAME } from '../lib/brand'
 import { supabase, ROLE_LABEL, ROLE_HINT, USERNAME_RE, errMsg, type Academy, type District, type Profile, type Region, type Role, type Status } from '../lib/supabase'
 import { startViewAs } from '../lib/viewAs'
 import { useAuth } from '../lib/auth'
@@ -18,7 +21,7 @@ function since(iso: string | null) {
 }
 
 export default function UsersPage() {
-  const { profile: me } = useAuth()
+  const { profile: me, project } = useAuth()
   const [users, setUsers] = useState<Profile[] | null>(null)
   const [academies, setAcademies] = useState<Academy[]>([])
   const [districts, setDistricts] = useState<District[]>([])
@@ -37,6 +40,8 @@ export default function UsersPage() {
     if (e) { setViewErr(e); setViewing(null) }
   }
   const [resetting, setResetting] = useState<Profile | null>(null)
+  const [joinOpen, setJoinOpen] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const [u, a, d, r] = await Promise.all([
@@ -70,8 +75,8 @@ export default function UsersPage() {
       <PageHeader
         eyebrow="System"
         title="Users"
-        description="Staff accounts are created here with a username and password. Academy coaches sign up through the link on the sign-in page and wait here for approval."
-        actions={<Button variant="primary" onClick={() => setCreating(true)}><UserPlus size={16} /> New user</Button>}
+        description="Create an account, copy its invite link and send it: the person chooses a password and is in. Academy coaches can also sign up through the project's join link and wait here for approval."
+        actions={<><Button onClick={() => setJoinOpen(true)} data-tour="join-link"><QrCode size={16} /> Coach join link</Button><Button variant="primary" onClick={() => setCreating(true)}><UserPlus size={16} /> New user</Button></>}
       />
       {viewErr && <div className="mb-4"><Alert>{viewErr}</Alert></div>}
 
@@ -122,14 +127,20 @@ export default function UsersPage() {
                       </td>
                       <td className="px-4 py-3">{u.role === 'owner' ? <Badge tone="dark">{ROLE_LABEL[u.role]}</Badge> : ROLE_LABEL[u.role]}</td>
                       <td className="px-4 py-3 text-muted">{scope}</td>
-                      <td className="px-4 py-3"><Badge tone={statusTone[u.status]}>{u.status}</Badge></td>
+                      <td className="px-4 py-3">
+                        <Badge tone={statusTone[u.status]}>{u.status}</Badge>
+                        {u.invite_token && u.status === 'active' && <div className="mt-1 text-[11px] text-muted">{u.invite_expires_at && new Date(u.invite_expires_at) < new Date() ? 'Invite expired' : 'Invited · link not used yet'}</div>}
+                      </td>
                       <td className="px-4 py-3 text-muted">{since(u.last_seen_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1.5">
                           {u.status === 'pending'
                             ? <Button size="sm" variant="primary" onClick={() => setEditing(u)}><Check size={14} /> Review</Button>
                             : <Button size="sm" variant="ghost" onClick={() => setEditing(u)} disabled={u.role === 'owner' && me?.role !== 'owner'}><Pencil size={14} /> Edit</Button>}
-                          <Button size="sm" variant="ghost" onClick={() => setResetting(u)} disabled={u.role === 'owner' && me?.role !== 'owner'} title="Set a new password"><KeyRound size={14} /></Button>
+                          {u.invite_token && u.status === 'active' && (!u.invite_expires_at || new Date(u.invite_expires_at) >= new Date()) && (
+                            <Button size="sm" variant="ghost" onClick={async () => { await copyText(inviteUrl(u.invite_token!)); setCopied(u.id); setTimeout(() => setCopied(null), 1500) }} title="Copy the invite link"><Link2 size={14} /> {copied === u.id ? 'Copied' : 'Copy invite'}</Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => setResetting(u)} disabled={u.role === 'owner' && me?.role !== 'owner'} title="New invite link or password"><KeyRound size={14} /></Button>
                           {u.role !== 'owner' && u.role !== 'coach' && u.status === 'active' && (u.role !== 'admin' || me?.role === 'owner') && (
                             <Button size="sm" variant="ghost" onClick={() => setAccessFor(u)} title="What this user can see and change"><ShieldCheck size={14} /> Access</Button>
                           )}
@@ -149,7 +160,8 @@ export default function UsersPage() {
 
       {creating && <CreateUserModal teams={teams} academies={academies} districts={districts} regions={regions} myRole={me?.role} onClose={() => setCreating(false)} onDone={() => { setCreating(false); load() }} onAcademyAdded={load} />}
       {editing && <EditUserModal teams={teams} user={editing} me={me} academies={academies} districts={districts} regions={regions} onClose={() => setEditing(null)} onDone={() => { setEditing(null); load() }} onAcademyAdded={load} />}
-      {resetting && <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} />}
+      {resetting && <ResetPasswordModal user={resetting} projectName={project?.name ?? 'Tony'} onClose={() => { setResetting(null); load() }} />}
+      {joinOpen && <JoinLinkModal slug={project?.slug ?? ''} projectName={project?.name ?? 'Tony'} onClose={() => setJoinOpen(false)} />}
       {accessFor && <AccessModal user={accessFor} onClose={() => setAccessFor(null)} />}
     </div>
   )
@@ -221,37 +233,48 @@ function AcademyPicker({ value, onChange, academies, districts, onAdded, suggest
 export function CreateUserModal({ teams, academies, districts, regions, myRole, onClose, onDone, onAcademyAdded }: {
   teams: ScopeTeam[]; academies: Academy[]; districts: District[]; regions: Region[]; myRole?: Role; onClose: () => void; onDone: () => void; onAcademyAdded: () => void
 }) {
-  const [f, setF] = useState({ username: '', full_name: '', phone: '', role: 'staff' as Role, academy_id: '', region_ids: [] as string[], team_ids: [] as string[], password: generatePassword() })
+  const { project } = useAuth()
+  const [f, setF] = useState({ username: '', full_name: '', phone: '', role: 'staff' as Role, academy_id: '', region_ids: [] as string[], team_ids: [] as string[], password: generatePassword(), mode: 'invite' as 'invite' | 'password' })
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [created, setCreated] = useState<{ username: string; password: string } | null>(null)
+  const [created, setCreated] = useState<{ username: string; password?: string; invite?: string } | null>(null)
 
   async function submit(e: FormEvent) {
     e.preventDefault(); setErr(null)
     const u = f.username.trim().toLowerCase()
     if (!USERNAME_RE.test(u)) return setErr('Username: 3–32 characters, letters, digits, dots, dashes or underscores.')
-    if (f.password.length < 8) return setErr('Password: at least 8 characters.')
+    if (f.mode === 'password' && f.password.length < 8) return setErr('Password: at least 8 characters.')
     if (f.role === 'coach' && !f.academy_id) return setErr('Choose the academy this coach belongs to.')
     setBusy(true)
     const { data: newId, error } = await supabase.rpc('admin_create_user', {
-      p_username: u, p_password: f.password, p_full_name: f.full_name.trim() || null, p_role: f.role,
+      p_username: u, p_password: f.mode === 'password' ? f.password : null, p_full_name: f.full_name.trim() || null, p_role: f.role,
       p_phone: f.phone.trim() || null, p_academy_id: f.academy_id || null, p_region_id: f.region_ids.length === 1 ? f.region_ids[0] : null,
     })
-    if (!error && (f.region_ids.length || f.team_ids.length)) await supabase.rpc('admin_set_scope', { p_user: newId, p_region_ids: f.region_ids, p_team_ids: f.team_ids })
+    if (error) { setBusy(false); return setErr(errMsg(error)) }
+    if (f.region_ids.length || f.team_ids.length) await supabase.rpc('admin_set_scope', { p_user: newId, p_region_ids: f.region_ids, p_team_ids: f.team_ids })
+    let invite: string | undefined
+    if (f.mode === 'invite') {
+      const r = await issueInvite(newId as string)
+      if ('error' in r) { setBusy(false); return setErr(r.error) }
+      invite = r.url
+    }
     setBusy(false)
-    if (error) return setErr(errMsg(error))
-    setCreated({ username: u, password: f.password })
+    setCreated({ username: u, password: f.mode === 'password' ? f.password : undefined, invite })
   }
 
   if (created) return (
-    <Modal open title="User created" onClose={onDone} footer={<Button variant="primary" onClick={onDone}>Done</Button>}>
-      <p className="text-sm text-muted">Send these details to the user. The password is shown only now.</p>
-      <div className="mt-4 rounded-xl bg-ink p-4 font-mono text-sm text-white">
-        <div><span className="text-white/50">Address </span>{location.origin}</div>
-        <div><span className="text-white/50">Username </span>{created.username}</div>
-        <div><span className="text-white/50">Password </span><span className="text-neon">{created.password}</span></div>
-      </div>
-      <Button className="mt-3" size="sm" onClick={() => navigator.clipboard.writeText(`${location.origin}\nUsername: ${created.username}\nPassword: ${created.password}`)}>Copy details</Button>
+    <Modal open title={created.invite ? 'Invite ready' : 'User created'} onClose={onDone} footer={<Button variant="primary" onClick={onDone}>Done</Button>}>
+      {created.invite ? (
+        <InviteCard url={created.invite} message={inviteMessage({ name: f.full_name.trim() || null, role: f.role, project: project?.name ?? 'Tony', url: created.invite })} username={created.username} />
+      ) : (<>
+        <p className="text-sm text-muted">Send these details to the user. The password is shown only now.</p>
+        <div className="mt-4 rounded-xl bg-ink p-4 font-mono text-sm text-white">
+          <div><span className="text-white/50">Address </span>{location.origin}</div>
+          <div><span className="text-white/50">Username </span>{created.username}</div>
+          <div><span className="text-white/50">Password </span><span className="text-neon">{created.password}</span></div>
+        </div>
+        <Button className="mt-3" size="sm" onClick={() => copyText(`${location.origin}\nUsername: ${created.username}\nPassword: ${created.password}`)}>Copy details</Button>
+      </>)}
     </Modal>
   )
 
@@ -267,12 +290,26 @@ export function CreateUserModal({ teams, academies, districts, regions, myRole, 
         <Field label="Role" required><RolePicker value={f.role} myRole={myRole} onChange={role => setF({ ...f, role })} /></Field>
         {f.role === 'coach' && <Field label="Academy" required><AcademyPicker value={f.academy_id} onChange={academy_id => setF({ ...f, academy_id })} academies={academies} districts={districts} onAdded={onAcademyAdded} /></Field>}
         <ScopeFields role={f.role} regions={regions} teams={teams} regionIds={f.region_ids} teamIds={f.team_ids} onRegions={v => setF({ ...f, region_ids: v })} onTeams={v => setF({ ...f, team_ids: v })} />
-        <Field label="Password" required hint="Generated for you. You can type your own instead.">
-          <div className="flex gap-2">
-            <Input value={f.password} onChange={e => setF({ ...f, password: e.target.value })} className="font-mono" />
-            <Button type="button" onClick={() => setF({ ...f, password: generatePassword() })} title="Generate"><Wand2 size={15} /></Button>
+        <div data-tour="invite-mode">
+          <div className="mb-1.5 text-[13px] font-semibold">How does the person get in?</div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {([['invite', 'Invite link', 'You copy a link and send it. They choose their own password. Nobody else sees it.'], ['password', 'Set a password now', 'You choose the password and pass it on yourself.']] as const).map(([m, l, d]) => (
+              <button key={m} type="button" onClick={() => setF({ ...f, mode: m })} aria-pressed={f.mode === m}
+                className={cx('rounded-lg border p-3 text-left', f.mode === m ? 'border-ink bg-ink text-white' : 'border-line-2 bg-card hover:border-text/40')}>
+                <div className="text-sm font-semibold">{l}{m === 'invite' && <span className={cx('ml-2 rounded px-1.5 py-px text-[10px] font-bold uppercase', f.mode === m ? 'bg-neon text-ink' : 'bg-neon-soft text-ink')}>Recommended</span>}</div>
+                <div className={cx('mt-0.5 text-xs', f.mode === m ? 'text-white/70' : 'text-muted')}>{d}</div>
+              </button>
+            ))}
           </div>
-        </Field>
+        </div>
+        {f.mode === 'password' && (
+          <Field label="Password" required hint="Generated for you. You can type your own instead.">
+            <div className="flex gap-2">
+              <Input value={f.password} onChange={e => setF({ ...f, password: e.target.value })} className="font-mono" />
+              <Button type="button" onClick={() => setF({ ...f, password: generatePassword() })} title="Generate"><Wand2 size={15} /></Button>
+            </div>
+          </Field>
+        )}
         {err && <Alert>{err}</Alert>}
       </form>
     </Modal>
@@ -339,41 +376,110 @@ export function EditUserModal({ teams, user, me, academies, districts, regions, 
   )
 }
 
-function ResetPasswordModal({ user, onClose }: { user: Profile; onClose: () => void }) {
+function ResetPasswordModal({ user, projectName, onClose }: { user: Profile; projectName: string; onClose: () => void }) {
+  const [mode, setMode] = useState<'invite' | 'password'>('invite')
   const [pw, setPw] = useState(generatePassword())
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [done, setDone] = useState(false)
+  const [done, setDone] = useState<{ password?: string; invite?: string } | null>(null)
   async function go() {
     setErr(null)
+    if (mode === 'invite') {
+      setBusy(true)
+      const r = await issueInvite(user.id)
+      setBusy(false)
+      if ('error' in r) return setErr(r.error)
+      return setDone({ invite: r.url })
+    }
     if (pw.length < 8) return setErr('At least 8 characters.')
     setBusy(true)
     const { error } = await supabase.rpc('admin_set_password', { p_user_id: user.id, p_password: pw })
     setBusy(false)
     if (error) return setErr(errMsg(error))
-    setDone(true)
+    setDone({ password: pw })
   }
   return (
-    <Modal open title="Set a new password" onClose={onClose}
-      footer={done ? <Button variant="primary" onClick={onClose}>Done</Button> : <><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={go}>Set password</Button></>}>
-      {done ? (
+    <Modal open title="Reset access" onClose={onClose}
+      footer={done ? <Button variant="primary" onClick={onClose}>Done</Button> : <><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={go}>{mode === 'invite' ? 'Create link' : 'Set password'}</Button></>}>
+      {done?.invite ? (
+        <InviteCard url={done.invite} message={inviteMessage({ name: user.full_name, role: user.role, project: projectName, url: done.invite, reset: true })} username={user.username} reset />
+      ) : done?.password ? (
         <div className="space-y-3">
           <Alert tone="good">Password changed. @{user.username} was signed out of every device.</Alert>
-          <div className="rounded-xl bg-ink p-4 font-mono text-sm text-white"><span className="text-white/50">Password </span><span className="text-neon">{pw}</span></div>
-          <Button size="sm" onClick={() => navigator.clipboard.writeText(pw)}>Copy password</Button>
+          <div className="rounded-xl bg-ink p-4 font-mono text-sm text-white"><span className="text-white/50">Password </span><span className="text-neon">{done.password}</span></div>
+          <Button size="sm" onClick={() => copyText(done.password!)}>Copy password</Button>
         </div>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-muted">For <b className="text-text">@{user.username}</b>. They will be signed out everywhere and use the new password from now on.</p>
-          <Field label="New password">
-            <div className="flex gap-2">
-              <Input value={pw} onChange={e => setPw(e.target.value)} className="font-mono" />
-              <Button type="button" onClick={() => setPw(generatePassword())}><Wand2 size={15} /></Button>
-            </div>
-          </Field>
+          <p className="text-sm text-muted">For <b className="text-text">@{user.username}</b>. Their current password keeps working until the new one is set.</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {([['invite', 'Send a new link', 'They choose a new password themselves. Works for 7 days.'], ['password', 'Set a password now', 'You choose it and pass it on. Signs them out everywhere.']] as const).map(([m, l, d]) => (
+              <button key={m} type="button" onClick={() => setMode(m)} aria-pressed={mode === m}
+                className={cx('rounded-lg border p-3 text-left', mode === m ? 'border-ink bg-ink text-white' : 'border-line-2 bg-card hover:border-text/40')}>
+                <div className="text-sm font-semibold">{l}</div><div className={cx('mt-0.5 text-xs', mode === m ? 'text-white/70' : 'text-muted')}>{d}</div>
+              </button>
+            ))}
+          </div>
+          {mode === 'password' && (
+            <Field label="New password">
+              <div className="flex gap-2">
+                <Input value={pw} onChange={e => setPw(e.target.value)} className="font-mono" />
+                <Button type="button" onClick={() => setPw(generatePassword())}><Wand2 size={15} /></Button>
+              </div>
+            </Field>
+          )}
           {err && <Alert>{err}</Alert>}
         </div>
       )}
+    </Modal>
+  )
+}
+
+/** The link, a ready-made message and a share button: everything an admin needs to send an invite. */
+function InviteCard({ url, message, username, reset }: { url: string; message: string; username: string; reset?: boolean }) {
+  const [flash, setFlash] = useState<string | null>(null)
+  const did = (k: string) => { setFlash(k); setTimeout(() => setFlash(null), 1500) }
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted">{reset ? 'Send this link to' : 'Send this link to'} <b className="text-text">@{username}</b>. They open it, choose a password and are in. The link works for <b className="text-text">7 days</b> and only once.</p>
+      <div className="rounded-xl bg-ink p-4 text-white">
+        <div className="label-caps text-[10px] text-neon">Invite link</div>
+        <div className="mt-1 break-all font-mono text-[13px]">{url}</div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="primary" size="sm" onClick={async () => { await copyText(url); did('link') }}><Copy size={14} /> {flash === 'link' ? 'Copied' : 'Copy link'}</Button>
+        <Button size="sm" onClick={async () => { await copyText(message); did('msg') }}><MessageSquareShare size={14} /> {flash === 'msg' ? 'Copied' : 'Copy message'}</Button>
+        {canShare() && <Button size="sm" onClick={() => shareText(`${APP_NAME} invite`, message)}><Share2 size={14} /> Share…</Button>}
+      </div>
+      <details className="rounded-lg border border-line bg-paper/60 p-3 text-sm">
+        <summary className="cursor-pointer font-semibold">The message</summary>
+        <pre className="mt-2 whitespace-pre-wrap font-sans text-[13px] text-muted">{message}</pre>
+      </details>
+    </div>
+  )
+}
+
+/** The join link of the project for academy coaches, with a QR code to print and hang at the academies. */
+function JoinLinkModal({ slug, projectName, onClose }: { slug: string; projectName: string; onClose: () => void }) {
+  const url = joinUrl(slug)
+  const [qr, setQr] = useState<string | null>(null)
+  const [flash, setFlash] = useState(false)
+  useEffect(() => { QRCode.toDataURL(url, { width: 640, margin: 2, color: { dark: '#000000', light: '#ffffff' } }).then(setQr).catch(() => setQr(null)) }, [url])
+  const message = `Coaches of ${projectName}: create your ${APP_NAME} account here and manage your squad, camps and invitations: ${url}\n\nAbatoza ba ${projectName}: fungura konti yawe ya ${APP_NAME} hano, uyobore ikipe yawe, amakambi n'ubutumire: ${url}`
+  return (
+    <Modal open title="Coach join link" onClose={onClose} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
+      <p className="text-sm text-muted">Any academy coach of <b className="text-text">{projectName}</b> can open this link, create an account and wait for your approval. Print the QR code for the academies.</p>
+      <div className="mt-3 rounded-xl bg-ink p-4 text-white">
+        <div className="label-caps text-[10px] text-neon">Join link</div>
+        <div className="mt-1 break-all font-mono text-[13px]">{url}</div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="primary" size="sm" onClick={async () => { await copyText(url); setFlash(true); setTimeout(() => setFlash(false), 1500) }}><Copy size={14} /> {flash ? 'Copied' : 'Copy link'}</Button>
+        <Button size="sm" onClick={() => copyText(message)}><MessageSquareShare size={14} /> Copy message</Button>
+        {canShare() && <Button size="sm" onClick={() => shareText(`${APP_NAME} · ${projectName}`, message)}><Share2 size={14} /> Share…</Button>}
+        {qr && <a className="inline-flex h-8 items-center gap-2 rounded-lg border border-line-2 bg-card px-3 text-[13px] font-semibold hover:border-text/40" href={qr} download={`${projectName} - coach join QR.png`}><Download size={14} /> Download QR</a>}
+      </div>
+      {qr && <div className="mt-4 flex justify-center rounded-xl border border-line bg-card p-4"><img src={qr} alt="QR code of the join link" className="h-56 w-56" /></div>}
     </Modal>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Clock, Lock, ShieldCheck } from 'lucide-react'
-import { supabase, usernameToEmail, USERNAME_RE, errMsg } from '../lib/supabase'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Clock, Lock, ShieldCheck, UserCheck } from 'lucide-react'
+import { supabase, usernameToEmail, USERNAME_RE, errMsg, ROLE_LABEL, type Role } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 import { APP_NAME, Bolts, Logo } from '../lib/brand'
@@ -120,15 +120,22 @@ export function OwnerSetupPage() {
 
 interface Opt { academy_id: string; academy: string; district: string | null; region: string | null }
 
+interface JoinInfo { id: string; name: string; country: string | null; tagline: string | null; academies: Opt[] }
+
 export function SignupPage() {
+  const { slug } = useParams()
   const [opts, setOpts] = useState<Opt[]>([])
+  const [proj, setProj] = useState<JoinInfo | null | undefined>(undefined)
   const [f, setF] = useState({ full_name: '', username: '', phone: '', academy_id: '', requested_academy: '', password: '', confirm: '' })
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const nav = useNavigate()
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
 
-  useEffect(() => { supabase.rpc('signup_options').then(({ data }) => setOpts((data as Opt[]) ?? [])) }, [])
+  useEffect(() => {
+    if (slug) supabase.rpc('project_join_info', { p_slug: slug }).then(({ data }) => { const j = data as JoinInfo | null; setProj(j); setOpts(j?.academies ?? []) })
+    else supabase.rpc('signup_options').then(({ data }) => { setProj(null); setOpts((data as Opt[]) ?? []) })
+  }, [slug])
 
   const grouped = opts.reduce<Record<string, Opt[]>>((acc, o) => { const k = [o.region, o.district].filter(Boolean).join(' · ') || 'Other'; (acc[k] ||= []).push(o); return acc }, {})
 
@@ -146,15 +153,20 @@ export function SignupPage() {
     if (free === false) { setBusy(false); return setErr('That username is taken. Try another.') }
     const { error } = await supabase.auth.signUp({
       email: usernameToEmail(u), password: f.password,
-      options: { data: { username: u, full_name: f.full_name.trim(), phone: f.phone.trim(), academy_id: f.academy_id || '', requested_academy: f.academy_id ? '' : f.requested_academy.trim() } },
+      options: { data: { username: u, full_name: f.full_name.trim(), phone: f.phone.trim(), academy_id: f.academy_id || '', requested_academy: f.academy_id ? '' : f.requested_academy.trim(), project_id: proj?.id ?? '' } },
     })
     setBusy(false)
     if (error) return setErr(errMsg(error))
     nav('/')
   }
 
+  if (slug && proj === null) return (
+    <AuthFrame title="Link not found" subtitle="This join link does not belong to an active Tony project.">
+      <Link to="/login" className="font-semibold text-royal hover:underline">Go to sign in</Link>
+    </AuthFrame>
+  )
   return (
-    <AuthFrame title="Coach account" subtitle="For academy coaches in Rwanda. An admin approves every new account before it can see any data.">
+    <AuthFrame title="Coach account" subtitle={`For academy coaches of ${proj?.name ?? 'Tony'}${proj?.country ? ` (${proj.country})` : ''}. An admin approves every new account before it can see any data.`}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Full name" required><Input value={f.full_name} onChange={set('full_name')} autoComplete="name" /></Field>
         <div className="grid grid-cols-2 gap-3">
@@ -205,6 +217,67 @@ export function PendingPage() {
         <p className="mt-4 text-sm text-muted">Once approved, sign in again and you will see your academy portal.</p>
       </div>
       <Button className="mt-5 w-full" onClick={signOut}>Sign out</Button>
+    </AuthFrame>
+  )
+}
+
+
+interface InviteInfo { full_name: string | null; username: string; role: string; status: string; project: string; tagline: string | null; academy: string | null; expired: boolean; expires_at: string }
+
+/** The page an invited user opens: it shows who they are and lets them choose a password, then signs them in. */
+export function WelcomePage() {
+  const { token } = useParams()
+  const [info, setInfo] = useState<InviteInfo | null | undefined>(undefined)
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [err, setErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const nav = useNavigate()
+
+  useEffect(() => { supabase.rpc('invite_info', { p_token: token ?? '' }).then(({ data }) => setInfo((data as InviteInfo) ?? null)) }, [token])
+
+  async function submit(e: FormEvent) {
+    e.preventDefault(); setErr(null)
+    if (password.length < 8) return setErr('Use at least 8 characters.')
+    if (password !== confirm) return setErr('The two passwords do not match.')
+    setBusy(true)
+    const { data, error } = await supabase.rpc('accept_invite', { p_token: token ?? '', p_password: password })
+    if (error) { setBusy(false); return setErr(errMsg(error)) }
+    const u = (data as { username: string }).username
+    const { error: e2 } = await supabase.auth.signInWithPassword({ email: usernameToEmail(u), password })
+    setBusy(false)
+    if (e2) return setErr(e2.message)
+    nav('/')
+  }
+
+  if (info === undefined) return <AuthFrame title="One moment…"><span /></AuthFrame>
+  if (info === null) return (
+    <AuthFrame title="This link was already used" subtitle="Or it is not a valid invite link. If you already set your password, sign in. Otherwise ask your admin for a new link.">
+      <Link to="/login" className="inline-flex h-10 items-center rounded-lg bg-ink px-4 text-sm font-semibold text-neon">Sign in</Link>
+    </AuthFrame>
+  )
+  if (info.expired) return (
+    <AuthFrame title="This link has expired" subtitle="Invite links work for 7 days. Ask your admin to send you a new one.">
+      <Link to="/login" className="font-semibold text-royal hover:underline">Go to sign in</Link>
+    </AuthFrame>
+  )
+  const first = (info.full_name || info.username).split(' ')[0]
+  return (
+    <AuthFrame title={`Welcome, ${first}`} subtitle={`You have been invited to ${APP_NAME}, ${info.project}${info.academy ? ` · ${info.academy}` : ''}. Choose a password and you are in.`}>
+      <div className="mb-5 flex items-center gap-3 rounded-xl border border-line bg-card p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-neon"><UserCheck size={18} /></div>
+        <div className="min-w-0">
+          <div className="font-semibold">{info.full_name || info.username}</div>
+          <div className="text-sm text-muted">@{info.username} · {ROLE_LABEL[info.role as Role] ?? info.role}</div>
+        </div>
+      </div>
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Your password" required hint="At least 8 characters. Only you know it."><Input type="password" autoComplete="new-password" autoFocus value={password} onChange={e => setPassword(e.target.value)} /></Field>
+        <Field label="Repeat the password" required><Input type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></Field>
+        {err && <Alert>{err}</Alert>}
+        <Button variant="primary" className="w-full" loading={busy} type="submit">Set password and sign in</Button>
+      </form>
+      <p className="mt-6 text-xs text-muted">Your username is <b className="text-text">{info.username}</b>. You will use it with this password to sign in next time.</p>
     </AuthFrame>
   )
 }
