@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { supabase, type AgeGroup } from '../../lib/supabase'
+import { SUPABASE_KEY, SUPABASE_URL, supabase, type AgeGroup } from '../../lib/supabase'
+import { queueUpload, subscribeSync, syncState } from '../../lib/offline'
 import { useAuth } from '../../lib/auth'
 import { useNotifications, type Notif } from '../../lib/notifications'
 import type { Decision, PStatus, Stage } from '../../lib/scouting'
@@ -8,7 +9,7 @@ export interface JourneyItem {
   id: string; camp_id: string; camp: string; stage: Stage; starts_on: string | null; ends_on: string | null; venue: string | null
   rsvp_deadline: string | null; status: PStatus; decision: Decision | null; message: string | null; absence_reason: string | null; note: string | null
 }
-export interface LogItem { id: string; at: string; kind: 'note' | 'match' | 'absent' | 'measure' | 'status' | 'injury'; text: string | null }
+export interface LogItem { id: string; at: string; kind: 'note' | 'match' | 'absent' | 'measure' | 'status' | 'injury'; text: string | null; pending?: boolean }
 export type SquadStatus = 'active' | 'left' | 'unavailable'
 export interface SquadPlayer {
   id: string; first_name: string; last_name: string; birth_year: number; birth_date: string | null; positions: string | null
@@ -17,6 +18,8 @@ export interface SquadPlayer {
   photo_path: string | null; shirt_no: number | null; height_cm: number | null; weight_kg: number | null; measured_on: string | null
   school: string | null; sector: string | null; joined_year: number | null; squad_status: SquadStatus; pool_status: string
   sessions: number; log: LogItem[]
+  /** written while offline, not sent yet */
+  pending?: boolean
 }
 export interface OpenCamp {
   id: string; name: string; starts_on: string | null; ends_on: string | null; venue: string | null; age_groups: string[] | null
@@ -32,7 +35,7 @@ export interface ScheduleCamp {
   id: string; name: string; stage: Stage; status: string; starts_on: string | null; ends_on: string | null; venue: string | null; age_groups: string[] | null
   district: string | null; own_district: boolean; submissions_open: boolean; days: CampDay[]; booking: Booking | null; my_players: number; my_invited: number
 }
-export interface Session { id: string; held_on: string; topic: string | null; duration_min: number | null; notes: string | null; present: number; players: string[] }
+export interface Session { id: string; held_on: string; topic: string | null; duration_min: number | null; notes: string | null; present: number; players: string[]; pending?: boolean }
 export interface Standing { submitted: number; selected: number; rank: number | null; academies: number; region: string | null }
 export type ProgrammeStatus = 'registered' | 'observed' | 'partner' | 'official'
 export interface Level { code: string; label: string; min_points: number; next?: { code: string; label: string; min_points: number } | null }
@@ -49,7 +52,7 @@ export interface Progress {
 export interface MyAcademy {
   id: string; name: string; district: string | null; region: string | null; contact_name: string | null; contact_phone: string | null
   venue: string | null; training_days: string[]; training_time: string | null; players_count: number | null; age_groups: string[]
-  photo_path: string | null; programme_status: ProgrammeStatus; profile_updated_at: string | null; complete: boolean
+  photo_path: string | null; programme_status: ProgrammeStatus; profile_updated_at: string | null; complete: boolean; pending?: boolean
 }
 
 interface CoachData {
@@ -112,6 +115,11 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
   }, [scoutingSeason, previewAcademy, signAll])
 
   useEffect(() => { reload() }, [reload, profile?.academy_id])
+  // once queued changes went out, read everything again from the server
+  useEffect(() => {
+    let last: number | null = syncState().lastSync
+    return subscribeSync(st => { if (st.lastSync && st.lastSync !== last) { last = st.lastSync; reload() } })
+  }, [reload])
 
   // One "visit" per portal session: activity for the staff and the weekly points. Realtime pushes the points notification back.
   useEffect(() => {
@@ -163,7 +171,13 @@ export async function shrinkPhoto(file: File, max = 900): Promise<Blob> {
 export async function uploadPhoto(academyId: string, file: File, kind: 'player' | 'academy', id: string): Promise<string> {
   const blob = await shrinkPhoto(file)
   const path = `${academyId}/${kind}-${id}-${Date.now()}.jpg`
+  const queue = () => queueUpload(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, blob, 'image/jpeg', kind === 'player' ? 'Player photo' : 'Academy photo', { apikey: SUPABASE_KEY })
+  if (!syncState().online) { await queue(); return path }
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: true })
-  if (error) throw error
+  if (error) {
+    // no network: the photo waits in the outbox with the rest
+    if (/fetch|network|Load failed/i.test(error.message) || !navigator.onLine) { await queue(); return path }
+    throw error
+  }
   return path
 }

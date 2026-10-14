@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
+import { offlineFetch, setTokenSource } from './offline'
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_KEY as string,
-  { auth: { persistSession: true, autoRefreshToken: true } },
-)
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY as string
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true },
+  global: { fetch: offlineFetch },
+})
+setTokenSource(async () => (await supabase.auth.getSession()).data.session?.access_token ?? null)
 
 /** Logins are usernames; Supabase Auth needs an email, so each username maps to an internal address that never receives mail. */
 export const usernameToEmail = (u: string) => `${u.trim().toLowerCase()}@users.pluribus.app`

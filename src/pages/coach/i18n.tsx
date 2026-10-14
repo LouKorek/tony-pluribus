@@ -225,6 +225,18 @@ const S = {
   onceOnly: ['once', 'rimwe gusa'],
   noProgressYet: ['Your points and badges appear here once your academy is linked to your account.', "Amanota n'ibirango byawe bizagaragara hano iyo ishuri ryawe rihujwe na konti yawe."],
   yourLevel: ['Your level', 'Urwego rwawe'],
+  waitingToSend: ['Waiting to send', 'Bitegereje koherezwa'],
+  offline: ['Offline', 'Nta murandasi'],
+  offlineHint: ['No network. You can keep working: everything you save is sent when the phone is back online.', "Nta murandasi. Ushobora gukomeza gukora: ibyo ubitse byose bizoherezwa iyo telefoni yongeye kugira murandasi."],
+  savedCopy: ['Showing the last saved copy', 'Werekwa kopi ya nyuma yabitswe'],
+  pendingChanges: ['changes waiting to send', 'impinduka zitegereje koherezwa'],
+  failedChanges: ['could not be sent', 'ntibyashoboye koherezwa'],
+  sendNow: ['Send now', 'Ohereza ubu'],
+  syncing: ['Sending…', 'Birimo koherezwa…'],
+  allSent: ['Everything is sent', 'Byose byoherejwe'],
+  discard: ['Discard', 'Kuraho'],
+  retry: ['Try again', 'Ongera ugerageze'],
+  outboxTitle: ['Changes waiting', 'Impinduka zitegereje'],
   seeProgress: ['See your progress', 'Reba iterambere ryawe'],
 } as const
 

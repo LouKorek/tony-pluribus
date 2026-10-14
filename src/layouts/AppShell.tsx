@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import { InstallButton } from '../lib/install'
 import { APP_NAME, Logo } from '../lib/brand'
 import { NotificationBell } from '../components/NotificationBell'
+import { SYNC_EN, SyncButton } from '../components/SyncStatus'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return <Logo variant="wordmark" color="neon" className={compact ? 'h-[18px]' : 'h-[22px]'} />
@@ -109,6 +110,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="border-t border-white/10 p-3">
+        <div className="mb-2 empty:hidden"><SyncButton labels={SYNC_EN} placement="up" /></div>
         <InstallButton className="mb-2" />
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-royal font-display text-sm font-semibold ">
@@ -167,7 +169,7 @@ function Shell() {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-ink px-4 text-white lg:hidden">
           <button onClick={() => setOpen(true)} className="rounded-md p-1.5 hover:bg-white/10" aria-label="Open menu"><Menu size={20} /></button>
           <Brand compact />
-          <div className="flex items-center"><NotificationBell className="text-white/70" placement="down-end" /><HelpButton className="text-white/70" /></div>
+          <div className="flex items-center gap-1"><SyncButton labels={SYNC_EN} /><NotificationBell className="text-white/70" placement="down-end" /><HelpButton className="text-white/70" /></div>
         </header>
         <main key={loc.pathname} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
           <Suspense fallback={<Spinner />}><Outlet /></Suspense>

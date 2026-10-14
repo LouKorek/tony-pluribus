@@ -8,7 +8,7 @@ import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Select, Textarea, cx, printArea } from '../../components/ui'
 import { STAGE_T, useT } from './i18n'
 import { groupOf, uploadPhoto, useCoach, type JourneyItem, type LogItem, type MyAcademy, type Session, type SquadPlayer } from './data'
-import { Avatar, JourneyBadge, ScreenTitle, SubTabs, lastItem, name } from './shared'
+import { Avatar, JourneyBadge, PendingDot, ScreenTitle, SubTabs, lastItem, name } from './shared'
 
 type Tab = 'players' | 'training' | 'academy'
 
@@ -65,7 +65,7 @@ function PlayersPanel({ onEdit }: { onEdit: (p: SquadPlayer) => void }) {
               <button key={p.id} onClick={() => setOpen(p.id)} className={cx('flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper', p.squad_status !== 'active' && 'opacity-60')}>
                 <Avatar player={p} />
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5"><span className="truncate font-semibold">{name(p)}</span>{p.shirt_no != null && <span className="rounded bg-paper px-1 text-[11px] font-bold text-muted">#{p.shirt_no}</span>}</span>
+                  <span className="flex items-center gap-1.5"><span className="truncate font-semibold">{name(p)}</span>{p.shirt_no != null && <span className="rounded bg-paper px-1 text-[11px] font-bold text-muted">#{p.shirt_no}</span>}{p.pending && <PendingDot />}</span>
                   <span className="flex items-center gap-1.5 text-sm text-muted">
                     {p.birth_year}
                     {g ? <span className="font-semibold text-text">· {g}</span> : groups.length > 0 && <span className="text-warn">· {t('outsideAge')}</span>}
@@ -131,11 +131,12 @@ function PlayerForm({ player, onClose }: { player: SquadPlayer | null; onClose: 
     try {
       let photo_path = f.photo_path
       const payload = { ...f, birth_year: f.birth_date ? f.birth_date.slice(0, 4) : f.birth_year }
-      // a new player needs an id before the photo can be named after it: save first, then attach the photo
-      const { data: id, error } = await supabase.rpc('coach_save_player', { p_id: player?.id ?? null, p: { ...payload, photo_path } })
+      // the phone chooses the id of a new player, so the photo can be named after it even without network
+      const id = player?.id ?? crypto.randomUUID()
+      const { error } = await supabase.rpc('coach_save_player', { p_id: id, p: { ...payload, photo_path } })
       if (error) throw error
       if (pendingFile && academy) {
-        photo_path = await uploadPhoto(academy.id, pendingFile, 'player', id as string)
+        photo_path = await uploadPhoto(academy.id, pendingFile, 'player', id)
         const { error: e2 } = await supabase.rpc('coach_save_player', { p_id: id, p: { ...payload, photo_path } })
         if (e2) throw e2
       }
@@ -390,7 +391,7 @@ function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
         <div key={s.id} className="flex items-center gap-3 px-4 py-3">
           <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(s.held_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{new Date(s.held_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })}</div></div>
           <button className="min-w-0 flex-1 text-left" onClick={() => !preview && onEdit(s)} disabled={preview}>
-            <div className="truncate font-semibold">{topicLabel(s.topic) || t('training')}{s.duration_min ? <span className="font-normal text-muted"> · {s.duration_min} min</span> : ''}</div>
+            <div className="flex items-center gap-1.5"><span className="truncate font-semibold">{topicLabel(s.topic) || t('training')}{s.duration_min ? <span className="font-normal text-muted"> · {s.duration_min} min</span> : ''}</span>{s.pending && <PendingDot />}</div>
             <div className="text-sm text-muted">{s.present}/{active} {t('present')}{s.notes ? ` · ${s.notes}` : ''}</div>
           </button>
           <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-black/8"><div className="h-full bg-grass" style={{ width: `${active ? Math.min(100, Math.round((s.present / active) * 100)) : 0}%` }} /></div>
@@ -415,7 +416,7 @@ function SessionForm({ session, onClose }: { session: Session | null; onClose: (
   const toggle = (id: string) => setPresent(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
   async function save() {
     setBusy(true); setErr(null)
-    const { error } = await supabase.rpc('coach_save_session', { p_id: session?.id ?? null, p: { ...f, players: [...present] } })
+    const { error } = await supabase.rpc('coach_save_session', { p_id: session?.id ?? crypto.randomUUID(), p: { ...f, players: [...present] } })
     setBusy(false)
     if (error) return setErr(error.message)
     await reload(); onClose()

@@ -163,10 +163,10 @@ begin
   insert into public.point_rules(project_id, code, points, label, description, cap, cap_period, sort) values
     (p_project, 'account.approved',         50,   'Account approved',            'Your coach account was approved.', 1, 'once', 10),
     (p_project, 'academy.profile_complete', 30,   'Academy profile complete',    'Training ground, days, phone and age groups filled in.', 1, 'once', 11),
-    (p_project, 'player.added',             10,   'Player added',                'A player added to your squad (up to 3 a day).', 3, 'day', 20),
+    (p_project, 'player.added',             10,   'Player added',                'A player added to your squad.', 3, 'day', 20),
     (p_project, 'player.profile_complete',  10,   'Player profile complete',     'Photo, height and weight added to a player.', null, null, 21),
     (p_project, 'player.guardian_consent',   5,   'Guardian consent',            'The guardian agreed to Tony camps.', null, null, 22),
-    (p_project, 'session.logged',           15,   'Training session logged',     'A training session with attendance (up to 4 a week).', 4, 'week', 30),
+    (p_project, 'session.logged',           15,   'Training session logged',     'A training session with attendance.', 4, 'week', 30),
     (p_project, 'camp.submitted',           15,   'Player submitted',            'A player submitted to a district camp.', null, null, 40),
     (p_project, 'camp.booking_confirmed',   25,   'Camp day confirmed',          'You confirmed your day at a camp in time.', null, null, 41),
     (p_project, 'camp.arrived',             50,   'Came to the camp',            'Your academy arrived at the camp with its players.', null, null, 42),

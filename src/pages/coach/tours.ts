@@ -28,6 +28,11 @@ export const COACH_TOURS: TourMap = {
              "Ishuri ryawe ribona amanota ku byo rikorana na Tony byose. Kanda urebe urwego, ibirango n'umwanya wawe."],
     },
     {
+      title: ['Works without network', 'Ikora nta murandasi'],
+      body: ['No signal at the training ground? Keep working. Players, training and answers you save are kept on the phone and sent on their own when the network is back. A yellow pill at the top shows what is waiting.',
+             "Nta murandasi ku kibuga? Komeza ukore. Abakinnyi, imyitozo n'ibisubizo ubitse bibikwa kuri telefoni bikoherezwa byonyine iyo murandasi igarutse. Akamenyetso k'umuhondo hejuru kerekana ibitegereje."],
+    },
+    {
       target: 'coach-tabs', title: ['Menu', 'Ibikubiyemo'],
       body: ['Move between Home, your team, the schedule and updates.', "Jya ahabanza, ku ikipe yawe, kuri gahunda no ku makuru."],
     },

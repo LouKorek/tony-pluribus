@@ -85,3 +85,9 @@ export function Avatar({ player, size = 40, className }: { player: SquadPlayer; 
 }
 
 export const fmtTime = (t: string | null | undefined) => (t ? t.slice(0, 5) : '')
+
+/** Marks something written while offline that still waits to be sent. */
+export function PendingDot() {
+  const { t } = useT()
+  return <span title={t('waitingToSend')} aria-label={t('waitingToSend')} className="inline-block h-2 w-2 shrink-0 rounded-full bg-warn" />
+}

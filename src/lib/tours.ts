@@ -19,6 +19,7 @@ export const STAFF_TOURS: TourMap = {
     { target: 'project-box', title: 'Project and season', body: 'The project you work in and the scouting season the screens show. Click it to switch to an earlier season and see its camps, finals and pool.' },
     { target: 'overview-stats', title: 'At a glance', body: 'The season, the academy register, players and camps planned. The numbers update as the staff work.' },
     { target: 'help', title: 'Need the tour again?', body: 'Press the "?" button on any screen to replay the tour of that screen.' },
+    { title: 'Works without network', body: 'Tony Next keeps a copy of what you have seen on this device. With no network, screens show the last saved copy and anything you save (camp sheet marks, bookings, decisions) waits in an outbox and is sent when the network is back. A pill at the bottom of the menu shows what is waiting.' },
   ],
   'scouting-home': [
     { target: 'funnel', title: 'Season funnel', body: 'How many players were submitted, seen at district camps, invited to the province finals and selected at the national final.' },
