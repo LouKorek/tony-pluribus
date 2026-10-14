@@ -1,7 +1,7 @@
 import { CalendarCheck, CalendarDays, Camera, ChevronRight, ClipboardList, MapPin, Trophy, UserPlus } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 import { fmtDate } from '../../lib/scouting'
-import { Card } from '../../components/ui'
+import { Card, cx } from '../../components/ui'
 import { STAGE_T, useT } from './i18n'
 import { pendingInvites, useCoach } from './data'
 import { MiniStat, Section, fmtTime, name, useGo } from './shared'
@@ -12,7 +12,7 @@ import { NotifRow } from './CoachApp'
 export default function HomeScreen() {
   const { profile, scoutingSeason } = useAuth()
   const { t, pick } = useT()
-  const { academy, squad, standing, camps, schedule, sessions, notifs, groups, preview } = useCoach()
+  const { academy, squad, standing, camps, schedule, sessions, notifs, groups, preview, progress } = useCoach()
   const nav = useGo()
   const invites = pendingInvites(squad)
   const campsWithRoom = camps.filter(c => eligibleFor(c, squad, groups).some(e => !e.already)).length
@@ -71,6 +71,21 @@ export default function HomeScreen() {
         </Card>
       </Section>
 
+      {progress && (
+        <button onClick={() => nav('/progress')} data-tour="coach-progress" className="mt-7 flex w-full items-center gap-4 rounded-xl border border-ink bg-ink p-4 text-left text-white hover:border-neon">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neon text-ink"><Trophy size={22} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="label-caps block text-[11px] text-neon">{t('yourLevel')} · {progress.level.label}</span>
+            <span className="mt-0.5 block font-display text-[26px] font-semibold leading-none">{progress.points} <span className="text-base font-medium text-white/60">{t('points')}</span></span>
+            <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-white/15">
+              <span className={cx('block h-full rounded-full bg-neon')} style={{ width: `${progress.level.next ? Math.min(100, Math.round(((progress.points - progress.level.min_points) / (progress.level.next.min_points - progress.level.min_points)) * 100)) : 100}%` }} />
+            </span>
+            <span className="mt-1 block text-xs text-white/60">{progress.level.next ? `${progress.level.next.min_points - progress.points} ${t('toNext')} ${progress.level.next.label}` : t('topLevel')}{progress.rank.province ? ` · ${t('rankProvince')} #${progress.rank.province}` : ''}</span>
+          </span>
+          <ChevronRight size={18} className="text-white/60" />
+        </button>
+      )}
+
       {academy && <div className="mt-7"><ProgrammeStatusCard academy={academy} /></div>}
 
       {notifs.length > 0 && (
@@ -80,7 +95,7 @@ export default function HomeScreen() {
           </Card>
         </Section>
       )}
-      {standing?.rank && <p className="mt-6 text-center text-xs text-muted">{t('provinceRank')}: #{standing.rank} {t('rankOf')} {standing.academies}{standing.region ? ` · ${standing.region}` : ''}</p>}
+      {!progress && standing?.rank && <p className="mt-6 text-center text-xs text-muted">{t('provinceRank')}: #{standing.rank} {t('rankOf')} {standing.academies}{standing.region ? ` · ${standing.region}` : ''}</p>}
     </div>
   )
 }

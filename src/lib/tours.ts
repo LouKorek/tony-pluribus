@@ -6,7 +6,7 @@ export function staffTourKey(path: string): string | null {
   if (/^\/scouting\/camps\/[^/]+$/.test(path)) return 'camp-sheet'
   const map: Record<string, string> = {
     '/scouting': 'scouting-home', '/scouting/plan': 'plan', '/scouting/academies': 'academies', '/scouting/camps': 'camps',
-    '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool',
+    '/scouting/finals': 'finals', '/scouting/players': 'players', '/scouting/pool': 'pool', '/scouting/coaches': 'coaches',
     '/dashboards': 'dashboards', '/reports': 'reports', '/files': 'files', '/squads': 'squads', '/attendance': 'attendance', '/physical': 'physical', '/training': 'training', '/matches': 'matches', '/evaluations': 'evaluations', '/player-files': 'player-files', '/staff-reports': 'staff-reports', '/finance': 'finance', '/partners': 'partners', '/transfers': 'transfers', '/club-portal': 'club-portal', '/assistant': 'assistant', '/sync': 'sync', '/users': 'users', '/settings': 'settings', '/notifications': 'notifications',
   }
   return map[path] ?? null
@@ -155,10 +155,17 @@ export const STAFF_TOURS: TourMap = {
     { target: 'notif-list', title: 'Open a notification', body: 'Tap one to jump to the screen it is about: a camp sheet, a coach waiting for approval, Sync Center. Unread ones are highlighted.' },
     { target: 'bell', title: 'The bell', body: 'The bell at the bottom of the menu shows what is new and opens the latest notifications from any screen.' },
   ],
+  coaches: [
+    { target: 'coach-stats', title: 'The coaches', body: 'How many coaches are active, how many opened the portal this week, how many log training, and how many you have reviewed.' },
+    { target: 'tabs', title: 'Coaches and leaderboard', body: 'The list of coaches, or the national leaderboard of academies by season points. Coaches see the same board for their province, with names.' },
+    { target: 'filters', title: 'Find a coach', body: 'Search, filter by province or programme status, and sort by points, activity or review.' },
+    { target: 'main table', title: 'Open a coach', body: 'Click a row: points and level, badges, training logged, portal visits, your reviews, a bonus or deduction, and a personal message. Reviews stay with the staff unless you share one with the coach.' },
+  ],
   settings: [
     { target: 'project', title: 'Project', body: 'The project details and the link to the shared Talent folder.' },
     { target: 'seasons', title: 'Seasons', body: 'Which season is being scouted and which one is running.' },
     { target: 'age-groups', title: 'Age groups', body: 'The birth years of each age group for the scouting season. Camps and pools use them everywhere.' },
     { target: 'brand', title: 'Brand and partner', body: 'Tony is the brand everywhere. The partner of this project appears only where you tick: certificates, reports and shared pages.' },
+    { target: 'points', title: 'Points and levels', body: 'What each action earns the coach, the daily or weekly caps, and the points each level needs. Change a value and it applies from the next award.' },
   ],
 }

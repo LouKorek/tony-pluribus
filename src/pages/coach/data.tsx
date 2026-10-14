@@ -35,6 +35,17 @@ export interface ScheduleCamp {
 export interface Session { id: string; held_on: string; topic: string | null; duration_min: number | null; notes: string | null; present: number; players: string[] }
 export interface Standing { submitted: number; selected: number; rank: number | null; academies: number; region: string | null }
 export type ProgrammeStatus = 'registered' | 'observed' | 'partner' | 'official'
+export interface Level { code: string; label: string; min_points: number; next?: { code: string; label: string; min_points: number } | null }
+export interface BadgeInfo { code: string; label: string; description: string; icon: string; earned_at: string | null }
+export interface Rule { code: string; points: number; label: string; description: string; cap: number | null; cap_period: 'day' | 'week' | 'season' | 'once' | null }
+export interface PointEvent { id: string; at: string; rule: string; points: number; label: string; note: string | null }
+export interface BoardRow { academy_id: string; name: string; district: string | null; region: string | null; points: number; rank: number; mine: boolean }
+export interface Review { id: string; at: string; reliability: number | null; player_quality: number | null; engagement: number | null; cooperation: number | null; comment: string | null }
+export interface Progress {
+  points: number; season_points: number; level: Level; levels: { code: string; label: string; min_points: number }[]
+  badges: BadgeInfo[]; rules: Rule[]; history: PointEvent[]
+  rank: { district: string | null; province: string | null; national: string | null }; province_board: BoardRow[]; reviews: Review[]
+}
 export interface MyAcademy {
   id: string; name: string; district: string | null; region: string | null; contact_name: string | null; contact_phone: string | null
   venue: string | null; training_days: string[]; training_time: string | null; players_count: number | null; age_groups: string[]
@@ -45,6 +56,7 @@ interface CoachData {
   loading: boolean; error: string | null
   academy: MyAcademy | null; squad: SquadPlayer[]; camps: OpenCamp[]; schedule: ScheduleCamp[]; sessions: Session[]
   standing: Standing | null; notifs: Notif[]; groups: AgeGroup[]
+  progress: Progress | null
   /** signed links of the photos in the squad and the academy, by storage path */
   photos: Record<string, string>
   photoUrl: (path: string | null | undefined) => string | null
@@ -62,7 +74,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
   const { profile, scoutingSeason } = useAuth()
   const notifications = useNotifications()
   const [state, setState] = useState<Omit<CoachData, 'reload' | 'markRead' | 'preview' | 'base' | 'notifs' | 'photoUrl'>>({
-    loading: true, error: null, academy: null, squad: [], camps: [], schedule: [], sessions: [], standing: null, groups: [], photos: {},
+    loading: true, error: null, academy: null, squad: [], camps: [], schedule: [], sessions: [], standing: null, groups: [], photos: {}, progress: null,
   })
   const photoCache = useRef<Record<string, { url: string; at: number }>>({})
 
@@ -77,7 +89,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
 
   const reload = useCallback(async () => {
     const args = previewAcademy ? { p_academy: previewAcademy } : {}
-    const [sq, ca, sc, se, st, ac, gr] = await Promise.all([
+    const [sq, ca, sc, se, st, ac, gr, pg] = await Promise.all([
       supabase.rpc('coach_squad', args),
       supabase.rpc('coach_camps', args),
       supabase.rpc('coach_schedule', args),
@@ -85,6 +97,7 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
       supabase.rpc('coach_standing', args),
       supabase.rpc('coach_academy', args),
       scoutingSeason ? supabase.from('age_groups').select('*').eq('season_id', scoutingSeason.id).order('sort') : Promise.resolve({ data: [], error: null }),
+      supabase.rpc('coach_progress', args),
     ])
     const err = sq.error || ca.error || sc.error || se.error || st.error || ac.error || gr.error
     const squad = (sq.data as SquadPlayer[]) ?? []
@@ -94,11 +107,18 @@ export function CoachDataProvider({ children, previewAcademy }: { children: Reac
     setState({
       loading: false, error: err ? err.message : null,
       squad, camps: (ca.data as OpenCamp[]) ?? [], schedule: (sc.data as ScheduleCamp[]) ?? [], sessions: (se.data as Session[]) ?? [],
-      standing: (st.data as Standing) ?? null, academy, groups: (gr.data as AgeGroup[]) ?? [], photos,
+      standing: (st.data as Standing) ?? null, academy, groups: (gr.data as AgeGroup[]) ?? [], photos, progress: (pg.data as Progress) ?? null,
     })
   }, [scoutingSeason, previewAcademy, signAll])
 
   useEffect(() => { reload() }, [reload, profile?.academy_id])
+
+  // One "visit" per portal session: activity for the staff and the weekly points. Realtime pushes the points notification back.
+  useEffect(() => {
+    if (previewAcademy || !profile) return
+    try { if (sessionStorage.getItem('tonynext.visit') === '1') return; sessionStorage.setItem('tonynext.visit', '1') } catch { /* storage blocked */ }
+    supabase.rpc('track', { p_kind: 'visit', p_meta: { ua: navigator.userAgent.slice(0, 80), standalone: window.matchMedia('(display-mode: standalone)').matches } }).then(() => {})
+  }, [previewAcademy, profile])
 
   const markRead = useCallback(async () => { if (!previewAcademy) await notifications.markAllRead() }, [previewAcademy, notifications])
   const photoUrl = useCallback((path: string | null | undefined) => (path ? state.photos[path] ?? null : null), [state.photos])

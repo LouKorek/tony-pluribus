@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Save } from 'lucide-react'
+import { Save, Trophy } from 'lucide-react'
 import { supabase, errMsg, type AgeGroup, type District, type Region } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { Alert, Badge, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { Alert, Badge, Button, Card, Field, Input, PageHeader, Select, cx } from '../components/ui'
 import { Logo, type Partner, type ProjectSettings } from '../lib/brand'
 
 export default function SettingsPage() {
@@ -90,6 +90,7 @@ export default function SettingsPage() {
         </Card>
 
         <BrandCard project={project} onSaved={refresh} />
+        <PointsCard projectId={project?.id} />
 
         <Card className="p-5 lg:col-span-2">
           <div className="label-caps text-muted">Provinces and districts</div>
@@ -163,6 +164,97 @@ function BrandCard({ project, onSaved }: { project: ReturnType<typeof useAuth>['
         </div>
       </div>
       {msg && <div className="mt-3"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+    </Card>
+  )
+}
+
+/* ───────────────────────── Points and levels ───────────────────────── */
+
+interface RuleRow { code: string; points: number; label: string; description: string; cap: number | null; cap_period: string | null; active: boolean; sort: number }
+interface LevelRow { code: string; label: string; min_points: number; sort: number }
+
+function PointsCard({ projectId }: { projectId: string | undefined }) {
+  const [rules, setRules] = useState<RuleRow[]>([])
+  const [levels, setLevels] = useState<LevelRow[]>([])
+  const [dirty, setDirty] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
+  const load = useCallback(async () => {
+    if (!projectId) return
+    const [r, l] = await Promise.all([
+      supabase.from('point_rules').select('*').eq('project_id', projectId).order('sort'),
+      supabase.from('point_levels').select('*').eq('project_id', projectId).order('min_points'),
+    ])
+    setRules((r.data as RuleRow[]) ?? []); setLevels((l.data as LevelRow[]) ?? []); setDirty(false)
+  }, [projectId])
+  useEffect(() => { load() }, [load])
+
+  const setRule = (code: string, patch: Partial<RuleRow>) => { setRules(rs => rs.map(r => (r.code === code ? { ...r, ...patch } : r))); setDirty(true) }
+  const setLevel = (code: string, min: number) => { setLevels(ls => ls.map(l => (l.code === code ? { ...l, min_points: min } : l))); setDirty(true) }
+
+  async function save() {
+    if (!projectId) return
+    const sorted = [...levels].sort((a, b) => a.sort - b.sort)
+    for (let i = 1; i < sorted.length; i++) if (sorted[i].min_points <= sorted[i - 1].min_points) return setMsg({ tone: 'bad', text: `${sorted[i].label} must need more points than ${sorted[i - 1].label}.` })
+    setBusy(true); setMsg(null)
+    for (const r of rules) {
+      const { error } = await supabase.from('point_rules').update({ points: r.points, cap: r.cap, cap_period: r.cap ? (r.cap_period ?? 'day') : null, active: r.active }).eq('project_id', projectId).eq('code', r.code)
+      if (error) { setBusy(false); return setMsg({ tone: 'bad', text: errMsg(error) }) }
+    }
+    for (const l of levels) {
+      const { error } = await supabase.from('point_levels').update({ min_points: l.min_points }).eq('project_id', projectId).eq('code', l.code)
+      if (error) { setBusy(false); return setMsg({ tone: 'bad', text: errMsg(error) }) }
+    }
+    setBusy(false); setDirty(false); setMsg({ tone: 'good', text: 'Points and levels saved. They apply from the next award.' })
+  }
+
+  return (
+    <Card data-tour="points" className="p-5 lg:col-span-2">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="label-caps text-muted"><Trophy size={12} className="mr-1 inline" />Points and levels</div>
+          <p className="mt-1 text-sm text-muted">What a coach earns for each action, the caps, and the points each level needs. The coach sees the active rules in the portal. Rewards to redeem come in a later stage.</p>
+        </div>
+        <Button variant="primary" loading={busy} disabled={!dirty} onClick={save}><Save size={15} />Save</Button>
+      </div>
+      {msg && <div className="mt-3"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+
+      <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_280px]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-line text-left text-xs text-muted"><tr><th className="py-1.5 pr-2">Action</th><th className="py-1.5 pr-2 text-right">Points</th><th className="py-1.5 pr-2">Cap</th><th className="py-1.5">On</th></tr></thead>
+            <tbody className="divide-y divide-line">
+              {rules.map(r => (
+                <tr key={r.code} className={cx(!r.active && 'opacity-50')}>
+                  <td className="py-1.5 pr-2"><div className="font-semibold">{r.label}</div><div className="text-xs text-muted">{r.description}</div></td>
+                  <td className="py-1.5 pr-2 text-right">{r.code.startsWith('staff.') ? <span className="text-xs text-faint">set each time</span> : <Input type="number" value={r.points} onChange={e => setRule(r.code, { points: parseInt(e.target.value, 10) || 0 })} className="w-20 text-right" />}</td>
+                  <td className="py-1.5 pr-2">
+                    {r.code.startsWith('staff.') ? null : (
+                      <div className="flex items-center gap-1">
+                        <Input type="number" min={0} value={r.cap ?? ''} placeholder="—" onChange={e => setRule(r.code, { cap: e.target.value === '' ? null : Math.max(0, parseInt(e.target.value, 10) || 0) || null })} className="w-16" />
+                        <Select value={r.cap_period ?? 'day'} disabled={!r.cap} onChange={e => setRule(r.code, { cap_period: e.target.value })} className="w-24"><option value="day">a day</option><option value="week">a week</option><option value="season">a season</option><option value="once">once</option></Select>
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-1.5"><input type="checkbox" checked={r.active} onChange={e => setRule(r.code, { active: e.target.checked })} className="h-4 w-4 accent-ink" aria-label={`${r.label} active`} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div className="label-caps mb-2 text-muted">Levels</div>
+          <div className="space-y-2">
+            {[...levels].sort((a, b) => a.sort - b.sort).map((l, i) => (
+              <div key={l.code} className="flex items-center gap-2">
+                <span className="w-20 font-display text-base font-semibold">{l.label}</span>
+                {i === 0 ? <span className="text-sm text-muted">from 0</span> : <><span className="text-xs text-muted">from</span><Input type="number" min={1} value={l.min_points} onChange={e => setLevel(l.code, parseInt(e.target.value, 10) || 0)} className="w-24" /><span className="text-xs text-muted">pts</span></>}
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-lg bg-paper p-3 text-xs text-muted">Badges (first player, full squad, four-week streak, first selection, finals, Tony squad, always on time) are earned automatically; they are not edited here.</div>
+        </div>
+      </div>
     </Card>
   )
 }

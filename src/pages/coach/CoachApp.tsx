@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { Bell, CalendarDays, ChevronRight, CircleHelp, Home as HomeIcon, LogOut, SlidersHorizontal, Users } from 'lucide-react'
+import { Bell, CalendarDays, ChevronRight, CircleHelp, Home as HomeIcon, LogOut, SlidersHorizontal, Trophy, Users } from 'lucide-react'
 import { InstallButton } from '../../lib/install'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
@@ -17,6 +17,7 @@ import { ScreenTitle, useGo } from './shared'
 import HomeScreen from './Home'
 import TeamScreen from './Team'
 import ScheduleScreen from './Schedule'
+import ProgressScreen from './Progress'
 
 export default function CoachApp({ previewAcademy }: { previewAcademy?: string }) {
   return (
@@ -30,6 +31,7 @@ export default function CoachApp({ previewAcademy }: { previewAcademy?: string }
             <Route path="squad" element={<RedirectTo to="/team" />} />
             <Route path="schedule" element={<ScheduleScreen />} />
             <Route path="camps" element={<RedirectTo to="/schedule" />} />
+            <Route path="progress" element={<ProgressScreen />} />
             <Route path="updates" element={<UpdatesScreen />} />
             <Route path="*" element={<RedirectTo to="/" />} />
           </Routes>
@@ -55,7 +57,7 @@ function CoachTours({ children }: { children: ReactNode }) {
   const loc = useLocation()
   const rel = loc.pathname.slice(base.length) || '/'
   const tab = new URLSearchParams(loc.search).get('tab')
-  const screen = rel === '/' ? 'coach-home' : rel === '/team' ? (tab === 'training' ? 'coach-training' : tab === 'academy' ? 'coach-academy' : 'coach-team') : rel === '/schedule' ? 'coach-schedule' : rel === '/updates' ? 'coach-updates' : null
+  const screen = rel === '/' ? 'coach-home' : rel === '/team' ? (tab === 'training' ? 'coach-training' : tab === 'academy' ? 'coach-academy' : 'coach-team') : rel === '/schedule' ? 'coach-schedule' : rel === '/progress' ? 'coach-progress' : rel === '/updates' ? 'coach-updates' : null
   return (
     <TourProvider tours={COACH_TOURS} screen={screen} lang={lang} seen={profile?.tours_seen ?? []}
       onSeen={key => { supabase.rpc('tour_seen', { p_key: key }).then(() => {}) }}>
@@ -86,6 +88,7 @@ function Shell({ children }: { children: ReactNode }) {
     { to: base || '/', label: t('home'), icon: HomeIcon, count: 0 },
     { to: base + '/team', label: t('team'), icon: Users, count: 0 },
     { to: base + '/schedule', label: t('schedule'), icon: CalendarDays, count: waiting },
+    { to: base + '/progress', label: t('progress'), icon: Trophy, count: 0 },
     ...(preview ? [] : [{ to: '/updates', label: t('updates'), icon: Bell, count: unread }]),
   ]
   return (
@@ -132,7 +135,7 @@ function Shell({ children }: { children: ReactNode }) {
       </main>
 
       <nav data-tour="coach-tabs" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] sm:hidden">
-        <div className={cx('grid', preview ? 'grid-cols-3' : 'grid-cols-4')}>
+        <div className={cx('grid', preview ? 'grid-cols-4' : 'grid-cols-5')}>
           {tabs.map(tb => (
             <NavLink key={tb.to} to={tb.to} end={tb.to === (base || '/')}
               className={({ isActive }) => cx('relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold', isActive ? 'text-royal' : 'text-muted')}>

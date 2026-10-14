@@ -23,6 +23,11 @@ export const COACH_TOURS: TourMap = {
              'Ubutumire bugomba gusubizwa n’amakambi afunguye ku bakinnyi bawe. Kanda ku murongo kugira ngo ubikore.'],
     },
     {
+      target: 'coach-progress', title: ['Points and level', "Amanota n'urwego"],
+      body: ['Your academy earns points for everything it does with Tony. Tap to see your level, badges and rank.',
+             "Ishuri ryawe ribona amanota ku byo rikorana na Tony byose. Kanda urebe urwego, ibirango n'umwanya wawe."],
+    },
+    {
       target: 'coach-tabs', title: ['Menu', 'Ibikubiyemo'],
       body: ['Move between Home, your team, the schedule and updates.', "Jya ahabanza, ku ikipe yawe, kuri gahunda no ku makuru."],
     },
@@ -86,6 +91,33 @@ export const COACH_TOURS: TourMap = {
       target: 'open-camps', title: ['Submit to district camps', "Ohereza mu makambi y'akarere"],
       body: ['These camps are open for your players. Tap "Submit players", choose the players and add a note for the scouts. You can withdraw a player until the camp starts.',
              'Aya makambi arafunguye ku bakinnyi bawe. Kanda "Ohereza abakinnyi", hitamo abakinnyi kandi wandike ubutumwa ku bashakashatsi. Ushobora gukuramo umukinnyi mbere y’uko ikambi itangira.'],
+    },
+  ],
+  'coach-progress': [
+    {
+      target: 'level', title: ['Your level and points', "Urwego n'amanota yawe"],
+      body: ['Everything you do for your academy earns points: adding players, logging training, coming to camps, players selected. Points take you from Rookie to Platinum.',
+             "Ibyo ukorera ishuri ryawe byose bitanga amanota: kongeramo abakinnyi, kwandika imyitozo, kuza mu makambi, abakinnyi batoranyijwe. Amanota akuzamura kuva Rookie kugera Platinum."],
+    },
+    {
+      target: 'ranks', title: ['Your rank', 'Umwanya wawe'],
+      body: ['Where your academy stands this season in the district, the province and the country.',
+             "Aho ishuri ryawe rigeze iki gihembwe mu karere, mu ntara no mu gihugu."],
+    },
+    {
+      target: 'badges', title: ['Badges', 'Ibirango'],
+      body: ['Badges mark the milestones: the first player, a full squad, a four-week training streak, a player at a final. Tap one to see what it takes.',
+             "Ibirango biranga intambwe zikomeye: umukinnyi wa mbere, ikipe yuzuye, imyitozo y'ibyumweru bine, umukinnyi mu irushanwa rya nyuma."],
+    },
+    {
+      target: 'rules', title: ['How to earn', "Uko wabona amanota"],
+      body: ['The full list of what earns points and how much. Points will later buy equipment and other rewards from Tony.',
+             "Urutonde rwuzuye rw'ibitanga amanota n'angahe. Amanota azagura nyuma ibikoresho n'ibindi bihembo bya Tony."],
+    },
+    {
+      target: 'board', title: ['Your province', 'Intara yawe'],
+      body: ['The academies of your province ranked by points. Your academy is highlighted.',
+             "Amashuri yo mu ntara yawe ashyizwe ku murongo hakurikijwe amanota. Ishuri ryawe rigaragazwa."],
     },
   ],
   'coach-updates': [

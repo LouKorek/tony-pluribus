@@ -29,6 +29,7 @@ const CampSheet = page(() => import('./pages/scouting/CampSheet'))
 const FinalsPage = page(() => import('./pages/scouting/Finals'))
 const PlayersPage = page(() => import('./pages/scouting/Players'))
 const PoolPage = page(() => import('./pages/scouting/Pool'))
+const CoachesPage = page(() => import('./pages/scouting/Coaches'))
 const DashboardsPage = page(() => import('./pages/insights/Dashboards'))
 const ReportsPage = page(() => import('./pages/insights/Reports'))
 const FilesPage = page(() => import('./pages/Files'))
@@ -98,6 +99,7 @@ export default function App() {
         <Route path="scouting/finals" element={<Need area="camps"><FinalsPage /></Need>} />
         <Route path="scouting/players" element={<Need area="players"><PlayersPage /></Need>} />
         <Route path="scouting/pool" element={<Need area="players"><PoolPage /></Need>} />
+        <Route path="scouting/coaches" element={<Need area="coaches"><CoachesPage /></Need>} />
         <Route path="dashboards" element={<Need area="insights"><DashboardsPage /></Need>} />
         <Route path="reports" element={<Need area="insights"><ReportsPage /></Need>} />
         <Route path="files" element={<Need area="files"><FilesPage /></Need>} />

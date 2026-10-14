@@ -490,6 +490,7 @@ const AREA_LABEL: Record<string, [string, string]> = {
   academies: ['Academies', 'The academy register and visits'],
   camps: ['Camps and finals', 'Plan, camp sheets, results, invitations'],
   players: ['Players and pool', 'Player cards, merging duplicates, the potential pool'],
+  coaches: ['Coaches', 'Coach activity, points, reviews, messages and bonuses'],
   insights: ['Dashboards and reports', 'Numbers, Excel and PDF reports'],
   files: ['Talent folder', 'Default for every folder below'],
   'files.private': ['Personal documents and finance', 'Birth certificates, contracts, health files, release letters, finance'],
