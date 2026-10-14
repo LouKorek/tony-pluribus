@@ -8,6 +8,7 @@ import { clientsClaim } from 'workbox-core'
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Parameters<typeof precacheAndRoute>[0] }
 
 cleanupOutdatedCaches()
+self.addEventListener('activate', e => e.waitUntil(caches.delete('tn-brand-v1')))
 precacheAndRoute(self.__WB_MANIFEST)
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')))
 self.skipWaiting()

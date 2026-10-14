@@ -102,7 +102,7 @@ export async function offlineFetch(input: RequestInfo | URL, init: RequestInit =
     const h = new Headers(init.headers); h.set('x-mutation-id', mid)
     const queue = async () => {
       const label = labelFor(method, path, bodyStr)
-      await db.outbox.put({ id: mid, at: Date.now(), kind: 'request', label, method, url, headers, body: bodyStr, tries: 0, error: null })
+      await db.outbox.put({ id: mid, at: Date.now(), kind: 'request', label, method, url, headers: { ...headers, 'x-mutation-id': mid }, body: bodyStr, tries: 0, error: null })
       if (label) await patchCache(method, path, bodyStr, mid)
       await recount()
       // the caller sees success; the data it reads next comes from the patched cache
