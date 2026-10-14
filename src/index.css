@@ -44,10 +44,41 @@
   --color-danger-soft: #fbe9e9;
 }
 
+/* Night: the same tokens, darker surfaces. Chosen per device (lib/theme), the device setting decides until then. */
+:root[data-theme="dark"] {
+  --color-paper: #0e100f;
+  --color-card: #171a18;
+  --color-line: #262a28;
+  --color-line-2: #3a403d;
+  --color-text: #f1f3f0;
+  --color-muted: #a3a9a5;
+  --color-faint: #6b716d;
+  --color-ink-2: #1a1c1b;
+  --color-ink-3: #242725;
+  --color-black: #ffffff;          /* bg-black/5 fills turn into soft white fills */
+  --color-neon-soft: #3b4300;
+  --color-royal-soft: #12263b;
+  --color-grass-soft: #0f2f22;
+  --color-good-soft: #0f2f22;
+  --color-warn-soft: #3a2a05;
+  --color-info-soft: #12263b;
+  --color-danger-soft: #3d1414;
+  --color-platinum: #4a4f4c;
+  --color-good: #4fbf8f;
+  --color-warn: #e0a93a;
+  --color-info: #6ea8e8;
+  --color-danger: #f07070;
+  --color-royal: #4d8fd1;
+  --color-royal-dark: #2f6fb0;
+  --color-grass: #3fae7f;
+}
+:root[data-theme="dark"] img.invert-night { filter: invert(1); }
+
 html, body, #root { height: 100%; }
 body {
   background: var(--color-paper);
   color: var(--color-text);
+  transition: background-color .2s ease, color .2s ease;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   font-size: 16.5px;

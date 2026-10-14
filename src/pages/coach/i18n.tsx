@@ -296,6 +296,8 @@ const S = {
   cMissing: ['Missing', 'Birabura'],
   cNeeded: ['Needed', 'Bikenewe'],
   addEquipment: ['Add equipment', 'Ongeraho ibikoresho'],
+  nightMode: ['Night mode', 'Uburyo bwa nijoro'],
+  dayMode: ['Day mode', 'Uburyo bwa ku manywa'],
   addSelected: ['Add', 'Ongeraho'],
   searchEquipment: ['Search the list', 'Shakisha mu rutonde'],
   noEquipment: ['Nothing counted yet. Add the equipment you have on the ground.', "Nta kintu kirabarwa. Ongeraho ibikoresho ufite ku kibuga."],

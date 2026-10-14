@@ -13,6 +13,7 @@ import { APP_NAME, Logo } from '../lib/brand'
 import { NotificationBell } from '../components/NotificationBell'
 import { SYNC_EN, SyncButton } from '../components/SyncStatus'
 import { clearCache } from '../lib/offline'
+import { ThemeButton } from '../lib/theme'
 
 export function Brand({ compact }: { compact?: boolean }) {
   return <Logo variant="wordmark" color="neon" className={compact ? 'h-[18px]' : 'h-[22px]'} />
@@ -145,6 +146,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="truncate text-sm font-semibold">{profile?.full_name || profile?.username}</div>
             <div className="truncate text-xs text-white/50">{profile ? ROLE_LABEL[profile.role] : ''}</div>
           </div>
+          <ThemeButton className="text-white/50" />
           <HelpButton />
           <button onClick={signOut} className="rounded-md p-2 text-white/50 hover:bg-white/10 hover:text-white" title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>
         </div>
@@ -194,7 +196,7 @@ function Shell() {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-ink px-4 text-white lg:hidden">
           <button onClick={() => setOpen(true)} className="rounded-md p-1.5 hover:bg-white/10" aria-label="Open menu"><Menu size={20} /></button>
           <Brand compact />
-          <div className="flex items-center gap-1"><SyncButton labels={SYNC_EN} /><NotificationBell className="text-white/70" placement="down-end" /><HelpButton className="text-white/70" /></div>
+          <div className="flex items-center gap-1"><SyncButton labels={SYNC_EN} /><ThemeButton className="text-white/70" /><NotificationBell className="text-white/70" placement="down-end" /><HelpButton className="text-white/70" /></div>
         </header>
         <main key={loc.pathname} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-9">
           <Suspense fallback={<Spinner />}><Outlet /></Suspense>

@@ -13,6 +13,10 @@ export const COACH_TOURS: TourMap = {
       body: ['Switch between English and Kinyarwanda here.', "Hindura hagati y'Icyongereza n'Ikinyarwanda hano."],
     },
     {
+      target: 'theme', title: ['Day and night', "Ku manywa na nijoro"],
+      body: ['Switch between the light and the dark look of the app.', "Hindura isura y'urubuga: urumuri cyangwa umwijima."],
+    },
+    {
       target: 'coach-stats', title: ['Your season', 'Igihembwe cyawe'],
       body: ['Active players, training sessions this month, players selected, and your next camp. Tap a card to open it.',
              "Abakinnyi bakina, imyitozo y'uku kwezi, abatoranyijwe, n'ikambi itaha. Kanda ku ikarita kugira ngo uyifungure."],

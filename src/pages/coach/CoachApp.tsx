@@ -8,6 +8,7 @@ import { fmtDate } from '../../lib/scouting'
 import { notifTarget, useNotifications } from '../../lib/notifications'
 import { PrefsMatrix, PushCard } from '../../components/NotificationPrefs'
 import { SyncButton } from '../../components/SyncStatus'
+import { ThemeButton } from '../../lib/theme'
 import { Alert, Button, Card, Empty, Spinner, cx } from '../../components/ui'
 import { Brand } from '../../layouts/AppShell'
 import { LangProvider, useT } from './i18n'
@@ -114,6 +115,7 @@ function Shell({ children }: { children: ReactNode }) {
             )}
             {!preview && <SyncButton labels={{ offline: t('offline'), offlineHint: t('offlineHint'), savedCopy: t('savedCopy'), pending: t('pendingChanges'), failed: t('failedChanges'), sendNow: t('sendNow'), syncing: t('syncing'), allSent: t('allSent'), discard: t('discard'), retry: t('retry'), title: t('outboxTitle') }} />}
             <InstallButton variant="icon" label="Install the app" />
+            <ThemeButton labels={[t('nightMode'), t('dayMode')]} />
             <CoachHelp />
             {!preview && <NavLink to="/updates" className="relative rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label={t('updates')}>
               <Bell size={18} />

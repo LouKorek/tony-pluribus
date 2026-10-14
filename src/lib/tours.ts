@@ -19,6 +19,7 @@ export const STAFF_TOURS: TourMap = {
     { target: 'project-box', title: 'Project and season', body: 'The project (country) you work in and the scouting season the screens show. Click it to look at an earlier season, or to switch to another project you belong to.' },
     { target: 'overview-stats', title: 'At a glance', body: 'The season, the academy register, players and camps planned. The numbers update as the staff work.' },
     { target: 'help', title: 'Need the tour again?', body: 'Press the "?" button on any screen to replay the tour of that screen.' },
+    { target: 'theme', title: 'Day and night', body: 'Switch between the light and the dark look. The choice stays on this device.' },
     { title: 'Works without network', body: 'Tony Next keeps a copy of what you have seen on this device. With no network, screens show the last saved copy and anything you save (camp sheet marks, bookings, decisions) waits in an outbox and is sent when the network is back. A pill at the bottom of the menu shows what is waiting.' },
   ],
   'scouting-home': [
