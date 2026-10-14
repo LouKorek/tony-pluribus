@@ -85,8 +85,8 @@ function Body({ d }: { d: Dash }) {
             {funnel.map((f, i) => (
               <div key={f.label} className="grid grid-cols-[minmax(0,200px)_1fr_auto] items-center gap-3 text-sm">
                 <span className="truncate text-muted">{f.label}</span>
-                <div className="h-6 rounded bg-black/5"><div className={cx('h-6 rounded', i % 2 ? 'bg-red' : 'bg-ink')} style={{ width: `${(f.v / fmax) * 100}%` }} /></div>
-                <span className="w-12 text-right font-display text-lg font-bold">{fmt(f.v)}</span>
+                <div className="h-6 rounded bg-black/5"><div className={cx('h-6 rounded', i % 2 ? 'bg-royal' : 'bg-ink')} style={{ width: `${(f.v / fmax) * 100}%` }} /></div>
+                <span className="w-12 text-right font-display text-lg font-semibold">{fmt(f.v)}</span>
               </div>
             ))}
           </div>
@@ -100,7 +100,7 @@ function Body({ d }: { d: Dash }) {
                   <div key={o} className="flex flex-1 flex-col items-center gap-1">
                     <span className="text-sm font-semibold">{v} <span className="text-xs text-muted">({pct(v, obsTotal)}%)</span></span>
                     <div className="w-full rounded-t bg-ink" style={{ height: `${Math.max(4, (v / obsTotal) * 120)}px`, opacity: o === 'A' ? 1 : o === 'B+' ? 0.8 : o === 'B' ? 0.6 : 0.4 }} />
-                    <span className="font-display text-lg font-bold">{o}</span>
+                    <span className="font-display text-lg font-semibold">{o}</span>
                   </div>
                 )
               })}
@@ -140,9 +140,9 @@ function Body({ d }: { d: Dash }) {
           <div className="space-y-3">
             {d.groups.map(g => (
               <div key={g.code}>
-                <div className="flex items-baseline justify-between text-sm"><span className="font-display text-lg font-bold">{g.code} <span className="text-xs font-normal text-muted">born {g.from}–{g.to}</span></span>
+                <div className="flex items-baseline justify-between text-sm"><span className="font-display text-lg font-semibold">{g.code} <span className="text-xs font-normal text-muted">born {g.from}–{g.to}</span></span>
                   <span className="text-muted">{g.selected} selected of {g.submitted} · {g.national_selected} national</span></div>
-                <div className="mt-1 h-3 rounded-full bg-black/5"><div className="h-3 rounded-full bg-red" style={{ width: `${pct(g.selected, Math.max(1, g.submitted))}%` }} /></div>
+                <div className="mt-1 h-3 rounded-full bg-black/5"><div className="h-3 rounded-full bg-royal" style={{ width: `${pct(g.selected, Math.max(1, g.submitted))}%` }} /></div>
               </div>
             ))}
           </div>
@@ -152,7 +152,7 @@ function Body({ d }: { d: Dash }) {
             <ol className="space-y-1.5 text-sm">
               {d.top_academies.map((a, i) => (
                 <li key={a.name} className="flex items-center gap-3">
-                  <span className="w-5 text-right font-display font-bold text-muted">{i + 1}</span>
+                  <span className="w-5 text-right font-display font-semibold text-muted">{i + 1}</span>
                   <span className="min-w-0 flex-1 truncate"><b>{a.name}</b> <span className="text-muted">· {a.district}</span></span>
                   <span className="text-muted">{a.submitted} sent</span>
                   <span className="w-10 text-right font-semibold">{a.selected}</span>
@@ -186,14 +186,14 @@ function Body({ d }: { d: Dash }) {
             <div key={h.season} className="flex min-w-[120px] flex-1 flex-col items-center">
               <div className="flex h-40 w-full items-end justify-center gap-1.5">
                 <Bar v={h.scouted || h.camp_submitted} max={hmax} cls="bg-black/25" />
-                <Bar v={h.selected || h.camp_selected} max={hmax} cls="bg-red" />
+                <Bar v={h.selected || h.camp_selected} max={hmax} cls="bg-royal" />
                 <Bar v={h.visited} max={hmax} cls="bg-ink" />
               </div>
               <span className={cx('mt-1.5 text-sm', h.current ? 'font-bold' : 'text-muted')}>{h.season.replace('-20', '/')}</span>
             </div>
           ))}
         </div>
-        <Legend items={[['bg-black/25', 'Players seen'], ['bg-red', 'Selected'], ['bg-ink', 'Academies visited']]} />
+        <Legend items={[['bg-black/25', 'Players seen'], ['bg-royal', 'Selected'], ['bg-ink', 'Academies visited']]} />
       </Panel>
     </div>
   )
@@ -202,12 +202,12 @@ function Body({ d }: { d: Dash }) {
 function Kpi({ label, value, of, sub, accent }: { label: string; value: number; of?: number; sub?: string; accent?: boolean }) {
   return (
     <Card className={cx('p-4', accent && 'border-ink bg-ink text-white')}>
-      <div className={cx('label-caps text-[11px]', accent ? 'text-lime' : 'text-muted')}>{label}</div>
+      <div className={cx('label-caps text-[11px]', accent ? 'text-neon' : 'text-muted')}>{label}</div>
       <div className="mt-1 flex items-baseline gap-1.5">
-        <span className="font-display text-4xl font-bold leading-none">{fmt(value)}</span>
+        <span className="font-display text-4xl font-semibold leading-none">{fmt(value)}</span>
         {of !== undefined && <span className={cx('text-sm', accent ? 'text-white/60' : 'text-muted')}>/ {fmt(of)}</span>}
       </div>
-      {of !== undefined && <div className={cx('mt-2 h-1.5 rounded-full', accent ? 'bg-white/15' : 'bg-black/5')}><div className="h-1.5 rounded-full bg-red" style={{ width: `${pct(value, of)}%` }} /></div>}
+      {of !== undefined && <div className={cx('mt-2 h-1.5 rounded-full', accent ? 'bg-white/15' : 'bg-black/5')}><div className="h-1.5 rounded-full bg-royal" style={{ width: `${pct(value, of)}%` }} /></div>}
       {sub && <div className={cx('mt-1.5 text-xs', accent ? 'text-white/60' : 'text-muted')}>{sub}</div>}
     </Card>
   )

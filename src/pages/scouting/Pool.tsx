@@ -56,7 +56,7 @@ export default function PoolPage() {
               <div key={col.key} className="flex w-64 shrink-0 flex-col rounded-xl bg-black/[.04]">
                 <div className="px-3 pb-2 pt-3">
                   <div className="flex items-center justify-between">
-                    <span className={cx('font-display text-base font-bold uppercase', col.key === 'selected' && 'text-good')}>{POOL_LABEL[col.key]}</span>
+                    <span className={cx('font-display text-base font-semibold ', col.key === 'selected' && 'text-good')}>{POOL_LABEL[col.key]}</span>
                     <span className={cx('rounded-full px-2 text-xs font-bold', col.key === 'selected' ? 'bg-good text-white' : 'bg-black/10 text-muted')}>{items.length}</span>
                   </div>
                   <div className="text-xs text-muted">{col.hint}</div>

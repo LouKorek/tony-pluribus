@@ -84,7 +84,7 @@ export function CampFormModal({ camp, defaults, onClose, onSaved }: { camp?: Cam
             <div className="flex h-10 gap-2">
               {ref.groups.map(g => (
                 <button key={g.code} type="button" onClick={() => toggleGroup(g.code)}
-                  className={cx('flex-1 rounded-lg border text-sm font-semibold', f.age_groups.includes(g.code) ? 'border-red bg-red-soft text-red' : 'border-line-2 text-muted')}>{g.code}</button>
+                  className={cx('flex-1 rounded-lg border text-sm font-semibold', f.age_groups.includes(g.code) ? 'border-royal bg-royal-soft text-royal' : 'border-line-2 text-muted')}>{g.code}</button>
               ))}
             </div>
           </Field>
@@ -108,7 +108,7 @@ export function CampFormModal({ camp, defaults, onClose, onSaved }: { camp?: Cam
           <Field label="Reply deadline" hint="For invited players"><Input type="date" value={f.rsvp_deadline} onChange={e => setF({ ...f, rsvp_deadline: e.target.value })} /></Field>
           {f.stage === 'district' && (
             <Field label="Coach submissions">
-              <label className="flex h-10 items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-red" checked={f.submissions_open} onChange={e => setF({ ...f, submissions_open: e.target.checked })} /> Open to academy coaches</label>
+              <label className="flex h-10 items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-royal" checked={f.submissions_open} onChange={e => setF({ ...f, submissions_open: e.target.checked })} /> Open to academy coaches</label>
             </Field>
           )}
         </div>

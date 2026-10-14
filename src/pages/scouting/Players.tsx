@@ -11,7 +11,7 @@ import {
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, MultiSelect, PageHeader, SearchInput, Select, Spinner, Td, Textarea, Th, cx, useDebounced } from '../../components/ui'
 
 export const poolTone = (s: PoolStatus) => ({
-  academy_squad: 'neutral', submitted: 'info', observed: 'neutral', province_final: 'lime', national_final: 'dark',
+  academy_squad: 'neutral', submitted: 'info', observed: 'neutral', province_final: 'neon', national_final: 'dark',
   selected: 'good', see_again: 'warn', not_selected: 'neutral', tony_squad: 'good', released: 'bad',
 } as const)[s]
 
@@ -199,7 +199,7 @@ export function PlayerDrawer({ playerId, onClose, onSaved, onOpenOther }: { play
                 <li key={j.id} className="relative">
                   <span className={cx('absolute -left-[27px] top-1 h-3 w-3 rounded-full border-2 border-card', j.decision === 'selected' ? 'bg-good' : j.decision === 'see_again' ? 'bg-warn' : j.status === 'absent' ? 'bg-faint' : 'bg-ink')} />
                   <button onClick={() => nav(`/scouting/camps/${j.camp.id}`)} className="text-left">
-                    <div className="text-sm font-semibold hover:text-red">{j.camp.name}</div>
+                    <div className="text-sm font-semibold hover:text-royal">{j.camp.name}</div>
                     <div className="text-xs text-muted">{fmtDate(j.camp.starts_on)} · {STAGE_SHORT[j.camp.stage]} · scouting for {seasons.find(s => s.id === j.camp.season_id)?.label}</div>
                   </button>
                   <div className="mt-1 flex flex-wrap gap-1.5 text-xs">
@@ -259,7 +259,7 @@ export function PlayerDrawer({ playerId, onClose, onSaved, onOpenOther }: { play
             <Field label="Parent / guardian"><Input value={f.guardian_name ?? ''} onChange={set('guardian_name')} disabled={!canEdit} /></Field>
             <Field label="Guardian phone"><Input value={f.guardian_phone ?? ''} onChange={set('guardian_phone')} disabled={!canEdit} /></Field>
           </div>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-red" checked={!!f.guardian_consent} onChange={e => setF({ ...f, guardian_consent: e.target.checked })} disabled={!canEdit} /> Guardian consent received</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 accent-royal" checked={!!f.guardian_consent} onChange={e => setF({ ...f, guardian_consent: e.target.checked })} disabled={!canEdit} /> Guardian consent received</label>
           {p.coach_notes && <Field label="Academy coach's notes"><div className="rounded-lg bg-paper p-3 text-sm">{p.coach_notes}</div></Field>}
           <Field label="Staff notes" hint="Internal. Never shown to academy coaches."><Textarea rows={3} value={f.staff_notes ?? ''} onChange={set('staff_notes')} disabled={!canEdit} /></Field>
           <Field label="Pool status" hint="Set automatically from camps. Change it by hand only to mark Tony squad or Released.">
@@ -296,8 +296,8 @@ function MergeModal({ keep, drop, onClose, onDone }: { keep: Player; drop: Playe
       <div className="space-y-3 text-sm">
         <p className="text-muted">All camps of the second card move to the first. The second card is hidden but kept, with a pointer to the first.</p>
         <div className="space-y-2">
-          <label className="flex items-center gap-2 rounded-lg border border-line p-3"><input type="radio" checked={dir === 'keep'} onChange={() => setDir('keep')} className="accent-red" /> Keep <b>{line(keep)}</b></label>
-          <label className="flex items-center gap-2 rounded-lg border border-line p-3"><input type="radio" checked={dir === 'drop'} onChange={() => setDir('drop')} className="accent-red" /> Keep <b>{line(drop)}</b></label>
+          <label className="flex items-center gap-2 rounded-lg border border-line p-3"><input type="radio" checked={dir === 'keep'} onChange={() => setDir('keep')} className="accent-royal" /> Keep <b>{line(keep)}</b></label>
+          <label className="flex items-center gap-2 rounded-lg border border-line p-3"><input type="radio" checked={dir === 'drop'} onChange={() => setDir('drop')} className="accent-royal" /> Keep <b>{line(drop)}</b></label>
         </div>
         <Alert tone="info">Merging {line(b)} into {line(a)}.</Alert>
         {err && <Alert>{err}</Alert>}

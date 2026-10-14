@@ -5,10 +5,13 @@ import { useAuth } from '../../lib/auth'
 import { STAGE_LABEL, fmtDate, useRefData, type Camp, type Stage } from '../../lib/scouting'
 import { Alert, Button, Card, Empty, Field, MultiSelect, PageHeader, Select, cx } from '../../components/ui'
 import { REPORTS, type Params, type ReportData } from './reports'
-import { downloadExcel, openPrint } from './export'
+import { downloadExcel, openPrint, type ExportBrand } from './export'
+import { usePartner } from '../../lib/brand'
 
 export default function ReportsPage() {
-  const { seasons, viewSeason } = useAuth()
+  const { seasons, viewSeason, project } = useAuth()
+  const partner = usePartner('exports')
+  const brand: ExportBrand = { projectLine: project?.name ?? 'Tony', partnerName: partner?.name, partnerLogo: partner?.logo }
   const ref = useRefData()
   const [id, setId] = useState(REPORTS[0].id)
   const def = REPORTS.find(r => r.id === id)!
@@ -104,10 +107,10 @@ export default function ReportsPage() {
             </div>
             <div data-tour="report-export" className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
               <Button variant="primary" disabled={!data || xl} loading={xl}
-                onClick={async () => { if (!data) return; setXl(true); try { await downloadExcel(data) } catch (e) { setErr(e instanceof Error ? e.message : String(e)) } setXl(false) }}>
+                onClick={async () => { if (!data) return; setXl(true); try { await downloadExcel(data, brand) } catch (e) { setErr(e instanceof Error ? e.message : String(e)) } setXl(false) }}>
                 <FileSpreadsheet size={16} /> Download Excel
               </Button>
-              <Button disabled={!data} onClick={() => { if (data && !openPrint(data)) setErr('The browser blocked the print window. Allow pop-ups for this site and try again.') }}>
+              <Button disabled={!data} onClick={() => { if (data && !openPrint(data, brand)) setErr('The browser blocked the print window. Allow pop-ups for this site and try again.') }}>
                 <FileText size={16} /> PDF / print
               </Button>
               {data && <span className="ml-auto text-sm text-muted">{rowCount} row{rowCount === 1 ? '' : 's'}</span>}
@@ -124,7 +127,7 @@ export default function ReportsPage() {
             ) : (
               <div>
                 <div className="border-b border-line p-4">
-                  <div className="font-display text-2xl font-bold uppercase leading-none">{data.title}</div>
+                  <div className="font-display text-2xl font-semibold leading-none">{data.title}</div>
                   <div className="mt-1 text-sm text-muted">{data.subtitle}</div>
                   {data.summary && <div className="mt-3 flex flex-wrap gap-2">{data.summary.map(([k, v]) => <span key={k} className="rounded-md border border-line px-2.5 py-1 text-sm"><b>{v}</b> <span className="text-muted">{k}</span></span>)}</div>}
                 </div>
@@ -136,7 +139,7 @@ export default function ReportsPage() {
                       </tr></thead>
                       <tbody>
                         {data.sections.map((s, si) => [
-                          s.title && <tr key={`s${si}`}><td colSpan={data.columns.length} className="border-l-4 border-red bg-paper px-3 py-1.5 font-semibold">{s.title}</td></tr>,
+                          s.title && <tr key={`s${si}`}><td colSpan={data.columns.length} className="border-l-4 border-royal bg-paper px-3 py-1.5 font-semibold">{s.title}</td></tr>,
                           ...s.rows.slice(0, 300).map((row, ri) => (
                             <tr key={`${si}-${ri}`} className="border-b border-line">
                               {data.columns.map(c => <td key={c.key} className={cx('px-3 py-1.5 align-top', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.key === 'player' && 'font-semibold whitespace-nowrap')}>{row[c.key] ?? ''}</td>)}

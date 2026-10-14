@@ -39,7 +39,7 @@ export default function SyncCenterPage() {
   const waiting = !ok && /^Waiting for the TonyRW admin/.test(state?.last_error ?? '')
   return (
     <div>
-      <PageHeader eyebrow="System" title="Sync Center" description="Pluribus reads the shared Talent folder in SharePoint through the Pluribus Sync app. Every change there (new files, renames, moves, deletions) reaches the Files screen and the links across the system."
+      <PageHeader eyebrow="System" title="Sync Center" description="Tony Next reads the shared Talent folder in SharePoint through the Tony Next sync app. Every change there (new files, renames, moves, deletions) reaches the Files screen and the links across the system."
         actions={<><Button onClick={() => run(true)} disabled={busy}>Full scan</Button><Button variant="primary" loading={busy} onClick={() => run(false)}><RefreshCcw size={15} /> Sync now</Button></>} />
       <div data-tour="sync-status" className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat accent label="Status" value={!state ? 'Not connected' : ok ? 'Connected' : waiting ? 'Waiting' : 'Error'} sub={state?.last_ok_at ? `Last good sync ${when(state.last_ok_at)}` : 'Waiting for Microsoft approval'} />
@@ -54,10 +54,10 @@ export default function SyncCenterPage() {
         {!runs.length ? <p className="px-4 py-6 text-center text-sm text-muted">No sync has run yet.</p> : (
           <ul className="divide-y divide-line">{runs.map(r => (
             <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-sm">
-              {r.status === 'ok' ? <CheckCircle2 size={16} className="text-good" /> : r.status === 'error' ? <CircleAlert size={16} className="text-red" /> : <Clock size={16} className="text-warn" />}
+              {r.status === 'ok' ? <CheckCircle2 size={16} className="text-good" /> : r.status === 'error' ? <CircleAlert size={16} className="text-danger" /> : <Clock size={16} className="text-warn" />}
               <span className="w-36 text-muted">{when(r.started_at)}</span>
               <span className="flex w-40 gap-1.5">{r.full_scan && <Badge>Full scan</Badge>}{r.scheduled && <Badge tone="info">Automatic</Badge>}{!r.full_scan && !r.scheduled && <Badge>Manual</Badge>}</span>
-              <span>{r.status === 'error' ? <span className="text-red">{r.error}</span> : r.status === 'running' ? 'Running…' : `${r.changed} new or changed · ${r.deleted} removed`}</span>
+              <span>{r.status === 'error' ? <span className="text-danger">{r.error}</span> : r.status === 'running' ? 'Running…' : `${r.changed} new or changed · ${r.deleted} removed`}</span>
             </li>
           ))}</ul>
         )}

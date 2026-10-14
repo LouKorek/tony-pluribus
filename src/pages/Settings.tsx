@@ -45,7 +45,7 @@ export default function SettingsPage() {
             <dt className="text-muted">Country</dt><dd>{project?.country}</dd>
             <dt className="text-muted">Partner</dt><dd>{project?.partner}</dd>
             <dt className="text-muted">Time zone</dt><dd>{project?.timezone}</dd>
-            <dt className="text-muted">Shared folder</dt><dd className="truncate"><a href={project?.sharepoint_root ?? '#'} target="_blank" rel="noreferrer" className="text-red hover:underline">Talent (SharePoint)</a></dd>
+            <dt className="text-muted">Shared folder</dt><dd className="truncate"><a href={project?.sharepoint_root ?? '#'} target="_blank" rel="noreferrer" className="text-royal hover:underline">Talent (SharePoint)</a></dd>
           </dl>
         </Card>
 
@@ -57,7 +57,7 @@ export default function SettingsPage() {
                 <span className="font-semibold">{s.label}</span>
                 <span className="flex gap-1.5">
                   {s.is_current_operational && <Badge tone="info">Current season</Badge>}
-                  {s.is_current_scouting && <Badge tone="lime">Scouting for</Badge>}
+                  {s.is_current_scouting && <Badge tone="neon">Scouting for</Badge>}
                 </span>
               </li>
             ))}
@@ -75,7 +75,7 @@ export default function SettingsPage() {
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {groups.map((g, i) => (
               <div key={g.id} className="rounded-lg border border-line p-3">
-                <div className="font-display text-2xl font-bold">{g.code}</div>
+                <div className="font-display text-2xl font-semibold">{g.code}</div>
                 <div className="mt-2 flex items-center gap-2 text-sm">
                   <span className="text-muted">Born</span>
                   <Input type="number" className="h-9 w-24" value={g.birth_year_from} onChange={e => setGroups(groups.map((x, j) => j === i ? { ...x, birth_year_from: +e.target.value } : x))} />

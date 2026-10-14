@@ -35,7 +35,7 @@ export default function ClubPortalPage() {
           {rows.map(s => (
             <Card key={s.id} className="p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0"><div className="truncate font-display text-lg font-bold uppercase leading-tight">{s.title}</div><div className="mt-0.5 text-sm text-muted">{s.audience ? `For ${s.audience} · ` : ''}{s.showcase_players.length} players</div></div>
+                <div className="min-w-0"><div className="truncate font-display text-lg font-semibold leading-tight">{s.title}</div><div className="mt-0.5 text-sm text-muted">{s.audience ? `For ${s.audience} · ` : ''}{s.showcase_players.length} players</div></div>
                 <Badge tone={live(s) ? 'good' : 'neutral'}>{live(s) ? 'Live' : s.active ? 'Expired' : 'Off'}</Badge>
               </div>
               <div className="mt-2 flex flex-wrap gap-x-4 text-xs text-muted"><span className="inline-flex items-center gap-1"><Eye size={12} /> {s.views} view{s.views === 1 ? "" : "s"}</span>{s.expires_on && <span>Until {new Date(s.expires_on + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}</div>
@@ -92,14 +92,14 @@ function ShowcaseModal({ showcase, onClose, onDone }: { showcase: Showcase | nul
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Title" required><Input value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder="U17 talents · October 2026" /></Field>
-          <Field label="For"><Input value={f.audience} onChange={e => setF({ ...f, audience: e.target.value })} placeholder="SL Benfica scouting" /></Field>
+          <Field label="For"><Input value={f.audience} onChange={e => setF({ ...f, audience: e.target.value })} placeholder="Partner club scouting" /></Field>
         </div>
         <Field label="Message to the club"><Textarea rows={2} value={f.intro} onChange={e => setF({ ...f, intro: e.target.value })} /></Field>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Link works until" hint="Leave empty for no end date."><Input type="date" value={f.expires_on} onChange={e => setF({ ...f, expires_on: e.target.value })} /></Field>
           <div className="space-y-2 pt-6 text-sm">
             {([['active', 'Link is on'], ['show_stats', 'Show matches, goals and assists'], ['show_tests', 'Show speed, height and weight']] as const).map(([k, l]) => (
-              <label key={k} className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-red" checked={f[k]} onChange={e => setF({ ...f, [k]: e.target.checked })} /> {l}</label>
+              <label key={k} className="flex items-center gap-2"><input type="checkbox" className="h-4 w-4 accent-royal" checked={f[k]} onChange={e => setF({ ...f, [k]: e.target.checked })} /> {l}</label>
             ))}
           </div>
         </div>

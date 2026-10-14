@@ -18,7 +18,7 @@ function icon(i: Item) {
   if (i.is_folder) return <Folder size={18} className="text-warn" />
   const e = i.ext ?? ''
   if (['xlsx', 'xls', 'csv'].includes(e)) return <FileSpreadsheet size={18} className="text-good" />
-  if (['pptx', 'ppt'].includes(e)) return <Presentation size={18} className="text-red" />
+  if (['pptx', 'ppt'].includes(e)) return <Presentation size={18} className="text-royal" />
   if (['docx', 'doc', 'pdf', 'txt'].includes(e)) return <FileText size={18} className="text-info" />
   if (['jpg', 'jpeg', 'png', 'heic', 'cr2'].includes(e)) return <FileImage size={18} className="text-muted" />
   if (['mp4', 'mov', 'avi'].includes(e)) return <FileVideo size={18} className="text-muted" />
@@ -56,7 +56,7 @@ export default function FilesPage() {
   return (
     <div>
       <PageHeader eyebrow="System" title="Files"
-        description={<>The shared <b>Talent</b> folder that SL Benfica and TFEP work in. Open any file in SharePoint from here. Kept in sync with SharePoint every 15 minutes{stats?.indexed_at ? `, last read ${fmtWhen(stats.indexed_at)}` : ''}.</>}
+        description={<>The shared <b>Talent</b> folder of the project. Open any file in SharePoint from here. Kept in sync with SharePoint every 15 minutes{stats?.indexed_at ? `, last read ${fmtWhen(stats.indexed_at)}` : ''}.</>}
         actions={root ? <a href={encodeURI(path ? `${root}/${path}` : root)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line-2 bg-card px-4 text-sm font-semibold hover:border-text/40"><ExternalLink size={15} /> Open in SharePoint</a> : undefined} />
 
       {stats && (
@@ -70,11 +70,11 @@ export default function FilesPage() {
 
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <nav data-tour="crumbs" className="flex min-w-0 flex-wrap items-center gap-1 text-sm" aria-label="Folder path">
-          <button onClick={() => go('')} className={cx('rounded px-1.5 py-0.5 font-semibold', path ? 'text-red hover:underline' : 'text-text')}>Talent</button>
+          <button onClick={() => go('')} className={cx('rounded px-1.5 py-0.5 font-semibold', path ? 'text-royal hover:underline' : 'text-text')}>Talent</button>
           {crumbs.map((c, i) => (
             <span key={c.path} className="flex items-center gap-1">
               <ChevronRight size={14} className="text-faint" />
-              <button onClick={() => go(c.path)} className={cx('max-w-[220px] truncate rounded px-1.5 py-0.5', i === crumbs.length - 1 ? 'font-semibold' : 'text-red hover:underline')}>{c.name}</button>
+              <button onClick={() => go(c.path)} className={cx('max-w-[220px] truncate rounded px-1.5 py-0.5', i === crumbs.length - 1 ? 'font-semibold' : 'text-royal hover:underline')}>{c.name}</button>
             </span>
           ))}
         </nav>
@@ -100,11 +100,11 @@ export default function FilesPage() {
                     <td className="px-4 py-2">
                       {i.is_folder
                         ? <button onClick={() => go(i.path)} className="flex items-center gap-2.5 text-left font-semibold">{icon(i)}<span className="truncate">{i.name}</span>{i.restricted && <Lock size={12} className="text-faint" />}</button>
-                        : <a href={spUrl(i)} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 hover:text-red">{icon(i)}<span className="truncate">{i.name}</span>{i.restricted && <Lock size={12} className="text-faint" />}</a>}
+                        : <a href={spUrl(i)} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 hover:text-royal">{icon(i)}<span className="truncate">{i.name}</span>{i.restricted && <Lock size={12} className="text-faint" />}</a>}
                     </td>
                     <td className="px-3 py-2 text-muted">
                       {searching
-                        ? <button onClick={() => go(i.parent)} className="max-w-[320px] truncate text-left hover:text-red" title={i.parent}>{i.parent || 'Talent'}</button>
+                        ? <button onClick={() => go(i.parent)} className="max-w-[320px] truncate text-left hover:text-royal" title={i.parent}>{i.parent || 'Talent'}</button>
                         : fmtWhen(i.modified_at)}
                     </td>
                     <td className="px-3 py-2 text-right text-muted">{i.is_folder ? '' : fmtSize(i.size)}</td>

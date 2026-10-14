@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [seasons, setSeasons] = useState<Season[]>([])
   const [access, setAccess] = useState<Record<string, number>>({})
   const currentUser = useRef<string | null>(null)
-  const [viewId, setViewId] = useState<string | null>(() => { try { return sessionStorage.getItem('pluribus.viewSeason') } catch { return null } })
+  const [viewId, setViewId] = useState<string | null>(() => { try { return sessionStorage.getItem('tonynext.viewSeason') } catch { return null } })
 
   const load = useCallback(async (s: Session | null) => {
     setSession(s)
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     inTeam: id => !profile || ['owner', 'admin'].includes(profile.role) || !profile.team_ids?.length || !id || profile.team_ids.includes(id),
     scoutingSeason: seasons.find(s => s.is_current_scouting) ?? null,
     viewSeason: seasons.find(s => s.id === viewId) ?? seasons.find(s => s.is_current_scouting) ?? null,
-    setViewSeason: id => { setViewId(id); try { sessionStorage.setItem('pluribus.viewSeason', id) } catch { /* storage blocked */ } },
+    setViewSeason: id => { setViewId(id); try { sessionStorage.setItem('tonynext.viewSeason', id) } catch { /* storage blocked */ } },
     refresh: async () => { const { data } = await supabase.auth.getSession(); await load(data.session) },
     // Signing out while the owner views the system as someone else returns to the owner's own account.
     signOut: async () => { if (viewingAs()) await stopViewAs(); else await supabase.auth.signOut() },

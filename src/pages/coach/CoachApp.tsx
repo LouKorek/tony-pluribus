@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Spinner, Textarea, cx, printArea } from '../../components/ui'
 import { Brand } from '../../layouts/AppShell'
+import { Bolts, Logo, usePartner, useTagline } from '../../lib/brand'
 import { DECISION_T, LangProvider, STAGE_T, STATUS_T, useT } from './i18n'
 import { TourProvider, useTour } from '../../lib/tour'
 import { COACH_TOURS } from './tours'
@@ -90,9 +91,9 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full bg-paper">
       {preview && (
-        <div className="flex items-center justify-between gap-3 bg-lime px-4 py-2 text-sm text-ink">
+        <div className="flex items-center justify-between gap-3 bg-neon px-4 py-2 text-sm text-ink">
           <span className="min-w-0 truncate"><b>Preview</b> · what the coach of {academy?.name ?? 'this academy'} sees · read only</span>
-          <Link to="/scouting/academies" className="shrink-0 font-semibold underline">Back to Pluribus</Link>
+          <Link to="/scouting/academies" className="shrink-0 font-semibold underline">Back to Tony Next</Link>
         </div>
       )}
       <header className="sticky top-0 z-30 bg-ink text-white">
@@ -102,14 +103,14 @@ function Shell({ children }: { children: ReactNode }) {
             <div data-tour="lang" className="mr-1 flex rounded-md bg-white/8 p-0.5 text-[12px] font-bold" role="group" aria-label={t('language')}>
               {(['en', 'rw'] as const).map(l => (
                 <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l}
-                  className={cx('rounded px-2 py-1 uppercase', lang === l ? 'bg-lime text-ink' : 'text-white/60 hover:text-white')}>{l}</button>
+                  className={cx('rounded px-2 py-1 uppercase', lang === l ? 'bg-neon text-ink' : 'text-white/60 hover:text-white')}>{l}</button>
               ))}
             </div>
             <InstallButton variant="icon" label="Install the app" />
             <CoachHelp />
             {!preview && <NavLink to="/updates" className="relative rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label={t('updates')}>
               <Bell size={18} />
-              {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-lime" />}
+              {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-neon" />}
             </NavLink>}
             {!preview && <button onClick={signOut} className="rounded-md p-2 text-white/60 hover:bg-white/10 hover:text-white" aria-label={t('signOut')} title={t('signOut')}><LogOut size={17} /></button>}
           </div>
@@ -117,9 +118,9 @@ function Shell({ children }: { children: ReactNode }) {
         <nav data-tour="coach-tabs" className="mx-auto hidden max-w-3xl gap-1 px-3 pb-2 sm:flex">
           {tabs.map(tb => (
             <NavLink key={tb.to} to={tb.to} end={tb.to === (base || '/')}
-              className={({ isActive }) => cx('flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold', isActive ? 'bg-lime text-ink' : 'text-white/70 hover:bg-white/8 hover:text-white')}>
+              className={({ isActive }) => cx('flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold', isActive ? 'bg-neon text-ink' : 'text-white/70 hover:bg-white/8 hover:text-white')}>
               <tb.icon size={15} />{tb.label}
-              {tb.count > 0 && <span className="rounded-full bg-red px-1.5 text-[11px] text-white">{tb.count}</span>}
+              {tb.count > 0 && <span className="rounded-full bg-royal px-1.5 text-[11px] text-white">{tb.count}</span>}
             </NavLink>
           ))}
         </nav>
@@ -134,10 +135,10 @@ function Shell({ children }: { children: ReactNode }) {
         <div className={cx('grid', preview ? 'grid-cols-3' : 'grid-cols-4')}>
           {tabs.map(tb => (
             <NavLink key={tb.to} to={tb.to} end={tb.to === (base || '/')}
-              className={({ isActive }) => cx('relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold', isActive ? 'text-red' : 'text-muted')}>
+              className={({ isActive }) => cx('relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold', isActive ? 'text-royal' : 'text-muted')}>
               <tb.icon size={20} />
               <span className="truncate">{tb.label}</span>
-              {tb.count > 0 && <span className="absolute left-1/2 top-1.5 ml-2 rounded-full bg-red px-1.5 text-[10px] leading-4 text-white">{tb.count}</span>}
+              {tb.count > 0 && <span className="absolute left-1/2 top-1.5 ml-2 rounded-full bg-royal px-1.5 text-[10px] leading-4 text-white">{tb.count}</span>}
             </NavLink>
           ))}
         </div>
@@ -150,8 +151,8 @@ function ScreenTitle({ eyebrow, title, action }: { eyebrow?: string; title: stri
   return (
     <div className="mb-5 flex items-end justify-between gap-3">
       <div className="min-w-0">
-        {eyebrow && <div className="label-caps mb-1 text-red">{eyebrow}</div>}
-        <h1 className="font-display text-[32px] font-bold uppercase leading-none tracking-tight">{title}</h1>
+        {eyebrow && <div className="label-caps mb-1 text-royal">{eyebrow}</div>}
+        <h1 className="font-display text-[32px] font-semibold leading-none tracking-tight">{title}</h1>
       </div>
       {action}
     </div>
@@ -179,7 +180,7 @@ function JourneyBadge({ item }: { item: JourneyItem | undefined }) {
     const tone = item.decision === 'selected' ? 'good' : item.decision === 'see_again' ? 'warn' : 'neutral'
     return <Badge tone={tone}>{pick(DECISION_T[item.decision])}</Badge>
   }
-  const tone = item.status === 'invited' ? 'bad' : item.status === 'confirmed' ? 'info' : item.status === 'declined' || item.status === 'absent' ? 'neutral' : 'lime'
+  const tone = item.status === 'invited' ? 'bad' : item.status === 'confirmed' ? 'info' : item.status === 'declined' || item.status === 'absent' ? 'neutral' : 'neon'
   return <Badge tone={tone}>{pick(STATUS_T[item.status])}{item.stage !== 'district' ? ' · ' + pick(STAGE_T[item.stage]) : ''}</Badge>
 }
 
@@ -198,8 +199,8 @@ function HomeScreen() {
 
   return (
     <div>
-      <div className="label-caps text-red">{t('coachPortal')} · {t('scoutingSeason')} {scoutingSeason?.label ?? ''}</div>
-      <h1 className="mt-1 font-display text-[38px] font-bold uppercase leading-none tracking-tight">{t('welcome')}, {first}</h1>
+      <div className="label-caps text-royal">{t('coachPortal')} · {t('scoutingSeason')} {scoutingSeason?.label ?? ''}</div>
+      <h1 className="mt-1 font-display text-[38px] font-semibold leading-none tracking-tight">{t('welcome')}, {first}</h1>
       {academy && (
         <div className="mt-2 flex items-center gap-1.5 text-[15px] text-muted">
           <MapPin size={15} className="shrink-0" />
@@ -219,7 +220,7 @@ function HomeScreen() {
         <Card className="divide-y divide-line" data-tour="coach-actions">
           {invites.map(({ player, item }) => (
             <button key={item.id} onClick={() => nav('/camps')} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-soft text-red"><Trophy size={17} /></span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-royal-soft text-royal"><Trophy size={17} /></span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{name(player)} · {pick(STAGE_T[item.stage])}</span>
                 <span className="block truncate text-sm text-muted">{t('replyInvite')}{item.rsvp_deadline ? ` · ${t('replyBy')} ${fmtDate(item.rsvp_deadline, false)}` : ''}</span>
@@ -229,14 +230,14 @@ function HomeScreen() {
           ))}
           {campsWithRoom > 0 && (
             <button onClick={() => nav('/camps')} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lime text-ink"><CalendarDays size={17} /></span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neon text-ink"><CalendarDays size={17} /></span>
               <span className="min-w-0 flex-1 font-semibold">{t('openCampsCta')}: {campsWithRoom}</span>
               <ChevronRight size={18} className="text-faint" />
             </button>
           )}
           {squad.length === 0 && (
             <button onClick={() => nav('/squad?add=1')} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-lime"><UserPlus size={17} /></span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-neon"><UserPlus size={17} /></span>
               <span className="min-w-0 flex-1"><span className="block font-semibold">{t('addPlayer')}</span><span className="block text-sm text-muted">{t('emptySquadHint')}</span></span>
               <ChevronRight size={18} className="text-faint" />
             </button>
@@ -246,7 +247,7 @@ function HomeScreen() {
       </Section>
 
       {notifs.length > 0 && (
-        <Section title={t('latestUpdates')} action={<button onClick={() => nav('/updates')} className="text-sm font-semibold text-red">{t('seeAll')}</button>}>
+        <Section title={t('latestUpdates')} action={<button onClick={() => nav('/updates')} className="text-sm font-semibold text-royal">{t('seeAll')}</button>}>
           <Card className="divide-y divide-line">
             {notifs.slice(0, 3).map(n => <NotifRow key={n.id} n={n} />)}
           </Card>
@@ -259,8 +260,8 @@ function HomeScreen() {
 function MiniStat({ label, value, sub, accent }: { label: string; value: ReactNode; sub?: string; accent?: boolean }) {
   return (
     <Card className={cx('p-4', accent && 'border-ink bg-ink text-white')}>
-      <div className={cx('label-caps text-[11px]', accent ? 'text-lime' : 'text-muted')}>{label}</div>
-      <div className="mt-1 font-display text-[40px] font-bold leading-none">{value}</div>
+      <div className={cx('label-caps text-[11px]', accent ? 'text-neon' : 'text-muted')}>{label}</div>
+      <div className="mt-1 font-display text-[40px] font-semibold leading-none">{value}</div>
       {sub && <div className={cx('mt-1 text-xs', accent ? 'text-white/60' : 'text-muted')}>{sub}</div>}
     </Card>
   )
@@ -295,7 +296,7 @@ function SquadScreen() {
             const g = groupOf(p.birth_year, groups)
             return (
               <button key={p.id} onClick={() => setOpen(p.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-paper">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-bold uppercase text-lime">{p.first_name[0]}{p.last_name[0]}</span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-semibold text-neon">{p.first_name[0]}{p.last_name[0]}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{name(p)}</span>
                   <span className="flex items-center gap-1.5 text-sm text-muted">
@@ -360,7 +361,7 @@ function PlayerForm({ player, onClose }: { player: SquadPlayer | null; onClose: 
           <div className="flex flex-wrap gap-1.5">
             {POSITIONS.map(p => (
               <button key={p} type="button" onClick={() => togglePos(p)} aria-pressed={pos.includes(p)}
-                className={cx('h-8 min-w-11 rounded-md border px-2 text-sm font-semibold', pos.includes(p) ? 'border-ink bg-ink text-lime' : 'border-line-2 bg-card text-muted hover:text-text')}>{p}</button>
+                className={cx('h-8 min-w-11 rounded-md border px-2 text-sm font-semibold', pos.includes(p) ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{p}</button>
             ))}
           </div>
         </div>
@@ -369,7 +370,7 @@ function PlayerForm({ player, onClose }: { player: SquadPlayer | null; onClose: 
           <div className="flex gap-1.5">
             {(['left', 'right', 'both'] as const).map(o => (
               <button key={o} type="button" onClick={() => set('preferred_foot', f.preferred_foot === o ? '' : o)} aria-pressed={f.preferred_foot === o}
-                className={cx('h-9 flex-1 rounded-md border text-sm font-semibold', f.preferred_foot === o ? 'border-ink bg-ink text-lime' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(o)}</button>
+                className={cx('h-9 flex-1 rounded-md border text-sm font-semibold', f.preferred_foot === o ? 'border-ink bg-ink text-neon' : 'border-line-2 bg-card text-muted hover:text-text')}>{t(o)}</button>
             ))}
           </div>
         </div>
@@ -381,7 +382,7 @@ function PlayerForm({ player, onClose }: { player: SquadPlayer | null; onClose: 
             <Field label={t('guardianPhone')}><Input type="tel" inputMode="tel" value={f.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} placeholder="07…" /></Field>
           </div>
           <label className="mt-3 flex items-start gap-2 text-sm">
-            <input type="checkbox" checked={f.guardian_consent} onChange={e => set('guardian_consent', e.target.checked)} className="mt-0.5 h-4 w-4 accent-red" />
+            <input type="checkbox" checked={f.guardian_consent} onChange={e => set('guardian_consent', e.target.checked)} className="mt-0.5 h-4 w-4 accent-royal" />
             {t('guardianConsent')}
           </label>
         </div>
@@ -438,7 +439,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
               {j.absence_reason && <div className="mt-1 text-sm text-muted">{t('reason')}: {j.absence_reason}</div>}
               {j.message && (
                 <div className="mt-2 rounded-lg border border-line bg-paper px-3 py-2 text-sm">
-                  <div className="label-caps mb-0.5 text-[10px] text-red">{t('messageFromStaff')}</div>
+                  <div className="label-caps mb-0.5 text-[10px] text-royal">{t('messageFromStaff')}</div>
                   {j.message}
                 </div>
               )}
@@ -455,7 +456,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
         <dt className="text-muted">{t('birthDate')}</dt><dd>{player.birth_date ? fmtDate(player.birth_date) : '—'}</dd>
         <dt className="text-muted">{t('foot')}</dt><dd>{player.preferred_foot ? t(player.preferred_foot) : '—'}</dd>
         <dt className="text-muted">{t('guardianName')}</dt><dd>{player.guardian_name || '—'}</dd>
-        <dt className="text-muted">{t('guardianPhone')}</dt><dd>{player.guardian_phone ? <a className="text-red" href={`tel:${player.guardian_phone}`}>{player.guardian_phone}</a> : '—'}</dd>
+        <dt className="text-muted">{t('guardianPhone')}</dt><dd>{player.guardian_phone ? <a className="text-royal" href={`tel:${player.guardian_phone}`}>{player.guardian_phone}</a> : '—'}</dd>
         <dt className="text-muted">{t('notes')}</dt><dd className="whitespace-pre-wrap">{player.coach_notes || '—'}</dd>
       </dl>
 
@@ -467,7 +468,11 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
 function Certificate({ player, item, onClose }: { player: SquadPlayer; item: JourneyItem; onClose: () => void }) {
   const { t } = useT()
   const { academy } = useCoach()
-  const text = `${name(player)} (${academy?.name ?? ''}) has been selected at the ${STAGE_T[item.stage][0]}: ${item.camp}. Tony Football Excellence Programme × SL Benfica.`
+  const { project } = useAuth()
+  const partner = usePartner('certificates')
+  const tagline = useTagline()
+  const programme = project?.name ?? 'Tony'
+  const text = `${name(player)} (${academy?.name ?? ''}) has been selected at the ${STAGE_T[item.stage][0]}: ${item.camp}. ${programme}${partner ? ' × ' + partner.name : ''}.`
   const canShare = typeof navigator !== 'undefined' && !!navigator.share
   return (
     <Modal open onClose={onClose} title={t('certificate')} wide
@@ -475,25 +480,25 @@ function Certificate({ player, item, onClose }: { player: SquadPlayer; item: Jou
         {canShare && <Button onClick={() => navigator.share({ title: t('certificate'), text }).catch(() => {})}><Share2 size={15} />{t('share')}</Button>}
         <Button variant="primary" onClick={printArea}><Printer size={15} />{t('print')}</Button>
       </>}>
-      <div className="print-area overflow-hidden rounded-xl bg-ink p-6 text-white sm:p-9">
-        <div className="flex items-center justify-between">
+      <div className="print-area relative overflow-hidden rounded-2xl bg-ink p-6 text-white sm:p-9">
+        <Bolts className="absolute inset-0 h-full w-full" width={800} height={600} stroke="rgba(255,255,255,.1)" />
+        <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/brand/tony.png" alt="Tony" className="h-5" />
-            <span className="h-6 w-px bg-white/20" />
-            <img src="/brand/benfica.png" alt="SL Benfica" className="h-9 w-9" />
+            <Logo variant="wordmark" color="neon" className="h-5" />
+            {partner?.logo && <><span className="h-6 w-px bg-white/20" /><img src={partner.logo} alt={partner.name} className="h-9 w-9" /></>}
           </div>
-          <div className="label-caps text-[11px] text-white/50">TFEP Rwanda</div>
+          <div className="label-caps text-[11px] text-white/50">{programme}</div>
         </div>
-        <div className="mt-10 label-caps text-lime">Certificate of selection</div>
-        <div className="mt-2 font-display text-[44px] font-bold uppercase leading-[.95] sm:text-[56px]">{name(player)}</div>
-        <div className="mt-3 text-[15px] text-white/75">{academy?.name}{academy?.district ? ` · ${academy.district.name}` : ''}</div>
-        <div className="mt-8 border-t border-white/15 pt-5 text-[15px] leading-relaxed text-white/85">
-          has been <b className="text-lime">selected</b> at the {STAGE_T[item.stage][0].toLowerCase()}
+        <div className="relative mt-10 label-caps text-neon">Certificate of selection</div>
+        <div className="relative mt-2 font-display text-[44px] font-semibold leading-[.95] sm:text-[56px]">{name(player)}</div>
+        <div className="relative mt-3 text-[15px] text-white/75">{academy?.name}{academy?.district ? ` · ${academy.district.name}` : ''}</div>
+        <div className="relative mt-8 border-t border-white/15 pt-5 text-[15px] leading-relaxed text-white/85">
+          has been <b className="text-neon">selected</b> at the {STAGE_T[item.stage][0].toLowerCase()}
           <div className="font-semibold text-white">{item.camp}{item.starts_on ? ` · ${fmtRange(item.starts_on, item.ends_on)}` : ''}</div>
         </div>
-        <div className="mt-8 flex items-end justify-between gap-4 text-xs text-white/50">
-          <span>Tony Football Excellence Programme<br />in partnership with SL Benfica</span>
-          <span className="h-1.5 w-16 rounded-full bg-red" />
+        <div className="relative mt-8 flex items-end justify-between gap-4 text-xs text-white/50">
+          <span>{tagline}{partner ? <><br />in partnership with {partner.name}</> : <><br />{programme}</>}</span>
+          <Logo variant="emblem" color="neon" className="h-10 opacity-90" />
         </div>
       </div>
     </Modal>
@@ -557,8 +562,8 @@ function CampCard({ camp, onSubmit }: { camp: OpenCamp; onSubmit: () => void }) 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            {camp.own_district && <div className="mb-1"><Badge tone="lime">{t('yourDistrict')}</Badge></div>}
-            <div className="font-display text-xl font-bold uppercase leading-tight">{camp.name}</div>
+            {camp.own_district && <div className="mb-1"><Badge tone="neon">{t('yourDistrict')}</Badge></div>}
+            <div className="font-display text-xl font-semibold leading-tight">{camp.name}</div>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted">
               <span className="flex items-center gap-1"><CalendarDays size={14} />{camp.starts_on ? fmtRange(camp.starts_on, camp.ends_on) : t('dateTbc')}</span>
               {(camp.venue || camp.district) && <span className="flex items-center gap-1"><MapPin size={14} />{camp.venue || camp.district}</span>}
@@ -577,7 +582,7 @@ function CampCard({ camp, onSubmit }: { camp: OpenCamp; onSubmit: () => void }) 
               <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
                 <span className="truncate font-medium">{name(player)} <span className="text-muted">· {player.birth_year}</span></span>
                 {item.status === 'submitted' && !preview
-                  ? <button disabled={busy === item.id} onClick={() => withdraw(item.id)} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold text-muted hover:bg-red-soft hover:text-red disabled:opacity-50"><Undo2 size={12} />{t('withdraw')}</button>
+                  ? <button disabled={busy === item.id} onClick={() => withdraw(item.id)} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold text-muted hover:bg-danger-soft hover:text-danger disabled:opacity-50"><Undo2 size={12} />{t('withdraw')}</button>
                   : <Badge>{pick(STATUS_T[item.status])}</Badge>}
               </li>
             ))}
@@ -613,14 +618,14 @@ function SubmitModal({ camp, onClose }: { camp: OpenCamp; onClose: () => void })
       {err && <div className="mb-3"><Alert>{err}</Alert></div>}
       <div className="mb-2 flex items-center justify-between">
         <div className="text-[13px] font-semibold">{t('chooseEligible')}{camp.age_groups?.length ? ` (${camp.age_groups.join(', ')})` : ''}</div>
-        {free.length > 1 && <button className="text-xs font-semibold text-red" onClick={() => setPicked(picked.size === free.length ? new Set() : new Set(free.map(o => o.player.id)))}>{picked.size === free.length ? t('clear') : t('selectAll')}</button>}
+        {free.length > 1 && <button className="text-xs font-semibold text-royal" onClick={() => setPicked(picked.size === free.length ? new Set() : new Set(free.map(o => o.player.id)))}>{picked.size === free.length ? t('clear') : t('selectAll')}</button>}
       </div>
       {options.length === 0 ? <p className="rounded-lg bg-paper px-3 py-4 text-sm text-muted">{t('noneEligible')}</p> : (
         <ul className="divide-y divide-line rounded-lg border border-line">
           {options.map(({ player, group, already }) => (
             <li key={player.id}>
               <label className={cx('flex items-center gap-3 px-3 py-2.5', already ? 'opacity-50' : 'cursor-pointer hover:bg-paper')}>
-                <input type="checkbox" disabled={already} checked={already || picked.has(player.id)} onChange={() => toggle(player.id)} className="h-4 w-4 accent-red" />
+                <input type="checkbox" disabled={already} checked={already || picked.has(player.id)} onChange={() => toggle(player.id)} className="h-4 w-4 accent-royal" />
                 <span className="min-w-0 flex-1 truncate font-medium">{name(player)}</span>
                 <span className="text-sm text-muted">{player.birth_year}{group ? ` · ${group}` : ''}</span>
                 {already && <Badge>{t('alreadyIn')}</Badge>}
@@ -653,17 +658,17 @@ function InviteCard({ player, item }: { player: SquadPlayer; item: JourneyItem }
   }
 
   return (
-    <Card className={cx('p-4', item.status === 'invited' && 'border-red')}>
+    <Card className={cx('p-4', item.status === 'invited' && 'border-royal')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="label-caps text-[11px] text-red">{pick(STAGE_T[item.stage])}</div>
+          <div className="label-caps text-[11px] text-royal">{pick(STAGE_T[item.stage])}</div>
           <div className="text-lg font-semibold leading-tight">{name(player)}</div>
           <div className="mt-0.5 text-sm text-muted">{item.camp}</div>
           <div className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
             <span className="flex items-center gap-1"><CalendarDays size={14} />{item.starts_on ? fmtRange(item.starts_on, item.ends_on) : t('dateTbc')}</span>
             {item.venue && <span className="flex items-center gap-1"><MapPin size={14} />{item.venue}</span>}
           </div>
-          {item.rsvp_deadline && item.status === 'invited' && <div className="mt-1 text-sm font-semibold text-red">{t('replyBy')} {fmtDate(item.rsvp_deadline)}</div>}
+          {item.rsvp_deadline && item.status === 'invited' && <div className="mt-1 text-sm font-semibold text-royal">{t('replyBy')} {fmtDate(item.rsvp_deadline)}</div>}
         </div>
         {(item.status !== 'invited' || preview) && <JourneyBadge item={item} />}
       </div>
@@ -671,7 +676,7 @@ function InviteCard({ player, item }: { player: SquadPlayer; item: JourneyItem }
       {preview ? null : !editing ? (
         <div className="mt-3 flex items-center justify-between gap-2 text-sm">
           <span className="text-muted">{item.status === 'declined' && item.absence_reason ? `${t('reason')}: ${item.absence_reason}` : ''}</span>
-          <button onClick={() => setEditing(true)} className="font-semibold text-red">{t('change')}</button>
+          <button onClick={() => setEditing(true)} className="font-semibold text-royal">{t('change')}</button>
         </div>
       ) : mode === 'decline' ? (
         <div className="mt-3 space-y-2">
@@ -721,7 +726,7 @@ function NotifRow({ n, fresh }: { n: ReturnType<typeof useCoach>['notifs'][numbe
   const isNew = fresh ?? !n.read_at
   return (
     <button onClick={go} className={cx('flex w-full gap-3 px-4 py-3 text-left', n.link ? 'hover:bg-paper' : 'cursor-default')}>
-      <span className={cx('mt-1.5 h-2 w-2 shrink-0 rounded-full', isNew ? 'bg-red' : 'bg-transparent')} />
+      <span className={cx('mt-1.5 h-2 w-2 shrink-0 rounded-full', isNew ? 'bg-royal' : 'bg-transparent')} />
       <span className="min-w-0 flex-1">
         <span className="block font-semibold">{n.title}</span>
         {n.body && <span className="block whitespace-pre-line text-sm text-muted">{n.body}</span>}

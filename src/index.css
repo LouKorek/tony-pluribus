@@ -1,32 +1,47 @@
 @import "tailwindcss";
 
+/* Rajdhani — the Tony brand typeface (Brandbook 2024, Typography 01). Self-hosted so it loads without Google and offline. */
+@font-face { font-family: "Rajdhani"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/rajdhani-regular.woff2) format("woff2"); }
+@font-face { font-family: "Rajdhani"; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/rajdhani-medium.woff2) format("woff2"); }
+@font-face { font-family: "Rajdhani"; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/rajdhani-semibold.woff2) format("woff2"); }
+@font-face { font-family: "Rajdhani"; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/rajdhani-bold.woff2) format("woff2"); }
+
 @theme {
-  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+  --font-sans: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
 
-  --color-ink: #0e1311;
-  --color-ink-2: #171d1a;
-  --color-ink-3: #232a26;
-  --color-paper: #f5f4ef;
+  /* Tony core palette (Brandbook 2024, Color Palette 01) */
+  --color-ink: #000000;        /* Black */
+  --color-ink-2: #121212;
+  --color-ink-3: #1e1e1e;
+  --color-neon: #e1ff00;       /* Neon */
+  --color-neon-soft: #f6ffb5;
+  --color-royal: #004179;      /* Royal */
+  --color-royal-dark: #003059;
+  --color-royal-soft: #e4edf6;
+  --color-grass: #006144;      /* Grass */
+  --color-grass-soft: #dff0e8;
+  --color-platinum: #c7c7c7;   /* Platinum */
+  --color-platinum-2: #a8a8a8;
+
+  /* surfaces and text */
+  --color-paper: #f2f3f1;
   --color-card: #ffffff;
-  --color-line: #e4e1d8;
-  --color-line-2: #d3cfc3;
-  --color-text: #151917;
-  --color-muted: #646a66;
-  --color-faint: #959a95;
+  --color-line: #e3e5e2;
+  --color-line-2: #c7c7c7;
+  --color-text: #0a0b0a;
+  --color-muted: #5d625f;
+  --color-faint: #a8a8a8;
 
-  --color-lime: #e0fd02;
-  --color-lime-soft: #f6ffc7;
-  --color-red: #d7262e;
-  --color-red-dark: #b01c23;
-  --color-red-soft: #fdecec;
-
-  --color-good: #157a4a;
-  --color-good-soft: #e3f4ea;
-  --color-warn: #a76a00;
+  /* signal colours: meaning only, never brand */
+  --color-good: #006144;
+  --color-good-soft: #dff0e8;
+  --color-warn: #a36a00;
   --color-warn-soft: #fdf3dc;
-  --color-info: #1f5fa8;
-  --color-info-soft: #e6effa;
+  --color-info: #004179;
+  --color-info-soft: #e4edf6;
+  --color-danger: #c43d3d;
+  --color-danger-soft: #fbe9e9;
 }
 
 html, body, #root { height: 100%; }
@@ -35,20 +50,24 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "tnum" 1;
+  font-size: 16.5px;
+  letter-spacing: -0.005em;
 }
+
+/* Rajdhani headlines: Medium/SemiBold, tight letter-spacing, 100% line height (Brandbook, Font Hierarchy 03) */
+.font-display { letter-spacing: -0.03em; }
 
 .label-caps {
   font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .12em;
   font-weight: 600;
   font-size: 12px;
 }
 
-::selection { background: var(--color-lime); color: var(--color-ink); }
+::selection { background: var(--color-neon); color: var(--color-ink); }
 
-:focus-visible { outline: 2px solid var(--color-red); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--color-royal); outline-offset: 2px; }
 
 .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
 .scroll-thin::-webkit-scrollbar-thumb { background: rgba(127,127,127,.35); border-radius: 3px; }

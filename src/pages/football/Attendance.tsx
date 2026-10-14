@@ -6,7 +6,7 @@ import { CODE_LABEL, TeamBar, pname, useRoster, useTeamSeason, useTeams, type Ma
 import { Alert, Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Spinner, cx } from '../../components/ui'
 
 const CODES = ['A', 'JA', 'I', 'SI', 'S', 'M', 'SM', 'TM', 'PT', '*']
-const codeTone = (c: string) => ['A'].includes(c) ? 'bg-red text-white' : ['I', 'SI'].includes(c) ? 'bg-warn text-white' : ['JA', 'S'].includes(c) ? 'bg-black/15 text-text' : ['M', 'SM'].includes(c) ? 'bg-ink text-lime' : 'bg-info-soft text-info'
+const codeTone = (c: string) => ['A'].includes(c) ? 'bg-danger text-white' : ['I', 'SI'].includes(c) ? 'bg-warn text-white' : ['JA', 'S'].includes(c) ? 'bg-black/15 text-text' : ['M', 'SM'].includes(c) ? 'bg-ink text-neon' : 'bg-info-soft text-info'
 const monthLabel = (m: string) => new Date(m + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 // month arithmetic on the calendar only: local time zones (Kigali, Lisbon, Israel) must not shift the month
 const shiftMonth = (m: string, d: number) => { const [y, mo] = m.split('-').map(Number); const t = y * 12 + (mo - 1) + d; return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}` }
@@ -95,11 +95,11 @@ export default function AttendancePage() {
               <table className="text-xs">
                 <thead><tr className="border-b border-line bg-paper/70">
                   <th className="sticky left-0 z-10 min-w-[210px] bg-paper px-3 py-2 text-left font-semibold text-muted">
-                    {canEdit && <input type="checkbox" className="mr-2 h-3.5 w-3.5 align-middle accent-red" checked={rows.size === players.length && players.length > 0} onChange={e => setRows(e.target.checked ? new Set(players.map(p => p.player_id)) : new Set())} aria-label="Tick all players" />}
+                    {canEdit && <input type="checkbox" className="mr-2 h-3.5 w-3.5 align-middle accent-royal" checked={rows.size === players.length && players.length > 0} onChange={e => setRows(e.target.checked ? new Set(players.map(p => p.player_id)) : new Set())} aria-label="Tick all players" />}
                     Player
                   </th>
                   {days.map(d => (
-                    <th key={d.id} className={cx('min-w-[38px] px-1 py-1.5 text-center font-semibold', d.kind === 'match' ? 'bg-ink text-lime' : 'text-muted', canEdit && 'cursor-pointer hover:bg-lime hover:text-ink')}
+                    <th key={d.id} className={cx('min-w-[38px] px-1 py-1.5 text-center font-semibold', d.kind === 'match' ? 'bg-ink text-neon' : 'text-muted', canEdit && 'cursor-pointer hover:bg-neon hover:text-ink')}
                       title={`${new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })} · ${d.kind}${d.minutes ? ` · ${d.minutes}′` : ''}${canEdit ? ' · click to mark ' + (rows.size ? 'the ticked players' : 'everyone') : ''}`}
                       onClick={e => openCell(e, d, rows.size ? [...rows] : players.map(p => p.player_id))}>
                       <div>{+d.day.slice(8)}</div><div className="text-[9px] font-normal opacity-70">{d.kind === 'match' ? 'M' : d.kind === 'training' ? (d.seq > 1 ? '2' : '') : d.kind.slice(0, 2).toUpperCase()}</div>
@@ -111,9 +111,9 @@ export default function AttendancePage() {
                 <tbody>{players.map(r => {
                   const t = totals(r.player_id)
                   return (
-                    <tr key={r.player_id} className={cx('border-b border-line last:border-0', rows.has(r.player_id) && 'bg-lime-soft')}>
+                    <tr key={r.player_id} className={cx('border-b border-line last:border-0', rows.has(r.player_id) && 'bg-neon-soft')}>
                       <td className="sticky left-0 z-10 whitespace-nowrap bg-card px-3 py-1.5 font-semibold">
-                        {canEdit && <input type="checkbox" className="mr-2 h-3.5 w-3.5 align-middle accent-red" checked={rows.has(r.player_id)} onChange={e => setRows(s => { const n = new Set(s); if (e.target.checked) n.add(r.player_id); else n.delete(r.player_id); return n })} />}
+                        {canEdit && <input type="checkbox" className="mr-2 h-3.5 w-3.5 align-middle accent-royal" checked={rows.has(r.player_id)} onChange={e => setRows(s => { const n = new Set(s); if (e.target.checked) n.add(r.player_id); else n.delete(r.player_id); return n })} />}
                         {pname(r.player)} <span className="font-normal text-faint">{r.position ?? ''}</span>
                       </td>
                       {days.map(d => {

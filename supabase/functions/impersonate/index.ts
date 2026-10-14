@@ -1,4 +1,4 @@
-// Pluribus · "View as" for the owner.
+// Tony Next · "View as" for the owner.
 // The owner asks to see the system as another user. The function checks that the caller is the active owner,
 // writes the request to the audit log and returns a one-time sign-in token for the target user.
 // No password is involved and nothing is e-mailed.

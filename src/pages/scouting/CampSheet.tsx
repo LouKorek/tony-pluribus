@@ -79,7 +79,7 @@ export default function CampSheet() {
     }
   }, [rows])
 
-  if (camp === null && rows) return <Empty icon={<Users2 size={20} />} title="Camp not found"><Link to="/scouting/camps" className="font-semibold text-red">Back to camps</Link></Empty>
+  if (camp === null && rows) return <Empty icon={<Users2 size={20} />} title="Camp not found"><Link to="/scouting/camps" className="font-semibold text-royal">Back to camps</Link></Empty>
   if (!camp || !rows) return <Spinner />
 
   const where = camp.stage === 'district' ? `${ref.district(camp.district_id)?.name} · ${ref.regionOf(camp.district_id)?.name}` : camp.stage === 'province_final' ? ref.regions.find(r => r.id === camp.region_id)?.name : 'Rwanda'
@@ -95,7 +95,7 @@ export default function CampSheet() {
             <Badge tone={statusTone(camp.status)}>{STATUS_LABEL[camp.status]}</Badge>
             {camp.submissions_open && <Badge tone="info">Open to coaches</Badge>}
           </div>
-          <h1 className="mt-2 font-display text-3xl font-bold uppercase leading-none tracking-tight sm:text-[34px]">{camp.name}</h1>
+          <h1 className="mt-2 font-display text-3xl font-semibold leading-none tracking-tight sm:text-[34px]">{camp.name}</h1>
           <p className="mt-2 text-[15px] text-muted">{fmtRange(camp.starts_on, camp.ends_on)} · {where}{camp.venue ? ` · ${camp.venue}` : ''}{camp.staff ? ` · Staff: ${camp.staff}` : ''}</p>
         </div>
         {canEdit && (
@@ -111,8 +111,8 @@ export default function CampSheet() {
       <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-6" data-tour="camp-stats">
         {[['Players', st.total], ['Attended', st.attended], ['Absent', st.absent], ['Graded', st.graded], ['Selected', st.selected], ['See again', st.see_again]].map(([l, v], i) => (
           <Card key={l as string} className={cx('px-3 py-2.5', i === 4 && 'border-ink bg-ink text-white')}>
-            <div className={cx('text-[11px] font-semibold uppercase tracking-wide', i === 4 ? 'text-lime' : 'text-muted')}>{l}</div>
-            <div className="font-display text-2xl font-bold">{v}</div>
+            <div className={cx('text-[11px] font-semibold uppercase tracking-wide', i === 4 ? 'text-neon' : 'text-muted')}>{l}</div>
+            <div className="font-display text-2xl font-semibold">{v}</div>
           </Card>
         ))}
       </div>
@@ -139,11 +139,11 @@ export default function CampSheet() {
                 return (
                   <tr key={r.id} className={cx('border-b border-line last:border-0', r.decision === 'selected' ? 'bg-good-soft/50' : r.decision === 'see_again' ? 'bg-warn-soft/40' : r.status === 'absent' ? 'bg-black/[.03] text-muted' : '')}>
                     <td className="px-3 py-1.5">
-                      <button onClick={() => setOpenPlayer(r.player_id)} className="whitespace-nowrap text-left font-semibold hover:text-red">{fullName(r.player)}</button>
+                      <button onClick={() => setOpenPlayer(r.player_id)} className="whitespace-nowrap text-left font-semibold hover:text-royal">{fullName(r.player)}</button>
                       {r.player.age_status === 'doubtful' && <span className="ml-1.5"><Badge tone="warn">Age?</Badge></span>}
                       {r.submission_note && <div className="max-w-[220px] truncate text-xs text-muted" title={r.submission_note}>Coach: {r.submission_note}</div>}
                     </td>
-                    <td className={cx('px-3 py-1.5', !!outOfAge && 'font-semibold text-red')} title={outOfAge ? 'Born outside the age groups of this season' : undefined}>{r.player.birth_year ?? '—'}</td>
+                    <td className={cx('px-3 py-1.5', !!outOfAge && 'font-semibold text-royal')} title={outOfAge ? 'Born outside the age groups of this season' : undefined}>{r.player.birth_year ?? '—'}</td>
                     <td className="max-w-[180px] truncate px-3 py-1.5 text-muted" title={ref.academy(r.player.academy_id)?.name}>{ref.academy(r.player.academy_id)?.name ?? '—'}</td>
                     <td className="px-3 py-1.5">
                       <select disabled={!canEdit} value={r.age_group ?? ''} onChange={e => patch(r.id, { age_group: e.target.value || null })} className="h-8 rounded-md border border-line-2 bg-card px-1.5 text-sm">
@@ -162,7 +162,7 @@ export default function CampSheet() {
                       <div className="flex gap-0.5">
                         {OBS.map(o => (
                           <button key={o} disabled={!canEdit} onClick={() => patch(r.id, { obs: r.obs === o ? null : o, ...(r.status === 'submitted' || r.status === 'invited' || r.status === 'confirmed' ? { status: 'attended' } : {}) })}
-                            className={cx('h-8 w-8 rounded-md border text-xs font-bold', r.obs === o ? 'border-ink bg-ink text-lime' : 'border-line-2 text-muted hover:border-text/40')}>{o}</button>
+                            className={cx('h-8 w-8 rounded-md border text-xs font-bold', r.obs === o ? 'border-ink bg-ink text-neon' : 'border-line-2 text-muted hover:border-text/40')}>{o}</button>
                         ))}
                       </div>
                     </td>
@@ -176,8 +176,8 @@ export default function CampSheet() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-3 py-1.5"><input type="checkbox" disabled={!canEdit} checked={r.is_goalkeeper} onChange={e => patch(r.id, { is_goalkeeper: e.target.checked })} className="h-4 w-4 accent-red" /></td>
-                    <td className="px-3 py-1.5"><input type="checkbox" disabled={!canEdit} checked={r.grade_a} onChange={e => patch(r.id, { grade_a: e.target.checked })} className="h-4 w-4 accent-red" title="Grade A" /></td>
+                    <td className="px-3 py-1.5"><input type="checkbox" disabled={!canEdit} checked={r.is_goalkeeper} onChange={e => patch(r.id, { is_goalkeeper: e.target.checked })} className="h-4 w-4 accent-royal" /></td>
+                    <td className="px-3 py-1.5"><input type="checkbox" disabled={!canEdit} checked={r.grade_a} onChange={e => patch(r.id, { grade_a: e.target.checked })} className="h-4 w-4 accent-royal" title="Grade A" /></td>
                     <TextCell v={r.position} w="w-28" placeholder="CB / CM (L)" disabled={!canEdit} onSave={v => patch(r.id, { position: v })} list="positions" />
                     {camp.stage !== 'district' && <TextCell v={r.team} w="w-16" placeholder="1ST" disabled={!canEdit} onSave={v => patch(r.id, { team: v })} />}
                     <TextCell v={r.status === 'absent' || r.status === 'declined' ? r.absence_reason : r.comment} w="w-48" placeholder={r.status === 'absent' || r.status === 'declined' ? 'Reason' : 'Comment'} disabled={!canEdit}
@@ -185,8 +185,8 @@ export default function CampSheet() {
                     <TextCell v={r.coach_message} w="w-48" placeholder="Shown to the coach on publish" disabled={!canEdit} onSave={v => patch(r.id, { coach_message: v })} />
                     <td className="px-2 py-1.5">
                       {canEdit && (confirmDelete === r.id
-                        ? <button onClick={() => remove(r.id)} className="rounded-md bg-red px-2 py-1 text-xs font-semibold text-white">Remove?</button>
-                        : <button onClick={() => setConfirmDelete(r.id)} className="rounded-md p-1.5 text-faint hover:bg-red-soft hover:text-red" title="Remove from camp"><Trash2 size={14} /></button>)}
+                        ? <button onClick={() => remove(r.id)} className="rounded-md bg-danger px-2 py-1 text-xs font-semibold text-white">Remove?</button>
+                        : <button onClick={() => setConfirmDelete(r.id)} className="rounded-md p-1.5 text-faint hover:bg-danger-soft hover:text-danger" title="Remove from camp"><Trash2 size={14} /></button>)}
                     </td>
                   </tr>
                 )
@@ -397,7 +397,7 @@ function PromoteModal({ camp, rows, onClose, onDone }: { camp: Camp; rows: Row[]
             <div className="max-h-80 divide-y divide-line overflow-y-auto rounded-lg border border-line">
               {selected.map(r => (
                 <label key={r.id} className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-paper/60">
-                  <input type="checkbox" className="h-4 w-4 accent-red" checked={pick.has(r.player_id)} onChange={e => { const s = new Set(pick); if (e.target.checked) s.add(r.player_id); else s.delete(r.player_id); setPick(s) }} />
+                  <input type="checkbox" className="h-4 w-4 accent-royal" checked={pick.has(r.player_id)} onChange={e => { const s = new Set(pick); if (e.target.checked) s.add(r.player_id); else s.delete(r.player_id); setPick(s) }} />
                   <span className="flex-1"><b>{fullName(r.player)}</b> <span className="text-muted">· {r.player.birth_year} · {r.age_group} · {ref.academy(r.player.academy_id)?.name ?? ''}</span></span>
                   <Badge tone={r.decision === 'selected' ? 'good' : 'warn'}>{DECISION_LABEL[r.decision!]}</Badge>
                 </label>

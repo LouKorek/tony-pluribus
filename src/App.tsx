@@ -9,7 +9,7 @@ import { LoginPage, OwnerSetupPage, PendingPage, SignupPage } from './pages/auth
 function page<T extends ComponentType<any>>(load: () => Promise<{ default: T }>) {
   return lazy(() => load().catch(err => {
     let reloaded = false
-    try { reloaded = sessionStorage.getItem('pluribus.reloaded') === '1'; sessionStorage.setItem('pluribus.reloaded', '1') } catch { /* storage blocked */ }
+    try { reloaded = sessionStorage.getItem('tonynext.reloaded') === '1'; sessionStorage.setItem('tonynext.reloaded', '1') } catch { /* storage blocked */ }
     if (!reloaded) { window.location.reload(); return new Promise<{ default: T }>(() => {}) }
     throw err
   }))

@@ -5,8 +5,8 @@ export const COACH_TOURS: TourMap = {
   'coach-home': [
     {
       title: ['Welcome to the coach portal', "Murakaza neza ku rubuga rw'umutoza"],
-      body: ['This is where your academy works with TFEP and SL Benfica. Every screen has a short tour. You can skip it at any time.',
-             "Aha ni ho ishuri ryawe rikorana na TFEP na SL Benfica. Buri paji ifite ubusobanuro bugufi. Ushobora kubusimbuka igihe cyose."],
+      body: ['This is where your academy works with Tony. Every screen has a short tour. You can skip it at any time.',
+             "Aha ni ho ishuri ryawe rikorana na Tony. Buri paji ifite ubusobanuro bugufi. Ushobora kubusimbuka igihe cyose."],
     },
     {
       target: 'lang', title: ['Language', 'Ururimi'],
@@ -58,8 +58,8 @@ export const COACH_TOURS: TourMap = {
   'coach-updates': [
     {
       target: 'updates', title: ['Updates', 'Amakuru'],
-      body: ['Invitations and results from TFEP staff arrive here. Tap one to open it.',
-             "Ubutumire n'ibisubizo bivuye ku bakozi ba TFEP biza hano. Kanda kuri kimwe ukifungure."],
+      body: ['Invitations and results from Tony staff arrive here. Tap one to open it.',
+             "Ubutumire n'ibisubizo bivuye ku bakozi ba Tony biza hano. Kanda kuri kimwe ukifungure."],
     },
   ],
 }

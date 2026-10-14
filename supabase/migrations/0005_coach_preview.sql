@@ -11,7 +11,7 @@ create or replace function public.coach_ctx(p_academy uuid default null, out v_a
 language plpgsql stable security definer set search_path = public as $$
 begin
   if p_academy is not null then
-    if not public.is_staff() then raise exception 'Only TFEP staff can preview an academy'; end if;
+    if not public.is_staff() then raise exception 'Only Tony staff can preview an academy'; end if;
     select a.id, a.project_id into v_academy, v_project from public.academies a where a.id = p_academy;
     if v_academy is null then raise exception 'Academy not found'; end if;
     return;

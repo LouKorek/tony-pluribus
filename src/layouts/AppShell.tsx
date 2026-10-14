@@ -9,15 +9,10 @@ import { TourProvider, useTour } from '../lib/tour'
 import { STAFF_TOURS, staffTourKey } from '../lib/tours'
 import { supabase } from '../lib/supabase'
 import { InstallButton } from '../lib/install'
+import { APP_NAME, Logo } from '../lib/brand'
 
 export function Brand({ compact }: { compact?: boolean }) {
-  return (
-    <div className="flex items-center gap-3">
-      <img src="/brand/tony.png" alt="Tony" className={compact ? 'h-4' : 'h-5'} />
-      <span className="h-6 w-px bg-white/15" />
-      <img src="/brand/benfica.png" alt="SL Benfica" className={compact ? 'h-7 w-7' : 'h-8 w-8'} />
-    </div>
-  )
+  return <Logo variant="wordmark" color="neon" className={compact ? 'h-[18px]' : 'h-[22px]'} />
 }
 
 /** Project and the scouting season the screens show. A custom list, readable on the dark sidebar. */
@@ -36,10 +31,10 @@ function SeasonPicker() {
   return (
     <div ref={box} className="relative mx-3 mb-3">
       <button type="button" data-tour="project-box" onClick={() => setOpen(o => !o)} aria-haspopup="listbox" aria-expanded={open} title="Season shown on the scouting screens"
-        className={cx('flex w-full items-center justify-between rounded-lg border bg-ink-2 px-3 py-2.5 text-left', history ? 'border-lime/60' : open ? 'border-white/30' : 'border-white/10 hover:border-white/25')}>
+        className={cx('flex w-full items-center justify-between rounded-lg border bg-ink-2 px-3 py-2.5 text-left', history ? 'border-neon/60' : open ? 'border-white/30' : 'border-white/10 hover:border-white/25')}>
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{project?.name ?? 'Project'}</div>
-          <div className={cx('truncate text-xs', history ? 'text-lime' : 'text-white/50')}>Scouting {viewSeason?.label ?? '—'}{history ? ' · history' : ''}</div>
+          <div className={cx('truncate text-xs', history ? 'text-neon' : 'text-white/50')}>Scouting {viewSeason?.label ?? '—'}{history ? ' · history' : ''}</div>
         </div>
         <ChevronsUpDown size={15} className="shrink-0 text-white/30" />
       </button>
@@ -52,8 +47,8 @@ function SeasonPicker() {
               <button key={s.id} type="button" role="option" aria-selected={on} onClick={() => { setViewSeason(s.id); setOpen(false) }}
                 className={cx('flex w-full items-center gap-2 px-3 py-2 text-left text-sm', on ? 'bg-white/10 font-semibold text-white' : 'text-white/80 hover:bg-white/5 hover:text-white')}>
                 <span className="flex-1">{s.label.replace('-20', '/')}</span>
-                {s.is_current_scouting && <span className="rounded bg-lime px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">Current</span>}
-                {on ? <Check size={14} className="text-lime" /> : <span className="w-3.5" />}
+                {s.is_current_scouting && <span className="rounded bg-neon px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">Current</span>}
+                {on ? <Check size={14} className="text-neon" /> : <span className="w-3.5" />}
               </button>
             )
           })}
@@ -70,7 +65,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col bg-ink text-white">
       <div className="px-5 pt-6 pb-5">
         <Brand />
-        <div className="mt-1.5 font-display text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">Pluribus</div>
+        <div className="mt-1.5 font-display uppercase text-[11px] font-semibold tracking-[.22em] text-white/40">{APP_NAME}</div>
       </div>
 
       <SeasonPicker />
@@ -81,7 +76,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           if (!items.length) return null
           return (
             <div key={g.label || 'root'} className="mt-3 first:mt-0">
-              {g.label && <div className="px-2 pb-1 pt-2 font-display text-[11px] font-semibold uppercase tracking-[.16em] text-white/35">{g.label}</div>}
+              {g.label && <div className="px-2 pb-1 pt-2 font-display uppercase text-[11px] font-semibold tracking-[.16em] text-white/35">{g.label}</div>}
               {items.map(i => {
                 const live = i.stage <= BUILD_STAGE
                 const Icon = i.icon
@@ -93,7 +88,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={({ isActive }) => cx(
                       'group flex items-center gap-2.5 rounded-md px-2 py-[7px] text-[14px] transition-colors',
-                      isActive ? 'bg-lime font-semibold text-ink' : live ? 'text-white/85 hover:bg-white/6 hover:text-white' : 'text-white/40 hover:bg-white/5 hover:text-white/70',
+                      isActive ? 'bg-neon font-semibold text-ink' : live ? 'text-white/85 hover:bg-white/6 hover:text-white' : 'text-white/40 hover:bg-white/5 hover:text-white/70',
                     )}
                   >
                     {({ isActive }) => (<>
@@ -112,7 +107,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <div className="border-t border-white/10 p-3">
         <InstallButton className="mb-2" />
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red font-display text-sm font-bold uppercase">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-royal font-display text-sm font-semibold ">
             {(() => { const w = (profile?.full_name || profile?.username || '?').trim().split(/\s+/); return w.length > 1 ? w[0][0] + w[w.length - 1][0] : w[0].slice(0, 2) })()}
           </div>
           <div className="min-w-0 flex-1">

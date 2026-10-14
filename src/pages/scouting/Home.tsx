@@ -58,9 +58,9 @@ export default function ScoutingHome() {
                 <div key={s.label} className="grid grid-cols-[minmax(0,190px)_1fr_auto] items-center gap-3">
                   <div className={`truncate text-sm ${s.strong ? 'font-semibold' : 'text-muted'}`}>{s.label}</div>
                   <div className="h-6 rounded bg-black/[.04]">
-                    <div className={`h-6 rounded ${s.strong ? 'bg-red' : 'bg-ink'}`} style={{ width: `${Math.max(s.v ? 1.5 : 0, (s.v / max) * 100)}%`, opacity: s.strong ? 1 : 1 - i * 0.12 }} />
+                    <div className={`h-6 rounded ${s.strong ? 'bg-royal' : 'bg-ink'}`} style={{ width: `${Math.max(s.v ? 1.5 : 0, (s.v / max) * 100)}%`, opacity: s.strong ? 1 : 1 - i * 0.12 }} />
                   </div>
-                  <div className="w-14 text-right font-display text-xl font-bold tabular-nums">{s.v.toLocaleString()}</div>
+                  <div className="w-14 text-right font-display text-xl font-semibold tabular-nums">{s.v.toLocaleString()}</div>
                 </div>
               ))}
               {f.see_again > 0 && <div className="pt-1 text-sm text-muted">{f.see_again} more marked “see again”.</div>}
@@ -84,16 +84,16 @@ export default function ScoutingHome() {
       <div className="mt-6" data-tour="next-camps">
         <div className="mb-2 flex items-center justify-between">
           <div className="label-caps text-muted">Next camps</div>
-          <Link to="/scouting/plan" className="text-sm font-semibold text-red hover:underline">Open the plan</Link>
+          <Link to="/scouting/plan" className="text-sm font-semibold text-royal hover:underline">Open the plan</Link>
         </div>
         {!camps ? <Spinner /> : upcoming.length === 0 ? (
-          <Card className="p-5 text-sm text-muted">No upcoming camps. Plan the season on the <Link to="/scouting/plan" className="font-semibold text-red">Plan</Link> board.</Card>
+          <Card className="p-5 text-sm text-muted">No upcoming camps. Plan the season on the <Link to="/scouting/plan" className="font-semibold text-royal">Plan</Link> board.</Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map(c => (
               <button key={c.id} onClick={() => nav(`/scouting/camps/${c.id}`)} className="rounded-xl border border-line bg-card p-4 text-left hover:border-ink">
                 <div className="flex items-center justify-between"><span className="text-sm font-semibold">{fmtRange(c.starts_on, c.ends_on)}</span><Badge tone={stageTone(c.stage)}>{STAGE_SHORT[c.stage]}</Badge></div>
-                <div className="mt-1 font-display text-lg font-bold uppercase leading-tight">{c.name}</div>
+                <div className="mt-1 font-display text-lg font-semibold leading-tight">{c.name}</div>
                 <div className="mt-1 text-xs text-muted">{c.venue ?? 'Venue to be set'}{c.staff ? ` · ${c.staff}` : ''}</div>
                 <div className="mt-2 text-sm"><b>{stats[c.id]?.total ?? 0}</b> <span className="text-muted">players so far</span></div>
               </button>

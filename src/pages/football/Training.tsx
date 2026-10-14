@@ -40,18 +40,18 @@ export default function TrainingPage() {
         <div data-tour="plans" className="space-y-6">
           {byMonth.map(([m, list]) => (
             <section key={m}>
-              <div className="mb-2 flex items-baseline justify-between"><h2 className="font-display text-xl font-bold uppercase">{m === 'Undated' ? m : monthLabel(m)}</h2><span className="text-sm text-muted">{list.length} session{list.length > 1 ? 's' : ''}</span></div>
+              <div className="mb-2 flex items-baseline justify-between"><h2 className="font-display text-xl font-semibold ">{m === 'Undated' ? m : monthLabel(m)}</h2><span className="text-sm text-muted">{list.length} session{list.length > 1 ? 's' : ''}</span></div>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {list.map(p => (
                   <Card key={p.id} className="flex flex-col p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-display text-2xl font-bold leading-none">{p.number ? `T${p.number}` : 'Session'}</span>
+                      <span className="font-display text-2xl font-semibold leading-none">{p.number ? `T${p.number}` : 'Session'}</span>
                       {p.microcycle && <Badge>{p.microcycle}</Badge>}
                     </div>
                     {p.day && <div className="mt-1 text-xs text-muted">{new Date(p.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>}
                     {p.objective && <div className="mt-2 text-sm">{p.objective}</div>}
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      {p.file_id && files[p.file_id] ? <a href={files[p.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-red hover:underline"><FileText size={13} /> Plan (PDF)</a> : <span />}
+                      {p.file_id && files[p.file_id] ? <a href={files[p.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> Plan (PDF)</a> : <span />}
                       {canEdit && <button onClick={() => setEditing(p)} className="text-xs font-semibold text-muted hover:text-text">Edit</button>}
                     </div>
                   </Card>

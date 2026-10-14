@@ -66,7 +66,7 @@ export default function SquadsPage() {
                     <tr key={r.id} className={cx('border-b border-line last:border-0 hover:bg-paper/60', r.status === 'left' && 'text-muted')}>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <button onClick={() => setOpen(r.player_id)} className="whitespace-nowrap text-left font-semibold hover:text-red">{pname(r.player)}</button>
+                          <button onClick={() => setOpen(r.player_id)} className="whitespace-nowrap text-left font-semibold hover:text-royal">{pname(r.player)}</button>
                           {r.player.photo_file_id && photos[r.player.photo_file_id] && <a href={photos[r.player.photo_file_id].url} target="_blank" rel="noreferrer" title="Photo in SharePoint" className="text-faint hover:text-text"><Camera size={13} /></a>}
                           {r.status !== 'active' && <Badge tone={r.status === 'injured' ? 'bad' : 'neutral'}>{r.status}</Badge>}
                         </div>
@@ -74,13 +74,13 @@ export default function SquadsPage() {
                       <td className="px-3 py-2" title={POS_LABEL[r.position ?? ''] ?? ''}>{r.position ?? '—'}</td>
                       <td className="px-3 py-2">{r.player.birth_year ?? '—'}</td>
                       <td className="px-3 py-2 text-right">
-                        {pct === null ? '—' : <span className="inline-flex items-center gap-2"><span className="h-1.5 w-14 rounded-full bg-black/5"><span className={cx('block h-1.5 rounded-full', pct >= 80 ? 'bg-good' : pct >= 60 ? 'bg-warn' : 'bg-red')} style={{ width: `${pct}%` }} /></span>{pct}%</span>}
+                        {pct === null ? '—' : <span className="inline-flex items-center gap-2"><span className="h-1.5 w-14 rounded-full bg-black/5"><span className={cx('block h-1.5 rounded-full', pct >= 80 ? 'bg-good' : pct >= 60 ? 'bg-warn' : 'bg-royal')} style={{ width: `${pct}%` }} /></span>{pct}%</span>}
                       </td>
                       <td className="px-3 py-2 text-right">{s?.minutes ? s.minutes.toLocaleString() : '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.matches || '—'}</td>
                       <td className="px-3 py-2 text-right font-semibold">{s?.goals || '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.assists || '—'}</td>
-                      <td className="px-3 py-2 text-right">{s && (s.yellow || s.red) ? <span className="inline-flex gap-1">{s.yellow > 0 && <span className="rounded-sm bg-warn px-1 text-[11px] font-bold text-white">{s.yellow}</span>}{s.red > 0 && <span className="rounded-sm bg-red px-1 text-[11px] font-bold text-white">{s.red}</span>}</span> : '—'}</td>
+                      <td className="px-3 py-2 text-right">{s && (s.yellow || s.red) ? <span className="inline-flex gap-1">{s.yellow > 0 && <span className="rounded-sm bg-warn px-1 text-[11px] font-bold text-white">{s.yellow}</span>}{s.red > 0 && <span className="rounded-sm bg-danger px-1 text-[11px] font-bold text-white">{s.red}</span>}</span> : '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.sprint_10m ? Number(s.sprint_10m).toFixed(2) : '—'}</td>
                       <td className="px-3 py-2 text-right">{s?.sprint_20m ? Number(s.sprint_20m).toFixed(2) : '—'}</td>
                       <td className="whitespace-nowrap px-3 py-2 text-right">{s?.weight_kg ? `${Number(s.weight_kg)} kg` : '—'}</td>
@@ -107,7 +107,7 @@ export default function SquadsPage() {
 function TeamFolderLink({ folder }: { folder: string }) {
   const { project } = useAuth()
   return (
-    <a href={encodeURI(`${project?.sharepoint_root}/${folder}`)} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-red hover:underline">
+    <a href={encodeURI(`${project?.sharepoint_root}/${folder}`)} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-royal hover:underline">
       <FileText size={14} /> Team folder in SharePoint
     </a>
   )
@@ -144,7 +144,7 @@ function AddPlayersModal({ teamId, existing, onClose, onDone }: { teamId: string
       <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-line">
         {found.length === 0 ? <p className="px-3 py-6 text-center text-sm text-muted">{q.trim().length < 2 ? 'Type a name to search.' : 'No player found.'}</p> : found.map(p => (
           <label key={p.id} className="flex cursor-pointer items-center gap-3 border-b border-line px-3 py-2 last:border-0 hover:bg-paper">
-            <input type="checkbox" className="h-4 w-4 accent-red" checked={!!picked[p.id]}
+            <input type="checkbox" className="h-4 w-4 accent-royal" checked={!!picked[p.id]}
               onChange={e => setPicked(s => { const c = { ...s }; if (e.target.checked) c[p.id] = { id: p.id, label: pname(p), pos: '' }; else delete c[p.id]; return c })} />
             <span className="flex-1 font-medium">{pname(p)}</span>
             <span className="text-sm text-muted">{p.birth_year ?? '—'}</span>

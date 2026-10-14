@@ -25,7 +25,7 @@ export function PlayerPicker({ value, onChange, multi, exclude = [] }: { value: 
       <SearchInput value={q} onChange={setQ} placeholder="Type part of the player's name" />
       {value.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">{value.map(p => (
-          <button key={p.id} type="button" onClick={() => onChange(value.filter(v => v.id !== p.id))} className="rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white hover:bg-red" title="Remove">{playerName(p)} ×</button>
+          <button key={p.id} type="button" onClick={() => onChange(value.filter(v => v.id !== p.id))} className="rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white hover:bg-royal" title="Remove">{playerName(p)} ×</button>
         ))}</div>
       )}
       {found.length > 0 && (

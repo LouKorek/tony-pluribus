@@ -71,9 +71,9 @@ export default function MatchesPage() {
                       <td className="px-3 py-2 text-muted">{m.competition}</td>
                       <td className="px-3 py-2 font-semibold">{m.opponent}</td>
                       <td className="px-3 py-2 text-xs text-muted">{m.venue === 'home' ? 'Home' : m.venue === 'away' ? 'Away' : ''}</td>
-                      <td className="px-3 py-2">{r ? <span className={cx('inline-flex min-w-[52px] justify-center rounded-md px-2 py-0.5 font-display text-base font-bold', r === 'W' ? 'bg-good text-white' : r === 'L' ? 'bg-red text-white' : 'bg-black/10')}>{m.goals_for}–{m.goals_against}</span> : '—'}</td>
+                      <td className="px-3 py-2">{r ? <span className={cx('inline-flex min-w-[52px] justify-center rounded-md px-2 py-0.5 font-display text-base font-semibold', r === 'W' ? 'bg-good text-white' : r === 'L' ? 'bg-royal text-white' : 'bg-black/10')}>{m.goals_for}–{m.goals_against}</span> : '—'}</td>
                       <td className="max-w-[280px] truncate px-3 py-2 text-muted">{scorers[m.id] ?? ''}</td>
-                      <td className="px-3 py-2">{m.report_file_id && files[m.report_file_id] ? <a onClick={e => e.stopPropagation()} href={files[m.report_file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-red hover:underline"><FileText size={13} /> PDF</a> : ''}</td>
+                      <td className="px-3 py-2">{m.report_file_id && files[m.report_file_id] ? <a onClick={e => e.stopPropagation()} href={files[m.report_file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> PDF</a> : ''}</td>
                     </tr>
                   )
                 })}</tbody>
@@ -140,7 +140,7 @@ function MatchModal({ teamId, match, roster, canEdit, onClose, onDone }: { teamI
               <tbody>{inSquad.map(pid => (
                 <tr key={pid} className="border-t border-line">
                   <td className="whitespace-nowrap px-2 py-1 font-medium">{name(pid)}</td>
-                  <td className="px-2 py-1"><input type="checkbox" className="h-4 w-4 accent-red" checked={!!stats[pid].started} onChange={e => upd(pid, 'started', e.target.checked)} /></td>
+                  <td className="px-2 py-1"><input type="checkbox" className="h-4 w-4 accent-royal" checked={!!stats[pid].started} onChange={e => upd(pid, 'started', e.target.checked)} /></td>
                   {(['minutes', 'goals', 'assists', 'yellow', 'red'] as const).map(k => (
                     <td key={k} className="px-1 py-1"><input type="number" min={0} value={stats[pid][k] ?? ''} onChange={e => upd(pid, k, e.target.value === '' ? (k === 'minutes' ? null : 0) : Number(e.target.value))} className="h-8 w-14 rounded border border-line-2 px-1.5 text-center" /></td>
                   ))}

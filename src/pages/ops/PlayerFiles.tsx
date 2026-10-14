@@ -58,7 +58,7 @@ export default function PlayerFilesPage() {
         <MultiSelect className="lg:w-48" placeholder="All teams" value={teams} onChange={setTeams} options={allTeams.map(t => ({ value: t, label: t }))} />
         <MultiSelect className="lg:w-56" placeholder="All documents" value={kinds} onChange={setKinds} options={CHECK.map(k => ({ value: k, label: DOC_KINDS.find(d => d[0] === k)![1] }))} />
         <SearchInput className="lg:w-56" value={q} onChange={setQ} placeholder="Find a player" />
-        <label className="flex items-center gap-2 text-sm lg:ml-auto"><input type="checkbox" className="h-4 w-4 accent-red" checked={onlyMissing} onChange={e => setOnlyMissing(e.target.checked)} /> Only players with something missing</label>
+        <label className="flex items-center gap-2 text-sm lg:ml-auto"><input type="checkbox" className="h-4 w-4 accent-royal" checked={onlyMissing} onChange={e => setOnlyMissing(e.target.checked)} /> Only players with something missing</label>
       </div>
       {players && <p className="mb-3 text-sm text-muted"><b className="text-text">{complete}</b> of {players.length} players have every document.</p>}
       <Card data-tour="files-grid" className="overflow-hidden">
@@ -76,11 +76,11 @@ export default function PlayerFilesPage() {
                   <td className="px-3 py-2 text-muted">{p.teams.join(', ')}</td>
                   {cols.map(k => { const n = has(p.id, k).length; return (
                     <td key={k} className="px-2 py-2 text-center">
-                      <button onClick={() => n && setShow({ p, kind: k })} className={cx('inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-xs font-bold', n ? 'bg-good-soft text-good hover:bg-good hover:text-white' : 'bg-red-soft text-red')} title={n ? `${n} file${n > 1 ? 's' : ''}` : 'Missing'}>
+                      <button onClick={() => n && setShow({ p, kind: k })} className={cx('inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-xs font-bold', n ? 'bg-good-soft text-good hover:bg-good hover:text-white' : 'bg-danger-soft text-danger')} title={n ? `${n} file${n > 1 ? 's' : ''}` : 'Missing'}>
                         {n ? <><Check size={13} />{n > 1 ? n : ''}</> : <X size={13} />}
                       </button>
                     </td>) })}
-                  <td className="px-2 py-2 text-center">{(() => { const n = docs.filter(d => d.player_id === p.id && !CHECK.includes(d.kind)).length; return n ? <button onClick={() => setShow({ p, kind: '*' })} className="text-xs font-semibold text-red hover:underline">{n}</button> : <span className="text-faint">—</span> })()}</td>
+                  <td className="px-2 py-2 text-center">{(() => { const n = docs.filter(d => d.player_id === p.id && !CHECK.includes(d.kind)).length; return n ? <button onClick={() => setShow({ p, kind: '*' })} className="text-xs font-semibold text-royal hover:underline">{n}</button> : <span className="text-faint">—</span> })()}</td>
                   {canEdit && <td className="px-2 py-2 text-right"><Button size="sm" variant="ghost" onClick={() => setAdding(p)}><Plus size={13} /> Add</Button></td>}
                 </tr>
               ))}</tbody>
@@ -92,8 +92,8 @@ export default function PlayerFilesPage() {
         <Modal open title={`${pname(show.p)} · ${show.kind === '*' ? 'Other documents' : DOC_KINDS.find(d => d[0] === show.kind)![1]}`} onClose={() => setShow(null)}>
           <ul className="space-y-1.5">{docs.filter(d => d.player_id === show.p.id && (show.kind === '*' ? !CHECK.includes(d.kind) : d.kind === show.kind)).map(d => (
             <li key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2 text-sm">
-              {d.file ? <a href={fileUrl(project?.sharepoint_root, d.file.path, d.file.ext)} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 hover:text-red"><FileText size={15} className="shrink-0 text-info" /><span className="truncate">{d.file.name}</span></a> : <span>No file linked</span>}
-              {canEdit && <button className="text-xs text-muted hover:text-red" onClick={async () => { await supabase.from('player_documents').delete().eq('id', d.id); load() }}>Unlink</button>}
+              {d.file ? <a href={fileUrl(project?.sharepoint_root, d.file.path, d.file.ext)} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 hover:text-royal"><FileText size={15} className="shrink-0 text-info" /><span className="truncate">{d.file.name}</span></a> : <span>No file linked</span>}
+              {canEdit && <button className="text-xs text-muted hover:text-danger" onClick={async () => { await supabase.from('player_documents').delete().eq('id', d.id); load() }}>Unlink</button>}
             </li>
           ))}</ul>
         </Modal>
@@ -128,7 +128,7 @@ function LinkDocModal({ player, onClose, onDone }: { player: P; onClose: () => v
       <div className="mt-3 max-h-80 overflow-y-auto rounded-lg border border-line">
         {files.length === 0 ? <p className="px-3 py-6 text-center text-sm text-muted">No file found.</p> : files.map(f => (
           <label key={f.id} className="flex cursor-pointer items-start gap-3 border-b border-line px-3 py-2 text-sm last:border-0 hover:bg-paper">
-            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-red" checked={pick.has(f.id)} onChange={e => setPick(s => { const n = new Set(s); if (e.target.checked) n.add(f.id); else n.delete(f.id); return n })} />
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-royal" checked={pick.has(f.id)} onChange={e => setPick(s => { const n = new Set(s); if (e.target.checked) n.add(f.id); else n.delete(f.id); return n })} />
             <span className="min-w-0"><span className="block truncate font-medium">{f.name}</span><span className="block truncate text-xs text-muted">{f.path}</span></span>
           </label>
         ))}

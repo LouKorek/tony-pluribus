@@ -1,19 +1,23 @@
 import type { ReportData } from './reports'
 
 // Brand colours (ARGB for Excel)
-const INK = 'FF0E1311', LIME = 'FFE0FD02', RED = 'FFD7262E', PAPER = 'FFF5F4EF', LINE = 'FFE4E1D8', MUTED = 'FF646A66', GOOD = 'FF157A4A', ZEBRA = 'FFFAFAF7'
+// Tony palette (Brandbook 2024): Black, Neon, Royal, Grass, Platinum
+const INK = 'FF000000', LIME = 'FFE1FF00', RED = 'FF004179', PAPER = 'FFF2F3F1', LINE = 'FFE3E5E2', MUTED = 'FF5D625F', GOOD = 'FF006144', ZEBRA = 'FFFAFAFA'
 const FONT = 'Arial'
 
 export const today = () => new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 export const safeName = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 140)
 
 type ExcelNS = typeof import('exceljs')
-type Logos = { tony?: ArrayBuffer; benfica?: ArrayBuffer }
+type Logos = { tony?: ArrayBuffer; partner?: ArrayBuffer }
+/** What the report is branded with: the project line and, when the project shows its partner in exports, the partner. */
+export interface ExportBrand { projectLine: string; partnerName?: string | null; partnerLogo?: string | null }
+const DEFAULT_BRAND: ExportBrand = { projectLine: 'Tony Next' }
 
 /** Builds the workbook. Pure, so it can be checked outside the browser. */
-export function buildWorkbook(ExcelJS: ExcelNS, r: ReportData, logos: Logos = {}) {
+export function buildWorkbook(ExcelJS: ExcelNS, r: ReportData, logos: Logos = {}, brand: ExportBrand = DEFAULT_BRAND) {
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'Pluribus · TFEP'
+  wb.creator = 'Tony Next'
   wb.title = r.fileName
   const n = r.columns.length
   const ws = wb.addWorksheet(r.title.replace(/[[\]*?/\\:]/g, '').slice(0, 31) || 'Report', {
@@ -31,12 +35,12 @@ export function buildWorkbook(ExcelJS: ExcelNS, r: ReportData, logos: Logos = {}
   const band = ws.addRow([])
   band.height = 34
   all(band, c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: INK } } })
-  band.getCell(n).value = 'PLURIBUS · TFEP RWANDA'
-  band.getCell(n).font = { name: FONT, size: 8, bold: true, color: { argb: 'FF959A95' } }
+  band.getCell(n).value = (brand.projectLine + (brand.partnerName ? ' · with ' + brand.partnerName : '')).toUpperCase()
+  band.getCell(n).font = { name: FONT, size: 8, bold: true, color: { argb: 'FFA8A8A8' } }
   band.getCell(n).alignment = { horizontal: 'right', vertical: 'middle' }
-  // Benfica crest first, then the Tony wordmark (306×60 → 82×16) a little to the right of it
-  if (logos.benfica) ws.addImage(wb.addImage({ buffer: logos.benfica, extension: 'png' }), { tl: { col: 0.1, row: 0.12 }, ext: { width: 30, height: 30 }, editAs: 'absolute' })
-  if (logos.tony) ws.addImage(wb.addImage({ buffer: logos.tony, extension: 'png' }), { tl: { col: logos.benfica ? 1.25 : 0.15, row: 0.33 }, ext: { width: 82, height: 16 }, editAs: 'absolute' })
+  // Tony wordmark (825×137 → 96×16); the partner crest, when the project shows it, to the right of it
+  if (logos.tony) ws.addImage(wb.addImage({ buffer: logos.tony, extension: 'png' }), { tl: { col: 0.15, row: 0.33 }, ext: { width: 96, height: 16 }, editAs: 'absolute' })
+  if (logos.partner) ws.addImage(wb.addImage({ buffer: logos.partner, extension: 'png' }), { tl: { col: 1.55, row: 0.12 }, ext: { width: 30, height: 30 }, editAs: 'absolute' })
   const accent = ws.addRow([])
   accent.height = 4
   all(accent, c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIME } } })
@@ -113,10 +117,10 @@ export function buildWorkbook(ExcelJS: ExcelNS, r: ReportData, logos: Logos = {}
 async function fetchBuf(url: string) { try { const r = await fetch(url); return r.ok ? await r.arrayBuffer() : undefined } catch { return undefined } }
 
 /** Excel file laid out for printing: A4 landscape, fitted to the page width, header row repeated on every page. */
-export async function downloadExcel(r: ReportData) {
+export async function downloadExcel(r: ReportData, brand: ExportBrand = DEFAULT_BRAND) {
   const ExcelJS = (await import('exceljs')).default as unknown as ExcelNS
-  const [tony, benfica] = await Promise.all([fetchBuf('/brand/tony.png'), fetchBuf('/brand/benfica.png')])
-  const wb = buildWorkbook(ExcelJS, r, { tony, benfica })
+  const [tony, partner] = await Promise.all([fetchBuf('/brand/tony-wordmark-white.png'), brand.partnerLogo ? fetchBuf(brand.partnerLogo) : Promise.resolve(undefined)])
+  const wb = buildWorkbook(ExcelJS, r, { tony, partner }, brand)
   const buf = await wb.xlsx.writeBuffer()
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
   const a = document.createElement('a')
@@ -129,7 +133,7 @@ export async function downloadExcel(r: ReportData) {
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 
 /** The print-ready page (the browser saves it as PDF under the report's file name). Pure, so it can be checked outside the browser. */
-export function printHtml(r: ReportData, origin: string, autoPrint = true) {
+export function printHtml(r: ReportData, origin: string, autoPrint = true, brand: ExportBrand = DEFAULT_BRAND) {
   const total = r.columns.reduce((s, c) => s + c.width, 0)
   const cols = r.columns.map(c => `<col style="width:${((c.width / total) * 100).toFixed(2)}%">`).join('')
   const head = `<tr>${r.columns.map(c => `<th class="${c.align ?? ''}">${esc(c.label)}</th>`).join('')}</tr>`
@@ -141,52 +145,55 @@ export function printHtml(r: ReportData, origin: string, autoPrint = true) {
   `).join('')
   const empty = !r.sections.some(s => s.rows.length)
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(safeName(r.fileName))}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
+  @font-face { font-family: Rajdhani; font-weight: 400; src: url(${origin}/fonts/rajdhani-regular.woff2) format('woff2'); }
+  @font-face { font-family: Rajdhani; font-weight: 500; src: url(${origin}/fonts/rajdhani-medium.woff2) format('woff2'); }
+  @font-face { font-family: Rajdhani; font-weight: 600; src: url(${origin}/fonts/rajdhani-semibold.woff2) format('woff2'); }
+  @font-face { font-family: Rajdhani; font-weight: 700; src: url(${origin}/fonts/rajdhani-bold.woff2) format('woff2'); }
   @page { size: A4 landscape; margin: 10mm 10mm 12mm; }
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   html, body { margin: 0; background: #fff; }
-  body { font-family: Barlow, Arial, sans-serif; color: #151917; font-size: 10px; }
-  .band { background: #0e1311; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 3px solid #e0fd02; }
-  .brand { display: flex; align-items: center; gap: 12px; } .brand .t { height: 13px; } .brand .b { height: 28px; } .brand span { width: 1px; height: 22px; background: rgba(255,255,255,.2); }
-  .band .r { text-align: right; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #959a95; font-weight: 600; line-height: 1.5; }
+  body { font-family: Rajdhani, Arial, sans-serif; color: #0a0b0a; font-size: 10.5px; }
+  .band { background: #000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 3px solid #e1ff00; }
+  .brand { display: flex; align-items: center; gap: 12px; } .brand .t { height: 14px; } .brand .b { height: 28px; } .brand span { width: 1px; height: 22px; background: rgba(255,255,255,.2); }
+  .band .r { text-align: right; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #a8a8a8; font-weight: 600; line-height: 1.5; }
   .head { padding: 14px 2px 0; }
-  h1 { font-family: 'Barlow Condensed', Arial, sans-serif; text-transform: uppercase; font-size: 28px; margin: 0; line-height: 1; letter-spacing: .01em; }
-  .sub { color: #646a66; font-size: 12px; margin-top: 4px; }
+  h1 { font-family: Rajdhani, Arial, sans-serif; font-weight: 600; font-size: 28px; margin: 0; line-height: 1; letter-spacing: -.03em; }
+  .sub { color: #5d625f; font-size: 12px; margin-top: 4px; }
   .sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 11px 0 12px; }
-  .sum div { border: 1px solid #e4e1d8; border-radius: 7px; padding: 5px 11px 4px; min-width: 76px; }
-  .sum b { font-family: 'Barlow Condensed', Arial; font-size: 20px; display: block; line-height: 1; }
-  .sum span { color: #646a66; font-size: 8.5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+  .sum div { border: 1px solid #e3e5e2; border-radius: 7px; padding: 5px 11px 4px; min-width: 76px; }
+  .sum b { font-family: Rajdhani, Arial; font-weight: 600; font-size: 20px; display: block; line-height: 1; letter-spacing: -.02em; }
+  .sum span { color: #5d625f; font-size: 8.5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   thead { display: table-header-group; } tr { page-break-inside: avoid; break-inside: avoid; }
-  th { background: #0e1311; color: #fff; text-align: left; font-weight: 600; padding: 6px 6px; border-bottom: 2px solid #e0fd02; font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  td { padding: 4.5px 6px; border-bottom: 1px solid #ece9e1; vertical-align: top; overflow-wrap: anywhere; line-height: 1.3; }
-  tr.z td { background: #fafaf7; }
-  tr.sec td { background: #f5f4ef; font-weight: 700; font-size: 11px; border-left: 3px solid #d7262e; padding: 7px 8px; border-top: 1px solid #e4e1d8; }
+  th { background: #000; color: #fff; text-align: left; font-weight: 600; padding: 6px 6px; border-bottom: 2px solid #e1ff00; font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td { padding: 4.5px 6px; border-bottom: 1px solid #ebedea; vertical-align: top; overflow-wrap: anywhere; line-height: 1.3; }
+  tr.z td { background: #fafafa; }
+  tr.sec td { background: #f2f3f1; font-weight: 700; font-size: 11px; border-left: 3px solid #004179; padding: 7px 8px; border-top: 1px solid #e3e5e2; }
   .right, .num { text-align: right; font-variant-numeric: tabular-nums; } .center { text-align: center; } .b { font-weight: 600; }
-  .sel { color: #157a4a; font-weight: 700; } .again { color: #a76a00; font-weight: 700; }
-  .empty { padding: 30px; text-align: center; color: #646a66; border: 1px dashed #d3cfc3; border-radius: 8px; margin-top: 10px; }
-  .foot { margin-top: 10px; color: #959a95; font-size: 8.5px; display: flex; justify-content: space-between; border-top: 1px solid #e4e1d8; padding-top: 6px; }
+  .sel { color: #006144; font-weight: 700; } .again { color: #a36a00; font-weight: 700; }
+  .empty { padding: 30px; text-align: center; color: #5d625f; border: 1px dashed #c7c7c7; border-radius: 8px; margin-top: 10px; }
+  .foot { margin-top: 10px; color: #a8a8a8; font-size: 8.5px; display: flex; justify-content: space-between; border-top: 1px solid #e3e5e2; padding-top: 6px; }
   .tools { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; }
-  .tools button { font: 600 13px Barlow, Arial; background: #d7262e; color: #fff; border: 0; border-radius: 8px; padding: 9px 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  .tools button { font: 600 13px Rajdhani, Arial; background: #000; color: #e1ff00; border: 0; border-radius: 8px; padding: 9px 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
   @media screen { body { max-width: 1120px; margin: 24px auto; padding: 0 16px 40px; } }
   @media print { .tools { display: none; } }
 </style></head><body>
 <div class="tools"><button onclick="print()">Save as PDF / print</button></div>
-<div class="band"><div class="brand"><img class="t" src="${origin}/brand/tony.png" alt="Tony"><span></span><img class="b" src="${origin}/brand/benfica.png" alt="SL Benfica"></div>
-<div class="r">Tony Football Excellence Programme<br>Rwanda · Pluribus</div></div>
+<div class="band"><div class="brand"><img class="t" src="${origin}/brand/tony-wordmark-white.svg" alt="Tony">${brand.partnerLogo ? `<span></span><img class="b" src="${origin}${brand.partnerLogo}" alt="${esc(brand.partnerName)}">` : ''}</div>
+<div class="r">${esc(brand.projectLine)}${brand.partnerName ? `<br>in partnership with ${esc(brand.partnerName)}` : '<br>Tony Next'}</div></div>
 <div class="head"><h1>${esc(r.title)}</h1><div class="sub">${esc(r.subtitle)} · printed ${today()}</div></div>
 ${r.summary?.length ? `<div class="sum">${r.summary.map(([k, v]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join('')}</div>` : '<div style="height:12px"></div>'}
 ${empty ? '<div class="empty">Nothing to report yet.</div>' : `<table><colgroup>${cols}</colgroup><thead>${head}</thead><tbody>${body}</tbody></table>`}
-<div class="foot"><span>${esc(safeName(r.fileName))}</span><span>TFEP × SL Benfica</span></div>
+<div class="foot"><span>${esc(safeName(r.fileName))}</span><span>${esc(brand.projectLine)}${brand.partnerName ? ' × ' + esc(brand.partnerName) : ''} · Tony Next</span></div>
 ${autoPrint ? "<script>window.addEventListener('load', () => setTimeout(() => print(), 500))</script>" : ''}
 </body></html>`
 }
 
-export function openPrint(r: ReportData) {
+export function openPrint(r: ReportData, brand: ExportBrand = DEFAULT_BRAND) {
   const w = window.open('', '_blank')
   if (!w) return false
-  w.document.write(printHtml(r, location.origin))
+  w.document.write(printHtml(r, location.origin, true, brand))
   w.document.close()
   return true
 }

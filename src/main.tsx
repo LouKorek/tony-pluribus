@@ -8,7 +8,7 @@ import ViewAsBanner from './components/ViewAsBanner'
 import './lib/install'
 
 // A successful start clears the one-time reload flag used when a deploy replaces page files.
-window.setTimeout(() => { try { sessionStorage.removeItem('pluribus.reloaded') } catch { /* storage blocked */ } }, 10000)
+window.setTimeout(() => { try { sessionStorage.removeItem('tonynext.reloaded') } catch { /* storage blocked */ } }, 10000)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

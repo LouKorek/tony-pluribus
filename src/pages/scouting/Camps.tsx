@@ -25,7 +25,7 @@ export function useCamps() {
   return { camps, stats, reload: load }
 }
 
-export const stageTone = (s: Stage) => (s === 'national_final' ? 'dark' : s === 'province_final' ? 'lime' : 'neutral') as 'dark' | 'lime' | 'neutral'
+export const stageTone = (s: Stage) => (s === 'national_final' ? 'dark' : s === 'province_final' ? 'neon' : 'neutral') as 'dark' | 'neon' | 'neutral'
 export const statusTone = (s: Camp['status']) => (s === 'published' ? 'good' : s === 'completed' ? 'info' : s === 'open' ? 'warn' : s === 'cancelled' ? 'bad' : 'neutral') as 'good' | 'info' | 'warn' | 'bad' | 'neutral'
 export const STATUS_LABEL: Record<Camp['status'], string> = { planned: 'Planned', open: 'Open', completed: 'Completed', published: 'Published', cancelled: 'Cancelled' }
 
@@ -69,7 +69,7 @@ export default function CampsPage() {
       <Card className="overflow-hidden">
         {!camps ? <Spinner /> : list.length === 0 ? (
           <Empty icon={<Tent size={20} />} title={camps.length ? 'No camps match' : 'No camps yet'}>
-            {camps.length ? 'Change the filter or clear the search.' : <>Plan the season's camps here or on the <Link to="/scouting/plan" className="font-semibold text-red">Plan</Link> board.</>}
+            {camps.length ? 'Change the filter or clear the search.' : <>Plan the season's camps here or on the <Link to="/scouting/plan" className="font-semibold text-royal">Plan</Link> board.</>}
           </Empty>
         ) : (
           <div className="overflow-x-auto">
@@ -158,7 +158,7 @@ export function PlanPage() {
               <div className="mb-1 text-xs font-semibold text-muted">{r.name}</div>
               <div className="flex flex-wrap gap-1">
                 {ref.districts.filter(d => d.region_id === r.id).map(d => (
-                  <span key={d.id} className={cx('rounded px-1.5 py-0.5 text-[11px] font-semibold', covered.has(d.id) ? 'bg-ink text-lime' : 'bg-black/5 text-faint')}>{d.name}</span>
+                  <span key={d.id} className={cx('rounded px-1.5 py-0.5 text-[11px] font-semibold', covered.has(d.id) ? 'bg-ink text-neon' : 'bg-black/5 text-faint')}>{d.name}</span>
                 ))}
               </div>
             </div>
@@ -181,10 +181,10 @@ export function PlanPage() {
             const past = w.sun < today
             return (
               <div key={w.sat}>
-                {header && <div className="label-caps mb-2 mt-5 text-red first:mt-0">{month}</div>}
+                {header && <div className="label-caps mb-2 mt-5 text-royal first:mt-0">{month}</div>}
                 <div className={cx('group flex items-stretch gap-3 rounded-xl border bg-card', list.length ? 'border-line' : 'border-dashed border-line', past && 'opacity-60')}>
                   <div className="flex w-24 shrink-0 flex-col justify-center border-r border-line px-3 py-2.5">
-                    <div className="font-display text-lg font-bold leading-none">{d.getDate()}–{new Date(w.sun + 'T00:00:00').getDate()}</div>
+                    <div className="font-display text-lg font-semibold leading-none">{d.getDate()}–{new Date(w.sun + 'T00:00:00').getDate()}</div>
                     <div className="mt-0.5 text-[11px] text-muted">Sat–Sun</div>
                   </div>
                   <div className="flex flex-1 flex-wrap items-center gap-2 py-2.5">
@@ -192,7 +192,7 @@ export function PlanPage() {
                     {!list.length && <span className="text-sm text-faint">Free weekend</span>}
                   </div>
                   {canEdit && (
-                    <button onClick={() => setCreating({ starts_on: w.sat, ends_on: w.sun })} className="flex items-center gap-1.5 px-4 text-sm font-semibold text-muted opacity-0 transition-opacity hover:text-red group-hover:opacity-100 focus:opacity-100">
+                    <button onClick={() => setCreating({ starts_on: w.sat, ends_on: w.sun })} className="flex items-center gap-1.5 px-4 text-sm font-semibold text-muted opacity-0 transition-opacity hover:text-royal group-hover:opacity-100 focus:opacity-100">
                       <CalendarPlus size={15} /> Add
                     </button>
                   )}
@@ -213,8 +213,8 @@ function CampChip({ c, n, onClick }: { c: Camp; n?: number; onClick: () => void 
   const where = c.stage === 'district' ? ref.district(c.district_id)?.name : c.stage === 'province_final' ? ref.regions.find(r => r.id === c.region_id)?.name : 'National'
   return (
     <button onClick={onClick} className={cx('flex items-center gap-2 rounded-lg border px-3 py-1.5 text-left text-sm transition-colors hover:border-ink',
-      c.stage === 'national_final' ? 'border-ink bg-ink text-white' : c.stage === 'province_final' ? 'border-ink/20 bg-lime-soft' : 'border-line-2 bg-card', c.status === 'cancelled' && 'line-through opacity-50')}>
-      <MapPin size={13} className={c.stage === 'national_final' ? 'text-lime' : 'text-red'} />
+      c.stage === 'national_final' ? 'border-ink bg-ink text-white' : c.stage === 'province_final' ? 'border-ink/20 bg-neon-soft' : 'border-line-2 bg-card', c.status === 'cancelled' && 'line-through opacity-50')}>
+      <MapPin size={13} className={c.stage === 'national_final' ? 'text-neon' : 'text-royal'} />
       <span className="font-semibold">{where}</span>
       <span className={c.stage === 'national_final' ? 'text-white/60' : 'text-muted'}>{c.stage === 'district' ? c.age_groups.join('/') : STAGE_SHORT[c.stage]}</span>
       {!!n && <span className={cx('rounded-full px-1.5 text-[11px] font-semibold', c.stage === 'national_final' ? 'bg-white/15' : 'bg-black/8')}>{n}</span>}

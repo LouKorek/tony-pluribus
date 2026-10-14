@@ -249,7 +249,7 @@ export function CreateUserModal({ teams, academies, districts, regions, myRole, 
       <div className="mt-4 rounded-xl bg-ink p-4 font-mono text-sm text-white">
         <div><span className="text-white/50">Address </span>{location.origin}</div>
         <div><span className="text-white/50">Username </span>{created.username}</div>
-        <div><span className="text-white/50">Password </span><span className="text-lime">{created.password}</span></div>
+        <div><span className="text-white/50">Password </span><span className="text-neon">{created.password}</span></div>
       </div>
       <Button className="mt-3" size="sm" onClick={() => navigator.clipboard.writeText(`${location.origin}\nUsername: ${created.username}\nPassword: ${created.password}`)}>Copy details</Button>
     </Modal>
@@ -318,7 +318,7 @@ export function EditUserModal({ teams, user, me, academies, districts, regions, 
       </>)}>
       <div className="space-y-5">
         <div className="flex items-center gap-3 rounded-xl bg-paper p-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ink font-display font-bold uppercase text-white">{(user.full_name || user.username).slice(0, 2)}</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ink font-display font-semibold text-white">{(user.full_name || user.username).slice(0, 2)}</div>
           <div className="min-w-0">
             <div className="font-semibold">@{user.username}</div>
             <div className="text-xs text-muted">Joined {new Date(user.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
@@ -359,7 +359,7 @@ function ResetPasswordModal({ user, onClose }: { user: Profile; onClose: () => v
       {done ? (
         <div className="space-y-3">
           <Alert tone="good">Password changed. @{user.username} was signed out of every device.</Alert>
-          <div className="rounded-xl bg-ink p-4 font-mono text-sm text-white"><span className="text-white/50">Password </span><span className="text-lime">{pw}</span></div>
+          <div className="rounded-xl bg-ink p-4 font-mono text-sm text-white"><span className="text-white/50">Password </span><span className="text-neon">{pw}</span></div>
           <Button size="sm" onClick={() => navigator.clipboard.writeText(pw)}>Copy password</Button>
         </div>
       ) : (
@@ -430,13 +430,13 @@ export function AccessModal({ user, onClose }: { user: Profile; onClose: () => v
       <div key={r.area} className={cx('flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between', indent && 'sm:pl-6')}>
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold">{indent && <span className="text-faint">└</span>}{label}
-            {isOverride(r) ? <Badge tone="lime">Set for this user</Badge> : <span className="text-xs font-normal text-faint">role default</span>}</div>
+            {isOverride(r) ? <Badge tone="neon">Set for this user</Badge> : <span className="text-xs font-normal text-faint">role default</span>}</div>
           {hint && <div className="text-xs text-muted">{hint}</div>}
         </div>
         <div className="flex shrink-0 gap-1 rounded-lg bg-black/5 p-1">
           {LEVELS.slice(0, max + 1).map((l, i) => (
             <button key={l} type="button" onClick={() => choose(r, i)}
-              className={cx('rounded-md px-3 py-1 text-sm font-semibold', v === i ? (i === 0 ? 'bg-card text-red shadow-sm' : 'bg-ink text-white shadow-sm') : 'text-muted hover:text-text')}>{l}</button>
+              className={cx('rounded-md px-3 py-1 text-sm font-semibold', v === i ? (i === 0 ? 'bg-card text-royal shadow-sm' : 'bg-ink text-white shadow-sm') : 'text-muted hover:text-text')}>{l}</button>
           ))}
         </div>
       </div>
@@ -462,7 +462,7 @@ export function AccessModal({ user, onClose }: { user: Profile; onClose: () => v
               {folders.map(r => line(r, true))}
               {priv && line(priv)}
             </div>
-            <p className="mt-2 text-xs text-muted">Editing files from inside Pluribus starts with the SharePoint sync. Until then "Edit" works like "View".</p>
+            <p className="mt-2 text-xs text-muted">Editing files from inside Tony Next starts with the SharePoint sync. Until then "Edit" works like "View".</p>
           </div>
         </div>
       )}

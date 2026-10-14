@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 
 // The owner can open the system as another user to see and test exactly what that user sees.
 // The owner's own session is kept aside on this device and restored with "Back to my account".
-const KEY = 'pluribus.viewAs'
+const KEY = 'tonynext.viewAs'
 // Name under which the owner deployed supabase/functions/impersonate in Supabase.
 const FUNCTION = 'clever-responder'
 

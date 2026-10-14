@@ -66,7 +66,7 @@ export default function EvaluationsPage() {
             return (
               <Card key={g} className="p-4">
                 <div className="flex items-center gap-3">
-                  <span className={cx('flex h-9 w-9 items-center justify-center rounded-lg font-display text-xl font-bold', GRADE_LABEL[g][1])}>{g}</span>
+                  <span className={cx('flex h-9 w-9 items-center justify-center rounded-lg font-display text-xl font-semibold', GRADE_LABEL[g][1])}>{g}</span>
                   <div><div className="font-semibold">{GRADE_LABEL[g][0]}</div><div className="text-xs text-muted">{list.length} player{list.length === 1 ? '' : 's'}</div></div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">{list.map(r => <span key={r.player_id} className="rounded-md bg-paper px-2 py-0.5 text-xs font-medium">{pname(r)} <span className="text-faint">{r.birth_year}</span></span>)}</div>
@@ -93,7 +93,7 @@ export default function EvaluationsPage() {
                     {canEdit ? <Textarea rows={1} defaultValue={r.ev?.summary ?? ''} key={r.ev?.id ?? r.player_id} onBlur={e => { if ((e.target.value || null) !== (r.ev?.summary ?? null)) setGrade(r, { summary: e.target.value || null }) }} placeholder="Strengths, what to work on" className="min-h-9 text-sm" />
                       : <span className="text-muted">{r.ev?.summary ?? ''}</span>}
                   </td>
-                  <td className="px-3 py-2">{r.ev?.report_file_id && files[r.ev.report_file_id] ? <a href={files[r.ev.report_file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-red hover:underline"><FileText size={13} /> PDF</a> : ''}</td>
+                  <td className="px-3 py-2">{r.ev?.report_file_id && files[r.ev.report_file_id] ? <a href={files[r.ev.report_file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> PDF</a> : ''}</td>
                 </tr>
               ))}</tbody>
             </table>

@@ -129,15 +129,15 @@ function TourOverlay({ steps, index, lang, onNext, onBack, onSkip }: {
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label={pick(step.title, lang)}>
       {rect ? (
-        <div className="pointer-events-none absolute rounded-lg ring-2 ring-lime transition-all duration-200"
+        <div className="pointer-events-none absolute rounded-lg ring-2 ring-neon transition-all duration-200"
           style={{ left: rect.left - pad, top: rect.top - pad, width: rect.width + pad * 2, height: rect.height + pad * 2, boxShadow: '0 0 0 9999px rgba(14,19,17,.62)' }} />
       ) : <div className="absolute inset-0 bg-ink/60" />}
       <div ref={card} className={cx('absolute rounded-xl bg-card p-4 text-text shadow-2xl', mobile && 'pb-[max(1rem,env(safe-area-inset-bottom))]')} style={style}>
         <div className="flex items-start justify-between gap-3">
-          <div className="label-caps text-[11px] text-red">{index + 1} {L.of} {steps.length}</div>
+          <div className="label-caps text-[11px] text-royal">{index + 1} {L.of} {steps.length}</div>
           <button onClick={onSkip} className="-mr-1 -mt-1 rounded-md p-1 text-muted hover:bg-black/5 hover:text-text" aria-label={L.skip}><X size={16} /></button>
         </div>
-        <div className="mt-1 font-display text-xl font-bold uppercase leading-tight">{pick(step.title, lang)}</div>
+        <div className="mt-1 font-display text-xl font-semibold leading-tight">{pick(step.title, lang)}</div>
         <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{pick(step.body, lang)}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
           <button onClick={onSkip} className="text-sm font-semibold text-muted hover:text-text">{L.skip}</button>
@@ -148,7 +148,7 @@ function TourOverlay({ steps, index, lang, onNext, onBack, onSkip }: {
             </button>
           </div>
         </div>
-        <div className="mt-3 flex gap-1">{steps.map((_, i) => <span key={i} className={cx('h-1 flex-1 rounded-full', i <= index ? 'bg-red' : 'bg-line')} />)}</div>
+        <div className="mt-3 flex gap-1">{steps.map((_, i) => <span key={i} className={cx('h-1 flex-1 rounded-full', i <= index ? 'bg-royal' : 'bg-line')} />)}</div>
       </div>
     </div>
   )

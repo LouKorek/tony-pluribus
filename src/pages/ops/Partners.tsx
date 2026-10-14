@@ -53,7 +53,7 @@ export default function PartnersPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Operations" title="Club & partners" description="SL Benfica, the federation, schools, sponsors and every club Tony works with: the people to call, and a log of every contact."
+      <PageHeader eyebrow="Operations" title="Club & partners" description="Partner clubs, the federation, schools, sponsors and every club Tony works with: the people to call, and a log of every contact."
         actions={canEdit ? <Button variant="primary" onClick={() => setEditing('new')}><Plus size={16} /> New partner</Button> : undefined} />
       <div data-tour="partner-filters" className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <MultiSelect className="lg:w-52" placeholder="All kinds" value={kinds} onChange={setKinds} options={Object.entries(PARTNER_KIND).map(([value, label]) => ({ value, label }))} />
@@ -67,7 +67,7 @@ export default function PartnersPage() {
             return (
               <button key={p.id} onClick={() => setOpen(p.id)} className="rounded-xl border border-line bg-card p-4 text-left shadow-sm transition hover:border-ink/30 hover:shadow">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0"><div className="truncate font-display text-lg font-bold uppercase leading-tight">{p.name}</div><div className="mt-0.5 text-sm text-muted">{PARTNER_KIND[p.kind]}{p.city || p.country ? ` · ${[p.city, p.country].filter(Boolean).join(', ')}` : ''}</div></div>
+                  <div className="min-w-0"><div className="truncate font-display text-lg font-semibold leading-tight">{p.name}</div><div className="mt-0.5 text-sm text-muted">{PARTNER_KIND[p.kind]}{p.city || p.country ? ` · ${[p.city, p.country].filter(Boolean).join(', ')}` : ''}</div></div>
                   <Badge tone={STATUS[p.status][1]}>{STATUS[p.status][0]}</Badge>
                 </div>
                 <div className="mt-3 flex gap-4 text-xs text-muted"><span><b className="text-text">{k.contacts}</b> contacts</span><span><b className="text-text">{k.notes}</b> notes</span><span><b className="text-text">{k.moves}</b> player moves</span></div>
@@ -115,7 +115,7 @@ function PartnerDrawer({ partner, canEdit, onClose, onEdit, onChanged }: { partn
         {(partner.website || partner.city || partner.country || partner.notes) && (
           <section className="space-y-1.5 text-sm">
             {(partner.city || partner.country) && <div className="text-muted">{[partner.city, partner.country].filter(Boolean).join(', ')}</div>}
-            {partner.website && <a href={/^https?:/.test(partner.website) ? partner.website : `https://${partner.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-red hover:underline"><Globe size={14} /> {partner.website.replace(/^https?:\/\//, '')}</a>}
+            {partner.website && <a href={/^https?:/.test(partner.website) ? partner.website : `https://${partner.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-royal hover:underline"><Globe size={14} /> {partner.website.replace(/^https?:\/\//, '')}</a>}
             {partner.notes && <p className="whitespace-pre-line">{partner.notes}</p>}
           </section>
         )}
@@ -126,8 +126,8 @@ function PartnerDrawer({ partner, canEdit, onClose, onEdit, onChanged }: { partn
               <li key={c.id} className={cx('rounded-lg border border-line px-3 py-2.5 text-sm', canEdit && 'cursor-pointer hover:border-ink/30')} onClick={() => canEdit && setContact(c)}>
                 <div className="flex items-center gap-2"><UserRound size={15} className="text-muted" /><b>{c.name}</b>{c.role && <span className="text-muted">· {c.role}</span>}</div>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-muted">
-                  {c.phone && <a onClick={e => e.stopPropagation()} href={`tel:${c.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 hover:text-red"><Phone size={13} /> {c.phone}</a>}
-                  {c.email && <a onClick={e => e.stopPropagation()} href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-red"><Mail size={13} /> {c.email}</a>}
+                  {c.phone && <a onClick={e => e.stopPropagation()} href={`tel:${c.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 hover:text-royal"><Phone size={13} /> {c.phone}</a>}
+                  {c.email && <a onClick={e => e.stopPropagation()} href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-royal"><Mail size={13} /> {c.email}</a>}
                 </div>
                 {c.notes && <p className="mt-1 text-muted">{c.notes}</p>}
               </li>
@@ -154,7 +154,7 @@ function PartnerDrawer({ partner, canEdit, onClose, onEdit, onChanged }: { partn
               <li key={n.id} className="relative text-sm">
                 <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-ink" />
                 <div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-muted">{new Date(n.day + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  {canEdit && <button aria-label="Delete note" className="text-faint hover:text-red" onClick={async () => { await supabase.from('partner_notes').delete().eq('id', n.id); load(); onChanged() }}><Trash2 size={13} /></button>}</div>
+                  {canEdit && <button aria-label="Delete note" className="text-faint hover:text-danger" onClick={async () => { await supabase.from('partner_notes').delete().eq('id', n.id); load(); onChanged() }}><Trash2 size={13} /></button>}</div>
                 <p className="whitespace-pre-line">{n.note}</p>
               </li>
             ))}</ol>
@@ -202,7 +202,7 @@ function PartnerModal({ partner, onClose, onDone }: { partner: Partner | null; o
           <Field label="Country"><Input value={f.country} onChange={e => setF({ ...f, country: e.target.value })} /></Field>
           <Field label="City"><Input value={f.city} onChange={e => setF({ ...f, city: e.target.value })} /></Field>
         </div>
-        <Field label="Website"><Input value={f.website} onChange={e => setF({ ...f, website: e.target.value })} placeholder="slbenfica.pt" /></Field>
+        <Field label="Website"><Input value={f.website} onChange={e => setF({ ...f, website: e.target.value })} placeholder="club.com" /></Field>
         <Field label="Notes"><Textarea rows={3} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></Field>
         {err && <Alert>{err}</Alert>}
       </div>

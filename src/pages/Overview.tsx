@@ -61,8 +61,8 @@ export default function Overview() {
               ['Tony squads', 'U13 · U15 · U17 · U20'],
             ].map(([t, d], i) => (
               <div key={t} className="relative">
-                <div className={`h-1.5 rounded-full ${i === 3 ? 'bg-lime' : 'bg-ink'}`} style={{ opacity: 1 - i * 0.15 }} />
-                <div className="mt-3 font-display text-base font-bold uppercase leading-tight">{t}</div>
+                <div className={`h-1.5 rounded-full ${i === 3 ? 'bg-neon' : 'bg-ink'}`} style={{ opacity: 1 - i * 0.15 }} />
+                <div className="mt-3 font-display text-base font-semibold leading-tight">{t}</div>
                 <div className="mt-1 text-xs leading-snug text-muted">{d}</div>
               </div>
             ))}

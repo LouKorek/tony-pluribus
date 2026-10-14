@@ -1,4 +1,4 @@
-// Pluribus · SharePoint sync (stage 6).
+// Tony Next · SharePoint sync (stage 6).
 // Reads the changes in the shared Talent folder through Microsoft Graph (delta query) and keeps the
 // talent_files index up to date: new, changed, renamed, moved and deleted files and folders.
 // Who may run it: an active owner/admin from the Sync Center, or the scheduled job (pg_cron, every 15 minutes).
@@ -67,7 +67,7 @@ Deno.serve(async req => {
     const tok = await tr.json()
     if (!tr.ok) {
       const d = String(tok.error_description ?? tok.error ?? tr.status)
-      throw new Error(/AADSTS7000229|AADSTS65001|AADSTS700016/.test(d) ? 'Waiting for the TonyRW admin to approve the Pluribus Sync app (the approval link has not been accepted yet).'
+      throw new Error(/AADSTS7000229|AADSTS65001|AADSTS700016/.test(d) ? 'Waiting for the TonyRW admin to approve the Tony Next sync app (the approval link has not been accepted yet).'
         : /AADSTS7000215|AADSTS7000222/.test(d) ? 'The Microsoft secret saved in Supabase is wrong or expired. Create a new client secret and paste it as MS_CLIENT_SECRET.'
         : `Microsoft sign-in failed: ${d.split('\r')[0]}`)
     }
@@ -75,7 +75,7 @@ Deno.serve(async req => {
       const r = await fetch(u.startsWith('http') ? u : GRAPH + u, { headers: { authorization: `Bearer ${tok.access_token}` } })
       const j = await r.json().catch(() => ({}))
       if (r.status === 410) return { resync: true }
-      if (!r.ok) throw new Error(r.status === 403 || r.status === 401 ? 'Microsoft refused access to the TonyRW site: the TonyRW admin has not approved the Pluribus Sync app yet.' : `Graph ${r.status}: ${j.error?.message ?? ''}`)
+      if (!r.ok) throw new Error(r.status === 403 || r.status === 401 ? 'Microsoft refused access to the TonyRW site: the TonyRW admin has not approved the Tony Next sync app yet.' : `Graph ${r.status}: ${j.error?.message ?? ''}`)
       return j
     }
 
@@ -106,7 +106,7 @@ Deno.serve(async req => {
         const parentPath = decodeURIComponent(String(it.parentReference?.path ?? ''))
         if (!prefix.test(parentPath + '/')) continue // outside the Talent folder
         const parent = (parentPath + '/').replace(prefix, '').replace(/\/$/, '')
-        // the SharePoint UniqueId is the key the rest of Pluribus links to; never invent one
+        // the SharePoint UniqueId is the key the rest of Tony Next links to; never invent one
         const uid = it.sharepointIds?.listItemUniqueId
         if (!uid) { skipped++; continue }
         const isFolder = !!it.folder

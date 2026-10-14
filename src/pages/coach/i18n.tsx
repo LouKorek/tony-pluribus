@@ -38,9 +38,9 @@ const S = {
   guardian: ['Parent or guardian', 'Umubyeyi cyangwa umurera'],
   guardianName: ['Guardian name', "Izina ry'umubyeyi"],
   guardianPhone: ['Guardian phone', "Telefone y'umubyeyi"],
-  guardianConsent: ['The guardian agrees to the player taking part in TFEP camps', "Umubyeyi yemeye ko umukinnyi yitabira amakambi ya TFEP"],
+  guardianConsent: ['The guardian agrees to the player taking part in Tony camps', "Umubyeyi yemeye ko umukinnyi yitabira amakambi ya Tony"],
   guardianHint: ['Needed later if the player joins the Tony squad.', 'Bizakenerwa nyuma niba umukinnyi yinjiye mu ikipe ya Tony.'],
-  notes: ['Notes for TFEP', 'Ibisobanuro kuri TFEP'],
+  notes: ['Notes for Tony', 'Ibisobanuro kuri Tony'],
   save: ['Save', 'Bika'],
   cancel: ['Cancel', 'Reka'],
   edit: ['Edit', 'Hindura'],
@@ -55,16 +55,16 @@ const S = {
   journey: ['Pathway', 'Urugendo'],
   noJourney: ['Not submitted to a camp yet.', 'Ntaroherezwa mu ikambi.'],
   waitingResult: ['Result not published yet', 'Ibisubizo ntibiratangazwa'],
-  messageFromStaff: ['Message from TFEP staff', "Ubutumwa bw'abakozi ba TFEP"],
+  messageFromStaff: ['Message from Tony staff', "Ubutumwa bw'abakozi ba Tony"],
   certificate: ['Selection certificate', "Icyemezo cyo gutoranywa"],
   print: ['Print or save as PDF', 'Capa cyangwa ubike nka PDF'],
   share: ['Share', 'Sangiza'],
   details: ['Details', 'Ibisobanuro'],
   openCamps: ['Open district camps', "Amakambi y'akarere afunguye"],
-  openCampsHint: ['Submit the players you want TFEP scouts to see. There is no limit.', "Ohereza abakinnyi ushaka ko abashakashatsi ba TFEP babona. Nta mubare ntarengwa."],
+  openCampsHint: ['Submit the players you want Tony scouts to see. There is no limit.', "Ohereza abakinnyi ushaka ko abashakashatsi ba Tony babona. Nta mubare ntarengwa."],
   yourDistrict: ['Your district', 'Akarere kawe'],
   noOpenCamps: ['No camp is open for submissions right now', "Nta kambi ifunguye ubu"],
-  noOpenCampsHint: ['TFEP opens district camps during the season. You will see them here.', "TFEP ifungura amakambi y'uturere mu gihembwe. Uzayabona hano."],
+  noOpenCampsHint: ['Tony opens district camps during the season. You will see them here.', "Tony ifungura amakambi y'uturere mu gihembwe. Uzayabona hano."],
   submitPlayers: ['Submit players', 'Ohereza abakinnyi'],
   submitTo: ['Submit to', 'Ohereza kuri'],
   noteForScouts: ['Note for the scouts', "Ubutumwa ku bashakashatsi"],
@@ -81,7 +81,7 @@ const S = {
   reasonNeeded: ['Please say why the player cannot come.', 'Nyamuneka vuga impamvu umukinnyi atazaza.'],
   change: ['Change answer', 'Hindura igisubizo'],
   noUpdates: ['No updates yet', 'Nta makuru arahari'],
-  noUpdatesHint: ['Invitations and results from TFEP staff appear here.', "Ubutumire n'ibisubizo bya TFEP bigaragara hano."],
+  noUpdatesHint: ['Invitations and results from Tony staff appear here.', "Ubutumire n'ibisubizo bya Tony bigaragara hano."],
   submittedN: ['players submitted', 'abakinnyi boherejwe'],
   done: ['Done', 'Byarangiye'],
   language: ['Language', 'Ururimi'],
@@ -109,12 +109,12 @@ interface LangCtx { lang: Lang; setLang: (l: Lang) => void; t: (k: Key) => strin
 const Ctx = createContext<LangCtx | null>(null)
 
 function readLang(): Lang {
-  try { return localStorage.getItem('pluribus.lang') === 'rw' ? 'rw' : 'en' } catch { return 'en' }
+  try { return localStorage.getItem('tonynext.lang') === 'rw' ? 'rw' : 'en' } catch { return 'en' }
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, set] = useState<Lang>(readLang)
-  const setLang = (l: Lang) => { set(l); try { localStorage.setItem('pluribus.lang', l) } catch { /* private mode */ } }
+  const setLang = (l: Lang) => { set(l); try { localStorage.setItem('tonynext.lang', l) } catch { /* private mode */ } }
   const i = lang === 'rw' ? 1 : 0
   const value: LangCtx = { lang, setLang, t: k => S[k][i], pick: p => (p ? p[i] : '') }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

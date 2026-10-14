@@ -72,7 +72,7 @@ export default function StaffReportsPage() {
                     <div className="mt-0.5 text-sm text-muted">{[a.location, a.contact && `contact: ${a.contact}`, a.staff && `staff: ${a.staff}`].filter(Boolean).join(' · ')}</div>
                     {a.feedback && <p className="mt-1 whitespace-pre-line text-sm">{a.feedback}</p>}
                   </div>
-                  {a.file_id && files[a.file_id] && <a onClick={e => e.stopPropagation()} href={files[a.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 self-start text-xs font-semibold text-red hover:underline"><FileText size={13} /> Week file</a>}
+                  {a.file_id && files[a.file_id] && <a onClick={e => e.stopPropagation()} href={files[a.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 self-start text-xs font-semibold text-royal hover:underline"><FileText size={13} /> Week file</a>}
                 </li>
               ))}</ul>
             </Card>

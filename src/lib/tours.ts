@@ -14,7 +14,7 @@ export function staffTourKey(path: string): string | null {
 
 export const STAFF_TOURS: TourMap = {
   overview: [
-    { title: 'Welcome to Pluribus', body: 'This is the home of the TFEP programme with SL Benfica. Every screen has a short tour like this one the first time you open it. You can skip it at any step.' },
+    { title: 'Welcome to Tony Next', body: 'This is the home of the Tony programme. Every screen has a short tour like this one the first time you open it. You can skip it at any step.' },
     { target: 'nav', title: 'The menu', body: 'Everything lives here, grouped by area. Items marked "Soon" are already planned and open in a later stage of the build.' },
     { target: 'project-box', title: 'Project and season', body: 'The project you work in and the scouting season the screens show. Click it to switch to an earlier season and see its camps, finals and pool.' },
     { target: 'overview-stats', title: 'At a glance', body: 'The season, the academy register, players and camps planned. The numbers update as the staff work.' },
@@ -77,7 +77,7 @@ export const STAFF_TOURS: TourMap = {
     { target: 'report-preview', title: 'Preview', body: 'Check the report here before you download it.' },
   ],
   files: [
-    { target: 'file-stats', title: 'The Talent folder', body: 'Every folder and file of the shared folder that SL Benfica and TFEP use, with the date of the last change.' },
+    { target: 'file-stats', title: 'The Talent folder', body: 'Every folder and file of the shared Talent folder of the project, with the date of the last change.' },
     { target: 'crumbs', title: 'Where you are', body: 'The path of the folder you are in. Click a part of it to go back up.' },
     { target: 'search', title: 'Search', body: 'Find any file in the whole folder by part of its name.' },
     { target: 'file-list', title: 'Open a file', body: 'Click a folder to open it, or a file to open it in SharePoint. Finance, contracts and personal documents are shown to admins only.' },
@@ -139,7 +139,7 @@ export const STAFF_TOURS: TourMap = {
     { target: 'ask', title: 'Your question', body: 'Enter sends, Shift+Enter starts a new line. The assistant only reads the data you are allowed to see.' },
   ],
   sync: [
-    { target: 'sync-status', title: 'Connection', body: 'Whether Pluribus is connected to the SharePoint Talent folder, and when it last read it.' },
+    { target: 'sync-status', title: 'Connection', body: 'Whether Tony Next is connected to the SharePoint Talent folder, and when it last read it.' },
     { target: 'page-actions', title: 'Sync now', body: '"Sync now" reads only what changed since the last run. "Full scan" reads the whole folder again and removes what no longer exists.' },
     { target: 'sync-runs', title: 'History', body: 'Every run with what changed, or the reason it failed.' },
   ],

@@ -63,7 +63,7 @@ export const REPORTS: ReportDef[] = [
       const groups = [...new Set(rows.map(r => r.age_group ?? 'Other'))].sort((a, b) => groupOrder(ref, a) - groupOrder(ref, b))
       const att = rows.filter(r => r.status === 'attended').length
       return {
-        fileName: `TFEP Camp sheet - ${camp.name} - ${camp.starts_on ?? ss(p.seasonLabel)}`,
+        fileName: `Tony Camp sheet - ${camp.name} - ${camp.starts_on ?? ss(p.seasonLabel)}`,
         title: camp.name,
         subtitle: `${STAGE_LABEL[camp.stage]} · ${fmtRange(camp.starts_on, camp.ends_on)} · ${where ?? ''}${camp.venue ? ` · ${camp.venue}` : ''}`,
         summary: [['Players', rows.length], ['Attended', att], ['Selected', rows.filter(r => r.decision === 'selected').length], ['See again', rows.filter(r => r.decision === 'see_again').length]],
@@ -116,7 +116,7 @@ export const REPORTS: ReportDef[] = [
         })
       }
       return {
-        fileName: `TFEP ${stage === 'national_final' ? 'National final' : 'Province finals'} results - ${ss(p.seasonLabel)}${p.region?.length && stage === 'province_final' ? ' - ' + regionNames(ref, p.region) : ''}`,
+        fileName: `Tony ${stage === 'national_final' ? 'National final' : 'Province finals'} results - ${ss(p.seasonLabel)}${p.region?.length && stage === 'province_final' ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: `${STAGE_LABEL[stage]}${stage === 'province_final' ? 's' : ''} · results`,
         subtitle: `Scouting ${p.seasonLabel}${p.region?.length && stage === 'province_final' ? ` · ${regionNames(ref, p.region)}` : ''}`,
         summary: order.slice(0, 4).map(([l, t]) => [l, rows.filter(t).length] as [string, Cell]),
@@ -146,7 +146,7 @@ export const REPORTS: ReportDef[] = [
         .sort((x, y) => x.pl.last_name.localeCompare(y.pl.last_name) || (x.c.starts_on ?? '').localeCompare(y.c.starts_on ?? ''))
       const one = acs.length === 1 ? acs[0] : null
       return {
-        fileName: `TFEP Academy report - ${names(acs.map(a => a.name), 'academies')} - ${ss(p.seasonLabel)}`,
+        fileName: `Tony Academy report - ${names(acs.map(a => a.name), 'academies')} - ${ss(p.seasonLabel)}`,
         title: one ? one.name : `${acs.length} academies`,
         subtitle: one ? `Academy report · scouting ${p.seasonLabel} · ${ref.district(one.district_id)?.name ?? ''}, ${ref.regionOf(one.district_id)?.name ?? ''}` : `Academy report · scouting ${p.seasonLabel} · ${acs.map(a => a.name).join(', ')}`,
         summary: [['Players in squad', players.length], ['Sent to camps', new Set(rows.map(r => r.player_id)).size], ['Selected', new Set(rows.filter(r => r.decision === 'selected').map(r => r.player_id)).size], ['Province finals', new Set(list.filter(x => x.c.stage !== 'district').map(x => x.pl.id)).size]],
@@ -176,7 +176,7 @@ export const REPORTS: ReportDef[] = [
       const vmap = new Map(visits.map(v => [v.academy_id, v]))
       const regions = ref.regions.filter(r => !p.region?.length || p.region.includes(r.id))
       return {
-        fileName: `TFEP Academy register - ${ss(p.seasonLabel)}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
+        fileName: `Tony Academy register - ${ss(p.seasonLabel)}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: 'Academy register',
         subtitle: `Scouting ${p.seasonLabel}${p.region?.length ? ` · ${regions.map(r => r.name).join(', ')}` : ' · all provinces'}`,
         summary: [['Academies', ref.academies.filter(a => a.is_active && regions.some(r => r.id === ref.regionOf(a.district_id)?.id)).length], ['Visited', visits.filter(v => v.visit_date && regions.some(r => r.id === ref.regionOf(ref.academy(v.academy_id)?.district_id)?.id)).length]],
@@ -206,7 +206,7 @@ export const REPORTS: ReportDef[] = [
       const list = players.filter(x => (!p.group?.length || p.group.includes(ageGroupFor(x.birth_year, ref.groups) ?? '')) &&
         (!p.region?.length || p.region.includes(ref.regionOf(x.district_id ?? ref.academy(x.academy_id)?.district_id)?.id ?? '')))
       return {
-        fileName: `TFEP Potential pool - ${ss(p.seasonLabel)}${p.group?.length ? ' - ' + p.group.join(' + ') : ''}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
+        fileName: `Tony Potential pool - ${ss(p.seasonLabel)}${p.group?.length ? ' - ' + p.group.join(' + ') : ''}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: 'Potential pool',
         subtitle: `Scouting ${p.seasonLabel}${p.group?.length ? ` · ${p.group.join(', ')}` : ''}${p.region?.length ? ` · ${p.region.map(id => ref.regions.find(r => r.id === id)?.name).join(', ')}` : ''}`,
         summary: [['Players', list.length], ['Selected', list.filter(x => x.pool_status === 'selected').length], ['See again', list.filter(x => x.pool_status === 'see_again').length]],
@@ -236,7 +236,7 @@ export const REPORTS: ReportDef[] = [
       const regionOfCamp = (c: Camp) => c.region_id ?? ref.district(c.district_id)?.region_id ?? null
       const list = camps.filter(c => !p.region?.length || p.region.includes(regionOfCamp(c) ?? '') || (c.stage === 'national_final' && !regionOfCamp(c)))
       return {
-        fileName: `TFEP Camps - ${ss(p.seasonLabel)}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
+        fileName: `Tony Camps - ${ss(p.seasonLabel)}${p.region?.length ? ' - ' + regionNames(ref, p.region) : ''}`,
         title: 'Camps of the season',
         subtitle: `Scouting ${p.seasonLabel}${p.region?.length ? ` · ${p.region.map(id => ref.regions.find(r => r.id === id)?.name).join(', ')}` : ''}`,
         summary: [['Camps', list.length], ['Players', list.reduce((s, c) => s + (smap.get(c.id)?.total ?? 0), 0)], ['Selected', list.reduce((s, c) => s + (smap.get(c.id)?.selected ?? 0), 0)]],

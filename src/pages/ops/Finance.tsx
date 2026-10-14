@@ -99,7 +99,7 @@ export default function FinancePage() {
                   <td className="px-3 py-2 text-right font-semibold">{Number(r.amount_out) ? rwf(Number(r.amount_out)) : ''}</td>
                   <td className="px-3 py-2 text-right font-semibold text-good">{Number(r.amount_in) ? rwf(Number(r.amount_in)) : ''}</td>
                   <td className="px-3 py-2 text-right text-muted">{r.balance != null ? rwf(Number(r.balance)) : ''}</td>
-                  <td className="px-3 py-2">{r.file_id && files[r.file_id] ? <a onClick={e => e.stopPropagation()} href={files[r.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-red hover:underline"><FileText size={13} /> Open</a> : r.invoice_ref ? <span className="text-xs text-faint" title={r.invoice_ref}>Named</span> : ''}</td>
+                  <td className="px-3 py-2">{r.file_id && files[r.file_id] ? <a onClick={e => e.stopPropagation()} href={files[r.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> Open</a> : r.invoice_ref ? <span className="text-xs text-faint" title={r.invoice_ref}>Named</span> : ''}</td>
                 </tr>
               ))}</tbody>
             </table>
@@ -121,7 +121,7 @@ function TxModal({ tx, accounts, types, onClose, onDone }: { tx: Tx | null; acco
     if (!Number(f.out) && !Number(f.inn)) return setErr('Enter an amount out or in.')
     setBusy(true)
     const row = { account_id: f.account_id, day: f.day, amount_out: Number(f.out) || 0, amount_in: Number(f.inn) || 0, description: f.description || null, type: f.type || null, subtype: f.subtype || null, payee: f.payee || null, invoice_ref: f.invoice_ref || null }
-    const { error } = tx ? await supabase.from('finance_tx').update(row).eq('id', tx.id) : await supabase.from('finance_tx').insert({ ...row, source: 'Pluribus', created_by: profile?.id })
+    const { error } = tx ? await supabase.from('finance_tx').update(row).eq('id', tx.id) : await supabase.from('finance_tx').insert({ ...row, source: 'Tony Next', created_by: profile?.id })
     setBusy(false)
     if (error) return setErr(errMsg(error))
     onDone()

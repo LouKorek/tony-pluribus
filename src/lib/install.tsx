@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { MonitorDown } from 'lucide-react'
 import { cx } from '../components/ui'
 
-// "Install Pluribus" — the browser offers it once the app meets the install rules
+// "Install Tony Next" — the browser offers it once the app meets the install rules
 // (manifest, icons, service worker). The event can fire before React starts, so it is caught here at load.
 interface PromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
 let deferred: PromptEvent | null = null
@@ -26,13 +26,13 @@ export function useInstall() {
   }
 }
 
-/** Sidebar row (staff) or icon (coach header) that installs Pluribus as a desktop / phone app. */
-export function InstallButton({ variant = 'row', label = 'Install Pluribus app', className }: { variant?: 'row' | 'icon'; label?: string; className?: string }) {
+/** Sidebar row (staff) or icon (coach header) that installs Tony Next as a desktop / phone app. */
+export function InstallButton({ variant = 'row', label = 'Install Tony Next app', className }: { variant?: 'row' | 'icon'; label?: string; className?: string }) {
   const { canInstall, install } = useInstall()
   if (!canInstall) return null
   return variant === 'icon'
     ? <button onClick={install} title={label} aria-label={label} className={cx('rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white', className)}><MonitorDown size={18} /></button>
-    : <button onClick={install} className={cx('flex w-full items-center gap-2.5 rounded-lg border border-white/10 px-3 py-2 text-left text-sm text-white/80 hover:border-lime/50 hover:text-white', className)}>
-        <MonitorDown size={16} className="text-lime" /><span className="flex-1">{label}</span>
+    : <button onClick={install} className={cx('flex w-full items-center gap-2.5 rounded-lg border border-white/10 px-3 py-2 text-left text-sm text-white/80 hover:border-neon/50 hover:text-white', className)}>
+        <MonitorDown size={16} className="text-neon" /><span className="flex-1">{label}</span>
       </button>
 }

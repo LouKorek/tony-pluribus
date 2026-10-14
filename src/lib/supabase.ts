@@ -34,7 +34,7 @@ export interface Profile {
   created_at: string
 }
 
-export interface Project { id: string; name: string; slug: string; country: string | null; partner: string | null; timezone: string; sharepoint_root: string | null }
+export interface Project { id: string; name: string; slug: string; country: string | null; partner: string | null; timezone: string; sharepoint_root: string | null; settings?: Record<string, unknown> | null }
 export interface Season { id: string; project_id: string; label: string; starts_on: string | null; ends_on: string | null; is_current_scouting: boolean; is_current_operational: boolean }
 export interface Region { id: string; name: string; sort: number }
 export interface District { id: string; name: string; region_id: string }

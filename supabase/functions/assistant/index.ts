@@ -1,4 +1,4 @@
-// Pluribus · AI assistant.
+// Tony Next · AI assistant.
 // Answers questions about the programme by reading the database AS THE SIGNED-IN USER:
 // every query runs with the user's own token, so the same access rules apply as on the screens.
 // Read only. The Anthropic key lives in the function secrets (ANTHROPIC_API_KEY), never in the browser.
@@ -44,7 +44,7 @@ const OPS = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'ilike', 'in', 'is'] as cons
 
 const tools = [{
   name: 'query',
-  description: 'Read rows from one table of the Pluribus database. PostgREST select syntax is allowed in "select", including embedded relations such as "name, team:teams(name)". Returns at most 200 rows. Use count=true to get only the number of matching rows.',
+  description: 'Read rows from one table of the Tony Next database. PostgREST select syntax is allowed in "select", including embedded relations such as "name, team:teams(name)". Returns at most 200 rows. Use count=true to get only the number of matching rows.',
   input_schema: {
     type: 'object',
     properties: {
@@ -79,7 +79,7 @@ Deno.serve(async req => {
     if (!history.length || history[history.length - 1].role !== 'user') return json({ error: 'Ask a question' }, 400)
 
     const today = new Date().toISOString().slice(0, 10)
-    const system = `You are the assistant of Pluribus, the management system of the Tony Football Excellence Programme in Rwanda, run with SL Benfica.
+    const system = `You are the assistant of Tony Next, the management system of the Tony Football Excellence Programme in Rwanda, run with SL Benfica.
 Today is ${today}. Answer the staff's questions using the query tool; never invent numbers, players or dates. If the data is not there or you are not allowed to read it, say so plainly.
 Answer in the language of the question (English, Kinyarwanda, Portuguese, Hebrew...). Be short and concrete; use a small table or list when it helps. Write player names as First LAST.
 Scouting: academies submit players to district camps, the best go to province finals and then the national final; pool_status tracks a player's place. Teams (U13, U15, U17, U20) are the Tony squads of an operational season.

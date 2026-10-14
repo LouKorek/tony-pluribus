@@ -4,33 +4,28 @@ import { Clock, Lock, ShieldCheck } from 'lucide-react'
 import { supabase, usernameToEmail, USERNAME_RE, errMsg } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
+import { APP_NAME, Bolts, Logo } from '../lib/brand'
 
 function AuthFrame({ title, subtitle, children }: { title: string; subtitle?: ReactNode; children: ReactNode }) {
   return (
     <div className="grid min-h-full lg:grid-cols-[1.05fr_1fr]">
       <div className="relative hidden overflow-hidden bg-ink p-12 text-white lg:flex lg:flex-col">
-        <div className="flex items-center gap-4">
-          <img src="/brand/tony.png" alt="Tony" className="h-7" />
-          <span className="h-8 w-px bg-white/20" />
-          <img src="/brand/benfica.png" alt="SL Benfica" className="h-11 w-11" />
+        <Bolts className="absolute inset-0 h-full w-full" width={1000} height={1100} stroke="rgba(255,255,255,.13)" />
+        <div className="relative"><Logo variant="wordmark" color="white" className="h-7" /></div>
+        <div className="relative mt-auto max-w-md">
+          <div className="label-caps text-neon">{APP_NAME}</div>
+          <h2 className="mt-3 font-display text-6xl font-medium leading-[.92] tracking-tight">The global stars of tomorrow.</h2>
+          <p className="mt-5 text-[16px] leading-relaxed text-white/65">The talent system of Tony. Scouting, academies, camps and players in one place, in every Tony project.</p>
+          <div className="mt-8 flex gap-6 label-caps text-[11px] text-white/45"><span>Equality</span><span>Authenticity</span><span>Innovation</span></div>
         </div>
-        <div className="mt-auto max-w-md">
-          <div className="label-caps text-lime">Pluribus</div>
-          <h2 className="mt-3 font-display text-6xl font-bold uppercase leading-[.92] tracking-tight">From every district, one pathway.</h2>
-          <p className="mt-5 text-[15px] leading-relaxed text-white/60">The talent platform of Tony and SL Benfica. Scouting, academies, camps and players in one place, in step with the shared Talent folder.</p>
-        </div>
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border-[56px] border-lime/[.07]" />
-        <div className="pointer-events-none absolute -bottom-40 right-10 h-[28rem] w-[28rem] rounded-full border-[70px] border-red/[.12]" />
       </div>
       <div className="flex items-center justify-center px-5 py-10 sm:px-10">
         <div className="w-full max-w-[400px]">
           <div className="mb-8 flex items-center gap-3 rounded-xl bg-ink px-4 py-3 lg:hidden">
-            <img src="/brand/tony.png" alt="Tony" className="h-4" />
-            <span className="h-5 w-px bg-white/20" />
-            <img src="/brand/benfica.png" alt="SL Benfica" className="h-7 w-7" />
-            <span className="ml-auto font-display text-[11px] font-semibold uppercase tracking-[.2em] text-white/50">Pluribus</span>
+            <Logo variant="wordmark" color="neon" className="h-[18px]" />
+            <span className="ml-auto font-display uppercase text-[11px] font-semibold tracking-[.2em] text-white/50">{APP_NAME}</span>
           </div>
-          <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight">{title}</h1>
+          <h1 className="font-display text-4xl font-semibold leading-none tracking-tight">{title}</h1>
           {subtitle && <p className="mt-2 text-[15px] text-muted">{subtitle}</p>}
           <div className="mt-7">{children}</div>
         </div>
@@ -60,7 +55,7 @@ export function LoginPage() {
   return (
     <AuthFrame title="Sign in" subtitle="Use the username and password you were given.">
       {needsSetup && (
-        <div className="mb-6 rounded-xl border border-ink bg-lime p-4 text-ink">
+        <div className="mb-6 rounded-xl border border-ink bg-neon p-4 text-ink">
           <div className="flex items-center gap-2 font-semibold"><ShieldCheck size={17} /> First-time setup</div>
           <p className="mt-1 text-sm">The owner account has not been claimed yet.</p>
           <Link to="/setup" className="mt-3 inline-flex h-9 items-center rounded-lg bg-ink px-3 text-sm font-semibold text-white">Set up the owner account</Link>
@@ -74,8 +69,8 @@ export function LoginPage() {
       </form>
       <div className="mt-8 rounded-xl border border-line bg-card p-4 text-sm">
         <div className="font-semibold">Academy coach?</div>
-        <p className="mt-0.5 text-muted">Create your account, and a TFEP admin will approve it.</p>
-        <Link to="/signup" className="mt-2 inline-block font-semibold text-red hover:underline">Create a coach account →</Link>
+        <p className="mt-0.5 text-muted">Create your account, and a Tony admin will approve it.</p>
+        <Link to="/signup" className="mt-2 inline-block font-semibold text-royal hover:underline">Create a coach account →</Link>
       </div>
     </AuthFrame>
   )
@@ -142,7 +137,7 @@ export function SignupPage() {
     const u = f.username.trim().toLowerCase()
     if (!f.full_name.trim()) return setErr('Enter your full name.')
     if (!USERNAME_RE.test(u)) return setErr('Username: 3–32 characters, letters, digits, dots, dashes or underscores.')
-    if (!f.phone.trim()) return setErr('Enter a phone number so TFEP can reach you.')
+    if (!f.phone.trim()) return setErr('Enter a phone number so Tony can reach you.')
     if (!f.academy_id && !f.requested_academy.trim()) return setErr('Choose your academy, or type its name if it is not listed.')
     if (f.password.length < 8) return setErr('Password: at least 8 characters.')
     if (f.password !== f.confirm) return setErr('The two passwords do not match.')
@@ -186,7 +181,7 @@ export function SignupPage() {
         {err && <Alert>{err}</Alert>}
         <Button variant="primary" className="w-full" loading={busy} type="submit">Create account</Button>
       </form>
-      <p className="mt-6 text-sm text-muted">Already have an account? <Link to="/login" className="font-semibold text-red hover:underline">Sign in</Link></p>
+      <p className="mt-6 text-sm text-muted">Already have an account? <Link to="/login" className="font-semibold text-royal hover:underline">Sign in</Link></p>
     </AuthFrame>
   )
 }
@@ -197,7 +192,7 @@ export function PendingPage() {
   return (
     <AuthFrame
       title={locked ? 'Account locked' : 'Waiting for approval'}
-      subtitle={locked ? 'An admin has locked this account. Contact TFEP if you think this is a mistake.' : 'Your account was created. A TFEP admin will check it and link it to your academy.'}
+      subtitle={locked ? 'An admin has locked this account. Contact Tony if you think this is a mistake.' : 'Your account was created. A Tony admin will check it and link it to your academy.'}
     >
       <div className="rounded-xl border border-line bg-card p-5">
         <div className="flex items-center gap-3">

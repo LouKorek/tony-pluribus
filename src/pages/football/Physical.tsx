@@ -71,7 +71,7 @@ export default function PhysicalPage() {
                   <tr className="border-b border-line bg-paper/70 text-xs text-muted">
                     <th rowSpan={2} className="sticky left-0 z-10 min-w-[200px] bg-paper px-3 py-2 text-left font-semibold">Player</th>
                     {dates.map(d => <th key={d} colSpan={g.metrics.length} className="border-l border-line px-2 py-1.5 text-center font-semibold">{fmtDay(d)}</th>)}
-                    <th colSpan={g.metrics.length} className="border-l border-line bg-ink px-2 py-1.5 text-center font-semibold text-lime">Change</th>
+                    <th colSpan={g.metrics.length} className="border-l border-line bg-ink px-2 py-1.5 text-center font-semibold text-neon">Change</th>
                   </tr>
                   <tr className="border-b border-line bg-paper/70 text-[11px] text-muted">
                     {dates.flatMap(d => g.metrics.map(m => <th key={d + m} className="border-l border-line/60 px-2 py-1 text-center font-medium">{METRIC_LABEL[m][0].replace('Sprint ', '')} <span className="text-faint">{METRIC_LABEL[m][1]}</span></th>))}
@@ -87,7 +87,7 @@ export default function PhysicalPage() {
                         <td key={d + m} className="border-l border-line/60 p-0.5 text-center">
                           {canEdit
                             ? <input defaultValue={v ? String(Number(v.value)) : ''} key={v?.id ?? 'n'} onBlur={e => save(r.player_id, m, d, e.target.value)}
-                                className="h-8 w-16 rounded border border-transparent bg-transparent text-center hover:border-line-2 focus:border-ink focus:outline-none focus:ring-2 focus:ring-lime/70" inputMode="decimal" />
+                                className="h-8 w-16 rounded border border-transparent bg-transparent text-center hover:border-line-2 focus:border-ink focus:outline-none focus:ring-2 focus:ring-neon/70" inputMode="decimal" />
                             : <span>{v ? Number(v.value) : ''}</span>}
                         </td>
                       )
@@ -98,7 +98,7 @@ export default function PhysicalPage() {
                       const diff = Number(series[series.length - 1].value) - Number(series[0].value)
                       const good = g.lowerIsBetter ? diff < 0 : diff > 0
                       return (
-                        <td key={'c' + m} className={cx('border-l border-line/60 px-2 text-center font-semibold', g.lowerIsBetter || m === 'height_cm' ? (good ? 'text-good' : diff === 0 ? 'text-muted' : 'text-red') : 'text-text')}>
+                        <td key={'c' + m} className={cx('border-l border-line/60 px-2 text-center font-semibold', g.lowerIsBetter || m === 'height_cm' ? (good ? 'text-good' : diff === 0 ? 'text-muted' : 'text-royal') : 'text-text')}>
                           <span className="inline-flex items-center gap-0.5">{diff > 0 ? <ArrowUpRight size={13} /> : diff < 0 ? <ArrowDownRight size={13} /> : null}{diff > 0 ? '+' : ''}{Math.round(diff * 100) / 100}</span>
                         </td>
                       )

@@ -72,10 +72,10 @@ export default function AcademiesPage() {
         actions={canEdit && <Button variant="primary" onClick={() => setOpen('new')}><Plus size={16} /> New academy</Button>} />
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4" data-tour="academy-stats">
-        <Card className="p-4"><div className="label-caps text-muted">Academies</div><div className="mt-1 font-display text-4xl font-bold">{ref.academies.filter(a => a.is_active).length}</div><div className="text-xs text-muted">active in the register</div></Card>
-        <Card className="p-4"><div className="label-caps text-muted">Visited</div><div className="mt-1 font-display text-4xl font-bold">{visited}</div><div className="text-xs text-muted">scouting for {seasonLabel}</div></Card>
-        <Card className="p-4"><div className="label-caps text-muted">Players seen</div><div className="mt-1 font-display text-4xl font-bold">{seen.toLocaleString()}</div><div className="text-xs text-muted">as reported by the scouts</div></Card>
-        <Card className="p-4"><div className="label-caps text-muted">Selected</div><div className="mt-1 font-display text-4xl font-bold">{sel}</div><div className="text-xs text-muted">{seen ? Math.round((sel / seen) * 100) : 0}% of players seen</div></Card>
+        <Card className="p-4"><div className="label-caps text-muted">Academies</div><div className="mt-1 font-display text-4xl font-semibold">{ref.academies.filter(a => a.is_active).length}</div><div className="text-xs text-muted">active in the register</div></Card>
+        <Card className="p-4"><div className="label-caps text-muted">Visited</div><div className="mt-1 font-display text-4xl font-semibold">{visited}</div><div className="text-xs text-muted">scouting for {seasonLabel}</div></Card>
+        <Card className="p-4"><div className="label-caps text-muted">Players seen</div><div className="mt-1 font-display text-4xl font-semibold">{seen.toLocaleString()}</div><div className="text-xs text-muted">as reported by the scouts</div></Card>
+        <Card className="p-4"><div className="label-caps text-muted">Selected</div><div className="mt-1 font-display text-4xl font-semibold">{sel}</div><div className="text-xs text-muted">{seen ? Math.round((sel / seen) * 100) : 0}% of players seen</div></Card>
       </div>
 
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center" data-tour="filters">
@@ -171,7 +171,7 @@ function AcademyDrawer({ academy, history, canEdit, onClose, onSaved }: { academ
           <Field label="Phone"><div className="flex gap-2"><Input value={f.contact_phone} onChange={e => setF({ ...f, contact_phone: e.target.value })} disabled={!canEdit} />{f.contact_phone && <a href={`tel:${f.contact_phone}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line-2 text-muted hover:text-text" title="Call"><Phone size={15} /></a>}</div></Field>
         </div>
         <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} disabled={!canEdit} /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.is_active} onChange={e => setF({ ...f, is_active: e.target.checked })} disabled={!canEdit} className="h-4 w-4 accent-red" /> Active academy</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.is_active} onChange={e => setF({ ...f, is_active: e.target.checked })} disabled={!canEdit} className="h-4 w-4 accent-royal" /> Active academy</label>
         {err && <Alert>{err}</Alert>}
 
         {academy && (
@@ -193,7 +193,7 @@ function AcademyDrawer({ academy, history, canEdit, onClose, onSaved }: { academ
               </div>
             )}
             <p className="mt-3 text-sm text-muted">{players === null ? '' : `${players} player${players === 1 ? '' : 's'} linked to this academy in the system.`}</p>
-            <Link to={`/coach-preview/${academy.id}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-red hover:underline"><Eye size={15} />See this academy's coach portal</Link>
+            <Link to={`/coach-preview/${academy.id}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-royal hover:underline"><Eye size={15} />See this academy's coach portal</Link>
           </div>
         )}
       </div>

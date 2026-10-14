@@ -42,7 +42,7 @@ export function PlayerTony({ playerId, photoId }: { playerId: string; photoId?: 
     <section>
       <div className="mb-3 flex items-center justify-between">
         <div className="label-caps text-muted">At Tony</div>
-        {photoId && links[photoId] && <a href={links[photoId].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-red hover:underline"><Camera size={13} /> Photo</a>}
+        {photoId && links[photoId] && <a href={links[photoId].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><Camera size={13} /> Photo</a>}
       </div>
       {teams.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5">
@@ -51,7 +51,7 @@ export function PlayerTony({ playerId, photoId }: { playerId: string; photoId?: 
       )}
       <div className="grid grid-cols-3 gap-2 text-center sm:grid-cols-6">
         {[['Sessions', att.trained], ['Minutes', att.minutes.toLocaleString()], ['Matches', mt.matches], ['Goals', mt.goals], ['Assists', mt.assists], ['Cards', `${mt.yellow}/${mt.red}`]].map(([l, v]) => (
-          <div key={l as string} className="rounded-lg bg-paper px-2 py-2"><div className="font-display text-xl font-bold leading-none">{v}</div><div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">{l}</div></div>
+          <div key={l as string} className="rounded-lg bg-paper px-2 py-2"><div className="font-display text-xl font-semibold leading-none">{v}</div><div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">{l}</div></div>
         ))}
       </div>
       {meas.length > 0 && (
@@ -65,7 +65,7 @@ export function PlayerTony({ playerId, photoId }: { playerId: string; photoId?: 
               <div key={k} className="rounded-lg border border-line px-3 py-2">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-muted">{METRIC_LABEL[k][0]}</div>
                 <div className="font-semibold">{Number(l.value)} {METRIC_LABEL[k][1]}</div>
-                {d !== null && <div className={cx('text-xs', k === 'weight_kg' ? 'text-muted' : good ? 'text-good' : 'text-red')}>{d > 0 ? '+' : ''}{Math.round(d * 100) / 100} since {f!.taken_on?.slice(0, 7)}</div>}
+                {d !== null && <div className={cx('text-xs', k === 'weight_kg' ? 'text-muted' : good ? 'text-good' : 'text-royal')}>{d > 0 ? '+' : ''}{Math.round(d * 100) / 100} since {f!.taken_on?.slice(0, 7)}</div>}
               </div>
             )
           })}
@@ -77,7 +77,7 @@ export function PlayerTony({ playerId, photoId }: { playerId: string; photoId?: 
             <li key={e.season.label} className="flex items-start gap-2 text-sm">
               {e.grade && <span className={cx('mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold', GRADE_LABEL[e.grade][1])}>{e.grade}</span>}
               <span className="flex-1"><b>{e.season.label.replace('-20', '/')}</b> · {e.grade ? GRADE_LABEL[e.grade][0] : 'Not graded'}{e.summary ? <span className="block text-muted">{e.summary}</span> : null}</span>
-              {e.report_file_id && links[e.report_file_id] && <a href={links[e.report_file_id].url} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-red hover:underline"><FileText size={13} /> Report</a>}
+              {e.report_file_id && links[e.report_file_id] && <a href={links[e.report_file_id].url} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> Report</a>}
             </li>
           ))}
         </ul>

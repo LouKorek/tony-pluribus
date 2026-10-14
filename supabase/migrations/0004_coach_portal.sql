@@ -85,7 +85,7 @@ begin
   select * into ctx from public.coach_ctx();
   if not exists (select 1 from public.players where id = p_id and academy_id = ctx.v_academy) then raise exception 'Player not found in your squad'; end if;
   if exists (select 1 from public.camp_participants where player_id = p_id and status <> 'removed') then
-    raise exception 'This player has already been to a TFEP camp and stays on record. Ask TFEP staff if he left your academy.';
+    raise exception 'This player has already been to a Tony camp and stays on record. Ask Tony staff if he left your academy.';
   end if;
   delete from public.players where id = p_id;
 end $$;

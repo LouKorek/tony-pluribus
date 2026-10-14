@@ -73,19 +73,19 @@ export default function AssistantPage() {
         <div className="scroll-thin flex-1 space-y-4 overflow-y-auto p-5">
           {!msgs.length ? (
             <div className="mx-auto max-w-2xl py-6 text-center">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime text-ink"><Sparkles size={22} /></span>
-              <div className="mt-3 font-display text-2xl font-bold uppercase">What do you want to know?</div>
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-neon text-ink"><Sparkles size={22} /></span>
+              <div className="mt-3 font-display text-2xl font-semibold ">What do you want to know?</div>
               <div data-tour="suggestions" className="mt-5 grid gap-2 sm:grid-cols-2">
                 {SUGGEST.map(s => <button key={s} onClick={() => ask(s)} className="rounded-lg border border-line bg-paper/60 px-3 py-2.5 text-left text-sm hover:border-ink/30 hover:bg-paper">{s}</button>)}
               </div>
             </div>
           ) : msgs.map((m, i) => (
             <div key={i} className={cx('flex gap-3', m.role === 'user' && 'justify-end')}>
-              {m.role === 'assistant' && <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-lime"><Bot size={15} /></span>}
+              {m.role === 'assistant' && <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-neon"><Bot size={15} /></span>}
               <div className={cx('max-w-[80%] rounded-2xl px-4 py-2.5 text-sm', m.role === 'user' ? 'bg-ink text-white' : 'bg-paper')}>{m.role === 'user' ? <span className="whitespace-pre-line">{m.content}</span> : <Rich text={m.content} />}</div>
             </div>
           ))}
-          {busy && <div className="flex gap-3"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-lime"><Bot size={15} /></span><div className="rounded-2xl bg-paper px-4 py-3 text-sm text-muted"><span className="animate-pulse">Looking into the data…</span></div></div>}
+          {busy && <div className="flex gap-3"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-neon"><Bot size={15} /></span><div className="rounded-2xl bg-paper px-4 py-3 text-sm text-muted"><span className="animate-pulse">Looking into the data…</span></div></div>}
           {err && <Alert>{err}</Alert>}
           <div ref={end} />
         </div>

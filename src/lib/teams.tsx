@@ -33,23 +33,23 @@ export const pname = (p: { first_name: string; last_name: string }) => (p.last_n
 /** The season the team screens show. Defaults to the running (operational) season. */
 export function useTeamSeason() {
   const { seasons } = useAuth()
-  const [id, setId] = useState<string | null>(() => { try { return sessionStorage.getItem('pluribus.teamSeason') } catch { return null } })
+  const [id, setId] = useState<string | null>(() => { try { return sessionStorage.getItem('tonynext.teamSeason') } catch { return null } })
   const season: Season | null = seasons.find(s => s.id === id) ?? seasons.find(s => s.is_current_operational) ?? seasons[seasons.length - 1] ?? null
-  const set = (v: string) => { setId(v); try { sessionStorage.setItem('pluribus.teamSeason', v) } catch { /* storage blocked */ } }
+  const set = (v: string) => { setId(v); try { sessionStorage.setItem('tonynext.teamSeason', v) } catch { /* storage blocked */ } }
   return { season, setSeason: set, seasons }
 }
 
 /** Teams of a season and the one picked (kept in the address so a link opens the same team). */
 export function useTeams(seasonId: string | undefined) {
   const [teams, setTeams] = useState<Team[] | null>(null)
-  const [teamId, setTeamId] = useState<string | null>(() => { try { return sessionStorage.getItem('pluribus.team') } catch { return null } })
+  const [teamId, setTeamId] = useState<string | null>(() => { try { return sessionStorage.getItem('tonynext.team') } catch { return null } })
   useEffect(() => {
     if (!seasonId) return
     setTeams(null)
     supabase.from('teams').select('*').eq('season_id', seasonId).order('sort').then(({ data }) => setTeams((data as Team[]) ?? []))
   }, [seasonId])
   const team = useMemo(() => teams?.find(t => t.id === teamId) ?? teams?.[0] ?? null, [teams, teamId])
-  const pick = useCallback((id: string) => { setTeamId(id); try { sessionStorage.setItem('pluribus.team', id) } catch { /* storage blocked */ } }, [])
+  const pick = useCallback((id: string) => { setTeamId(id); try { sessionStorage.setItem('tonynext.team', id) } catch { /* storage blocked */ } }, [])
   return { teams, team, pick }
 }
 

@@ -42,7 +42,7 @@ export default function TransfersPage() {
       <div className="flex items-start justify-between gap-2"><b className="leading-tight">{playerName(m.player)}</b><Badge>{MOVE_KIND[m.kind]}</Badge></div>
       <div className="mt-1 text-muted">{clubOf(m)}{m.player.birth_year ? ` · ${m.player.birth_year}` : ''}</div>
       {(m.starts_on || m.amount) && <div className="mt-1 text-xs text-muted">{m.starts_on ? new Date(m.starts_on + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}{m.ends_on ? ` – ${new Date(m.ends_on + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}{m.amount ? ` · ${Number(m.amount).toLocaleString('en-GB')} ${m.currency ?? ''}` : ''}</div>}
-      {m.file_id && files[m.file_id] && <a onClick={e => e.stopPropagation()} href={files[m.file_id].url} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-red hover:underline"><FileText size={12} /> Document</a>}
+      {m.file_id && files[m.file_id] && <a onClick={e => e.stopPropagation()} href={files[m.file_id].url} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={12} /> Document</a>}
     </button>
   )
 
@@ -78,7 +78,7 @@ export default function TransfersPage() {
                 <td className="px-3 py-2"><Badge tone={MOVE_STATUS[m.status][1]}>{MOVE_STATUS[m.status][0]}</Badge></td>
                 <td className="px-3 py-2 text-muted">{[m.starts_on, m.ends_on].filter(Boolean).join(' – ')}</td>
                 <td className="px-3 py-2 text-muted">{m.amount ? `${Number(m.amount).toLocaleString('en-GB')} ${m.currency ?? ''}` : ''}</td>
-                <td className="px-3 py-2 text-right">{m.file_id && files[m.file_id] && <a onClick={e => e.stopPropagation()} href={files[m.file_id].url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-red hover:underline">Document</a>}</td>
+                <td className="px-3 py-2 text-right">{m.file_id && files[m.file_id] && <a onClick={e => e.stopPropagation()} href={files[m.file_id].url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-royal hover:underline">Document</a>}</td>
               </tr>
             ))}</tbody>
           </table>
