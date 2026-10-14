@@ -146,9 +146,11 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="truncate text-sm font-semibold">{profile?.full_name || profile?.username}</div>
             <div className="truncate text-xs text-white/50">{profile ? ROLE_LABEL[profile.role] : ''}</div>
           </div>
-          <ThemeButton className="text-white/50" />
-          <HelpButton />
-          <button onClick={signOut} className="rounded-md p-2 text-white/50 hover:bg-white/10 hover:text-white" title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>
+          <div className="-mr-1 flex shrink-0 items-center">
+            <ThemeButton className="!p-1.5 text-white/50" />
+            <HelpButton className="!p-1.5" />
+            <button onClick={signOut} className="rounded-md p-1.5 text-white/50 hover:bg-white/10 hover:text-white" title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>
+          </div>
         </div>
       </div>
     </div>
