@@ -97,7 +97,7 @@ export default function ProgressScreen() {
         )}
       </Section>
 
-      <Section title={`${t('academiesIn')} ${geo.region.toLowerCase()}`} id="board">
+      <Section title={`${t('academiesIn')} ${geo.region === 'Intara' ? 'ntara' : geo.region.toLowerCase()}`} id="board">
         {province_board.length === 0 ? (
           <Card><div className="px-4 py-4 text-sm text-muted">{t('boardEmpty')}</div></Card>
         ) : (
