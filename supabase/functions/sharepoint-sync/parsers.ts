@@ -98,6 +98,7 @@ export function parsePresence(wb: XLSX.WorkBook, path: string): Parsed {
     }
     if (mi == null) { notes.push(`${name}: no month found`); continue }
     const y = year ?? yearFor(season, mi)
+    if (months.some(m => m.month === `${y}-${pad(mi + 1)}`)) { notes.push(`${name}: second sheet for the same month, skipped`); continue }
     // the header row: the one with the most day numbers
     let hdr = -1, best = 0
     for (let i = 0; i < Math.min(rows.length, 6); i++) {
@@ -105,34 +106,43 @@ export function parsePresence(wb: XLSX.WorkBook, path: string): Parsed {
       if (cnt > best) { best = cnt; hdr = i }
     }
     if (hdr < 0 || best < 2) { notes.push(`${name}: no day header`); continue }
-    const cols: { col: number; d: number }[] = []
-    const days: { day: string; seq: number; kind: string }[] = []
-    const seen = new Map<number, number>()
-    // the day columns start where three day-like cells follow each other (the totals columns before them are not days)
+    // every calendar day has a column; a day with two sessions has two ("15   M" = morning, "15" = afternoon)
+    const cols: { col: number; d: number; morning: boolean; filled: number; matches: number }[] = []
     const dayLike = (c: Cell) => c != null && (c instanceof Date || (typeof c === 'number' ? c >= 1 && c <= 31 : /^\d{1,2}\s*[A-Za-z]?\s*$/.test(String(c))))
-    let startCol = 1
+    let startCol = 1 // the day columns start where three day-like cells follow each other (totals columns come before them)
     for (let c = 1; c < rows[hdr].length; c++) if (dayLike(rows[hdr][c]) && dayLike(rows[hdr][c + 1]) && dayLike(rows[hdr][c + 2])) { startCol = c; break }
     rows[hdr].forEach((c, col) => {
       if (col < startCol || c == null) return
-      let d: number | null = null, kind = 'training'
+      let d: number | null = null, morning = false
       if (c instanceof Date) d = c.getUTCDate()
       else if (typeof c === 'number' && c >= 1 && c <= 31) d = c
-      else { const m = /^(\d{1,2})\s*([A-Za-z]*)\s*$/.exec(String(c)); if (m) { d = Number(m[1]); if (/^m/i.test(m[2])) kind = 'match' } }
-      if (d == null) return
-      const seq = (seen.get(d) ?? 0) + 1; seen.set(d, seq)
-      cols.push({ col, d: days.length }); days.push({ day: iso(y, mi, d), seq, kind })
+      else { const m = /^(\d{1,2})\s*([A-Za-z]*)\s*$/.exec(String(c)); if (m) { d = Number(m[1]); morning = /^m/i.test(m[2]) } }
+      if (d != null) cols.push({ col, d, morning, filled: 0, matches: 0 })
     })
-    const out: { name: string; cells: { d: number; v: string }[] }[] = []
+    const raw: { name: string; cells: { col: number; v: string }[] }[] = []
     for (const r of rows.slice(hdr + 1)) {
       if (!isPlayerName(r[0])) continue
-      const cells: { d: number; v: string }[] = []
-      for (const { col, d } of cols) {
-        const c = r[col]; if (c == null || c === '') continue
+      const cells: { col: number; v: string }[] = []
+      for (const k of cols) {
+        const c = r[k.col]; if (c == null || c === '') continue
         const v = typeof c === 'number' ? String(Math.round(c)) : str(c).toUpperCase()
-        if (v) cells.push({ d, v })
+        if (!v) continue
+        cells.push({ col: k.col, v }); k.filled++; if (v === 'M') k.matches++
       }
-      out.push({ name: str(r[0]), cells }); n += cells.length
+      raw.push({ name: str(r[0]), cells })
     }
+    // only days that hold something are days of the team; "M" for the squad means a match day
+    const kept = cols.filter(k => k.filled > 0)
+    const perDay = new Map<number, number>(); for (const k of kept) perDay.set(k.d, (perDay.get(k.d) ?? 0) + 1)
+    const seen = new Map<number, number>()
+    const index = new Map<number, number>()
+    const days = kept.map((k, i) => {
+      const seq = (seen.get(k.d) ?? 0) + 1; seen.set(k.d, seq); index.set(k.col, i)
+      const two = (perDay.get(k.d) ?? 1) > 1
+      return { day: iso(y, mi, k.d), seq, kind: k.matches > 0 && k.matches * 2 >= k.filled ? 'match' : 'training', label: two ? (k.morning || seq === 1 ? 'Morning' : 'Afternoon') : null }
+    })
+    const out = raw.map(r => ({ name: r.name, cells: r.cells.filter(c => index.has(c.col)).map(c => ({ d: index.get(c.col)!, v: c.v })) }))
+    n += out.reduce((a, r) => a + r.cells.length, 0)
     if (out.length) months.push({ month: `${y}-${pad(mi + 1)}`, days, rows: out })
   }
   return { payload: { months }, rows: n, notes }
@@ -143,10 +153,31 @@ function parseMeasures(wb: XLSX.WorkBook, path: string, set: 'speed' | 'weight')
   const season = seasonOf(path)
   const byName = new Map<string, { date: string; metric: string; value: number }[]>()
   const notes: string[] = []
+  const profile: { name: string; foot: string | null; district: string | null }[] = []
   let n = 0
   for (const name of wb.SheetNames) {
     const rows = sheetRows(wb, name)
     if (rows.length < 2) continue
+    if (set === 'weight' && /foot/i.test(name)) { // the "Foot" sheet: preferred foot, foot size, hand size, district
+      const hdr = rows.findIndex(r => r.some(c => typeof c === 'string' && /foot/i.test(c)))
+      if (hdr < 0) continue
+      const h = rows[hdr].map(c => str(c).toLowerCase())
+      const cFoot = h.findIndex(s => /^foot$|preferred|strong/.test(s)), cSize = h.findIndex(s => /foot\s*size|shoe/.test(s)), cHand = h.findIndex(s => /hand/.test(s)), cDist = h.findIndex(s => /district/.test(s))
+      const date = toDate(rows[hdr].find(c => c instanceof Date) ?? null) ?? toDate(rows[hdr + 1]?.find(c => c instanceof Date) ?? null)
+      for (const r of rows.slice(hdr + 1)) {
+        if (!isPlayerName(r[0])) continue
+        const foot = str(cFoot >= 0 ? r[cFoot] : null).toLowerCase()
+        profile.push({ name: str(r[0]), foot: /^l/.test(foot) ? 'left' : /^r/.test(foot) ? 'right' : /both|two|ambi/.test(foot) ? 'both' : null, district: str(cDist >= 0 ? r[cDist] : null) || null })
+        if (date) {
+          const list = byName.get(str(r[0])) ?? []
+          const sz = num(cSize >= 0 ? r[cSize] : null), hd = num(cHand >= 0 ? r[cHand] : null)
+          if (sz != null && sz > 20 && sz < 60) { list.push({ date, metric: 'shoe_size', value: sz }); n++ }
+          if (hd != null && hd > 0) { list.push({ date, metric: 'hand_size', value: hd }); n++ }
+          byName.set(str(r[0]), list)
+        }
+      }
+      continue
+    }
     // header row: the one holding "Date" (or the 10m/Weight labels)
     let hdr = rows.findIndex(r => r.some(c => typeof c === 'string' && /^date/i.test(c.trim())))
     if (hdr < 0) hdr = rows.findIndex(r => r.some(c => typeof c === 'string' && /10\s*m|weight|height/i.test(c)))
@@ -189,7 +220,7 @@ function parseMeasures(wb: XLSX.WorkBook, path: string, set: 'speed' | 'weight')
       byName.set(str(r[0]), list)
     }
   }
-  return { payload: { metric_set: set, rows: [...byName].map(([name, values]) => ({ name, values })) }, rows: n, notes }
+  return { payload: { metric_set: set, rows: [...byName].map(([name, values]) => ({ name, values })), profile }, rows: n, notes }
 }
 export const parseSpeed = (wb: XLSX.WorkBook, path: string) => parseMeasures(wb, path, 'speed')
 export const parseWeight = (wb: XLSX.WorkBook, path: string) => parseMeasures(wb, path, 'weight')
@@ -199,7 +230,7 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
   const season = seasonOf(path)
   const comp = /\/Matches\/([^/]+)\//i.exec(path)?.[1]
   const competition = comp ? comp[0].toUpperCase() + comp.slice(1).toLowerCase() : 'Friendly'
-  const matches: { number: number | null; opponent: string | null; date: string | null }[] = []
+  const matches: { number: number | null; opponent: string | null; date: string | null; goals_for: number | null; goals_against: number | null }[] = []
   const rowsOut: { name: string; stats: { m: number; goals: number; assists: number; yc: number; rc: number }[] }[] = []
   const notes: string[] = []
   let n = 0
@@ -220,7 +251,12 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
         const opp = /(?:vs|v\.)\s*(.+?)\s*$/i.exec(s)?.[1] ?? null
         const date = c instanceof Date ? toDate(c) : toDate(s, { season })
         // a header is a match if it names an opponent or a date (totals columns have neither)
-        if (numM || opp || date) { matches.push({ number: numM ? Number(numM[1]) : null, opponent: opp ? opp.replace(/\s+U\s*-?\d{2}\s*$/i, '').trim() : null, date }); current = matches.length - 1 }
+        if (numM || opp || date) {
+          const score = /\(\s*(\d+)\s*[-:]\s*(\d+)\s*\)/.exec(s) // "(16-0)" written after the opponent
+          const opponent = opp ? opp.replace(/\(\s*\d+\s*[-:]\s*\d+\s*\)/g, ' ').replace(/\s+U\s*-?\d{2}\s*$/i, '').replace(/\s+/g, ' ').trim() : null
+          matches.push({ number: numM ? Number(numM[1]) : null, opponent: opponent || null, date, goals_for: score ? Number(score[1]) : null, goals_against: score ? Number(score[2]) : null })
+          current = matches.length - 1
+        }
         else current = -1
       }
       if (current < 0 || col === 0) return
@@ -288,7 +324,7 @@ export function parseEvaluations(wb: XLSX.WorkBook, path: string): Parsed {
 // ───────── Finance ledgers (Finance Momo) ─────────
 export function parseFinance(wb: XLSX.WorkBook, path: string): Parsed {
   const file = path.split('/').pop() ?? path
-  const account = /andre/i.test(file) ? 'Andre' : /fabio/i.test(file) ? 'Fabio' : 'TRW MoMo'
+  const account = /andre/i.test(file) ? 'Andre' : /fabio/i.test(file) ? 'Fabio' : /car|gas|fuel/i.test(file) ? 'Car & fuel' : 'TRW MoMo'
   const sheets: { name: string; rows: Record<string, unknown>[] }[] = []
   const notes: string[] = []
   let n = 0
@@ -301,11 +337,22 @@ export function parseFinance(wb: XLSX.WorkBook, path: string): Parsed {
     const cDate = col(/^date/), cOut = col(/^(out|expense|debit)/), cIn = col(/^(in|income|credit)\b/), cDesc = col(/desc/), cType = col(/^type/), cSub = col(/sub\s*-?\s*type/),
       cName = col(/^(name|payee|to|from|beneficiary)/), cInv = col(/invoice|receipt|ref/), cBal = col(/balance/)
     const yy = /\b(\d{2}|20\d{2})\b/.exec(name)?.[1]
-    const year = yy ? (yy.length === 2 ? 2000 + Number(yy) : Number(yy)) : (/\b(20\d{2})\b/.exec(file)?.[1] ? Number(/\b(20\d{2})\b/.exec(file)![1]) : undefined)
+    const yFile = /\b(20\d{2})\b/.exec(file)?.[1] ?? /\/(20\d{2})[^/]*\//.exec(path)?.[1]
+    const year = yy ? (yy.length === 2 ? 2000 + Number(yy) : Number(yy)) : (yFile ? Number(yFile) : undefined)
+    const sheetMonth = monthIndex(name) // a sheet "JAN 26" holds January 2026: a mistyped year or a swapped day/month is corrected to it
+    let fixed = 0
     const out: Record<string, unknown>[] = []
     for (const r of rows.slice(hdr + 1)) {
-      const date = toDate(r[cDate], { year })
+      let date = toDate(r[cDate], { year })
       if (!date) continue
+      if (sheetMonth != null && year) {
+        const [dy, dm, dd] = date.split('-').map(Number)
+        if (dy !== year || dm - 1 !== sheetMonth) {
+          const day = dm - 1 !== sheetMonth && dd === sheetMonth + 1 && dm <= 31 ? dm : dd
+          const last = new Date(Date.UTC(year, sheetMonth + 1, 0)).getUTCDate()
+          date = iso(year, sheetMonth, Math.min(day, last)); fixed++
+        }
+      }
       const o = num(cOut >= 0 ? r[cOut] : null), i = num(cIn >= 0 ? r[cIn] : null)
       if (o == null && i == null) continue
       const inv = [cInv >= 0 ? r[cInv] : null, cInv >= 0 && /invoice|receipt|ref/.test(h[cInv + 1] ?? '') ? r[cInv + 1] : null].map(str).filter(Boolean).join(' ')
@@ -313,8 +360,9 @@ export function parseFinance(wb: XLSX.WorkBook, path: string): Parsed {
         subtype: str(cSub >= 0 ? r[cSub] : null) || null, payee: str(cName >= 0 ? r[cName] : null) || null, invoice: inv || null, balance: num(cBal >= 0 ? r[cBal] : null) })
     }
     if (out.length) { sheets.push({ name, rows: out }); n += out.length }
+    if (fixed) notes.push(`${name.trim()}: ${fixed} date(s) moved into the month of the sheet`)
   }
-  if (!sheets.length) notes.push('no ledger sheet recognised')
+  if (!sheets.length) notes.push('no dated rows found')
   return { payload: { file, account, sheets }, rows: n, notes }
 }
 

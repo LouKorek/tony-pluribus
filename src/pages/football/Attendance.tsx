@@ -102,7 +102,7 @@ export default function AttendancePage() {
                     <th key={d.id} className={cx('min-w-[38px] px-1 py-1.5 text-center font-semibold', d.kind === 'match' ? 'bg-ink text-neon' : 'text-muted', canEdit && 'cursor-pointer hover:bg-neon hover:text-ink')}
                       title={`${new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })} · ${d.kind}${d.minutes ? ` · ${d.minutes}′` : ''}${canEdit ? ' · click to mark ' + (rows.size ? 'the ticked players' : 'everyone') : ''}`}
                       onClick={e => openCell(e, d, rows.size ? [...rows] : players.map(p => p.player_id))}>
-                      <div>{+d.day.slice(8)}</div><div className="text-[9px] font-normal opacity-70">{d.kind === 'match' ? 'M' : d.kind === 'training' ? (d.seq > 1 ? '2' : '') : d.kind.slice(0, 2).toUpperCase()}</div>
+                      <div>{+d.day.slice(8)}</div><div className="text-[9px] font-normal opacity-70">{d.kind === 'match' ? 'M' : d.kind === 'training' ? (d.label === 'Morning' ? 'AM' : d.label === 'Afternoon' ? 'PM' : d.seq > 1 ? '2' : '') : d.kind.slice(0, 2).toUpperCase()}</div>
                     </th>
                   ))}
                   <th className="px-2 py-2 text-right font-semibold text-muted">Sessions</th>
