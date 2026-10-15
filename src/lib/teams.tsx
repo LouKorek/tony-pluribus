@@ -93,12 +93,12 @@ export function fileUrl(root: string | null | undefined, path: string, ext?: str
 export function useFileLinks(ids: (string | null | undefined)[]) {
   const { project } = useAuth()
   const key = ids.filter(Boolean).sort().join(',')
-  const [map, setMap] = useState<Record<string, { url: string; name: string }>>({})
+  const [map, setMap] = useState<Record<string, { url: string; name: string; ext: string | null }>>({})
   useEffect(() => {
     const list = key ? key.split(',') : []
     if (!list.length) { setMap({}); return }
     supabase.from('talent_files').select('id, path, name, ext').in('id', list.slice(0, 400)).then(({ data }) => {
-      setMap(Object.fromEntries(((data as { id: string; path: string; name: string; ext: string | null }[]) ?? []).map(f => [f.id, { url: fileUrl(project?.sharepoint_root, f.path, f.ext), name: f.name }])))
+      setMap(Object.fromEntries(((data as { id: string; path: string; name: string; ext: string | null }[]) ?? []).map(f => [f.id, { url: fileUrl(project?.sharepoint_root, f.path, f.ext), name: f.name, ext: f.ext }])))
     })
   }, [key, project?.sharepoint_root])
   return map

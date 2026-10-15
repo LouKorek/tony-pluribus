@@ -51,7 +51,7 @@ export default function TrainingPage() {
                     {p.day && <div className="mt-1 text-xs text-muted">{new Date(p.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>}
                     {p.objective && <div className="mt-2 text-sm">{p.objective}</div>}
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      {p.file_id && files[p.file_id] ? <a href={files[p.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> Plan (PDF)</a> : <span />}
+                      {p.file_id && files[p.file_id] ? <a href={files[p.file_id].url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-royal hover:underline"><FileText size={13} /> Plan{files[p.file_id].ext ? ` (${files[p.file_id].ext?.toUpperCase()})` : ''}</a> : <span />}
                       {canEdit && <button onClick={() => setEditing(p)} className="text-xs font-semibold text-muted hover:text-text">Edit</button>}
                     </div>
                   </Card>

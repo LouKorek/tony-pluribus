@@ -1,9 +1,14 @@
-// Tony Next · SharePoint sync (stage 6).
+// Tony Next · SharePoint sync (stage 6) + content sync (stage 19).
 // Reads the changes in the shared Talent folder through Microsoft Graph (delta query) and keeps the
 // talent_files index up to date: new, changed, renamed, moved and deleted files and folders.
+// Then it links files to rows (training plans, match reports, individual reports, photos, documents) and reads
+// every workbook that changed (squads, presence, speed tests, weight and height, match stats, evaluations,
+// finance ledgers, weekly staff reports) so that the screens always mirror the files.
 // Who may run it: an active owner/admin from the Sync Center, or the scheduled job (pg_cron, every 15 minutes).
 // Secrets: MS_CLIENT_SECRET (set by the owner in Supabase). The tenant and app ids below are not secret.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import * as XLSX from 'npm:xlsx@0.18.5'
+import { parseWorkbook } from './parsers.ts'
 
 const TENANT = Deno.env.get('MS_TENANT_ID') ?? 'c2ab5425-6dfd-4dd6-9d7d-cfa8e69b01da'
 const CLIENT = Deno.env.get('MS_CLIENT_ID') ?? '4fa18b48-035a-4371-8243-628d55e5436e'
@@ -17,6 +22,21 @@ const cors = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+
+async function appToken(secret: string) {
+  const tr = await fetch(`https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`, {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: CLIENT, client_secret: secret, scope: 'https://graph.microsoft.com/.default', grant_type: 'client_credentials' }),
+  })
+  const tok = await tr.json()
+  if (!tr.ok) {
+    const d = String(tok.error_description ?? tok.error ?? tr.status)
+    throw new Error(/AADSTS7000229|AADSTS65001|AADSTS700016/.test(d) ? 'Waiting for the TonyRW admin to approve the Tony Next sync app (the approval link has not been accepted yet).'
+      : /AADSTS7000215|AADSTS7000222/.test(d) ? 'The Microsoft secret saved in Supabase is wrong or expired. Create a new client secret and paste it as MS_CLIENT_SECRET.'
+      : `Microsoft sign-in failed: ${d.split('\r')[0]}`)
+  }
+  return tok as { access_token: string }
+}
 
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -49,6 +69,32 @@ Deno.serve(async req => {
   if (!projectId) return json({ error: 'No project is linked to SharePoint' }, 500)
 
   const { data: state } = await db.from('sync_state').select('*').eq('project_id', projectId).maybeSingle()
+
+  // peek: an admin looks at the sheets of one workbook (used to design and check the parsers); not a sync run
+  if (body.peek) {
+    if (!userId) return json({ error: 'Not allowed' }, 403)
+    const { data: f } = await db.from('talent_files').select('item_id, path').eq('id', body.peek).maybeSingle()
+    if (!f?.item_id || !state?.drive_id) return json({ error: 'file not found' }, 404)
+    try {
+      const tok = await appToken(secret)
+      const r = await fetch(`${GRAPH}/drives/${state.drive_id}/items/${f.item_id}/content`, { headers: { authorization: `Bearer ${tok.access_token}` } })
+      if (!r.ok) return json({ error: `download ${r.status}` }, 502)
+      const bytes = new Uint8Array(await r.arrayBuffer())
+      if (body.parse) { // what the parser makes of it, without applying
+        const { data: kind } = await db.rpc('talent_content_kind', { p_path: f.path, p_ext: f.path.split('.').pop()?.toLowerCase() })
+        const parsed = parseWorkbook(String(body.parse === true ? kind : body.parse), bytes, f.path)
+        return json({ ok: true, path: f.path, kind, ...parsed })
+      }
+      const wb = XLSX.read(bytes, { type: 'array', cellDates: true })
+      const sheets: Record<string, unknown> = {}
+      for (const n of wb.SheetNames) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null }) as unknown[][]
+        sheets[n] = { total_rows: rows.length, rows: rows.slice(body.from ?? 0, (body.from ?? 0) + (body.rows ?? 25)).map(r => r.slice(0, body.cols ?? 40)) }
+      }
+      return json({ ok: true, path: f.path, sheets })
+    } catch (e) { return json({ error: e instanceof Error ? e.message : String(e) }, 502) }
+  }
+
   const full = body.full === true || !state?.delta_link
   // never two runs at the same time
   const { data: busy } = await db.from('sync_runs').select('id').eq('project_id', projectId).eq('status', 'running').gt('started_at', new Date(Date.now() - 10 * 60_000).toISOString()).limit(1)
@@ -60,17 +106,7 @@ Deno.serve(async req => {
 
   try {
     // 1. app token
-    const tr = await fetch(`https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`, {
-      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ client_id: CLIENT, client_secret: secret, scope: 'https://graph.microsoft.com/.default', grant_type: 'client_credentials' }),
-    })
-    const tok = await tr.json()
-    if (!tr.ok) {
-      const d = String(tok.error_description ?? tok.error ?? tr.status)
-      throw new Error(/AADSTS7000229|AADSTS65001|AADSTS700016/.test(d) ? 'Waiting for the TonyRW admin to approve the Tony Next sync app (the approval link has not been accepted yet).'
-        : /AADSTS7000215|AADSTS7000222/.test(d) ? 'The Microsoft secret saved in Supabase is wrong or expired. Create a new client secret and paste it as MS_CLIENT_SECRET.'
-        : `Microsoft sign-in failed: ${d.split('\r')[0]}`)
-    }
+    const tok = await appToken(secret)
     const g = async (u: string) => {
       const r = await fetch(u.startsWith('http') ? u : GRAPH + u, { headers: { authorization: `Bearer ${tok.access_token}` } })
       const j = await r.json().catch(() => ({}))
@@ -123,11 +159,44 @@ Deno.serve(async req => {
       deltaLink = page['@odata.deltaLink'] ?? deltaLink
     }
     if (full && !skipped) { const { data: n } = await db.rpc('talent_sync_prune', { p_project: projectId, p_before: run!.started_at }); deleted += Number(n ?? 0) }
-
+    // the index is up to date: save the position before the (longer) content phase
     const now = new Date().toISOString()
     await db.from('sync_state').upsert({ project_id: projectId, drive_id: driveId, root_item_id: rootId, delta_link: deltaLink, last_run_at: now, last_ok_at: now, last_status: 'ok', last_error: null })
-    await finish({ status: 'ok', changed, deleted, error: skipped ? `${skipped} items came without a SharePoint id and were left as they were` : null })
-    return json({ ok: true, full, changed, deleted, skipped })
+
+    // 4. content: files that only link to rows (plans, match reports, individual reports, photos, documents)
+    const { data: linked, error: linkErr } = await db.rpc('link_talent_content', { p_project: projectId })
+    if (linkErr) throw new Error(`link: ${linkErr.message}`)
+
+    // 5. content: workbooks that changed since they were last read (squads, presence, tests, stats, evaluations, finance, weekly reports)
+    const budgetMs = body.content === true ? 110_000 : 45_000
+    const limit = body.content === true ? 60 : 12
+    const started = Date.now()
+    const content = { read: 0, failed: 0, rows: 0, pending: 0, files: [] as { path: string; rows?: number; error?: string; notes?: string[] }[] }
+    const { data: pending, error: pendErr } = await db.rpc('talent_content_pending', { p_project: projectId, p_limit: limit })
+    if (pendErr) throw new Error(`pending: ${pendErr.message}`)
+    const queue = (pending ?? []) as { id: string; item_id: string; path: string; kind: string }[]
+    for (const f of queue) {
+      if (Date.now() - started > budgetMs) { content.pending++; continue }
+      try {
+        const r = await fetch(`${GRAPH}/drives/${driveId}/items/${f.item_id}/content`, { headers: { authorization: `Bearer ${tok.access_token}` } })
+        if (!r.ok) throw new Error(`download ${r.status}`)
+        const parsed = parseWorkbook(f.kind, new Uint8Array(await r.arrayBuffer()), f.path)
+        const { data: n, error } = await db.rpc('talent_apply', { p_file: f.id, p_kind: f.kind, p: parsed.payload })
+        if (error) throw new Error(error.message)
+        content.read++; content.rows += Number(n ?? 0)
+        content.files.push({ path: f.path, rows: Number(n ?? 0), notes: parsed.notes.length ? parsed.notes : undefined })
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        await db.rpc('talent_content_failed', { p_file: f.id, p_kind: f.kind, p_error: msg })
+        content.failed++; content.files.push({ path: f.path, error: msg })
+      }
+    }
+    // membership and photos may depend on players the workbooks just created
+    if (content.read) await db.rpc('link_talent_content', { p_project: projectId })
+
+    const note = [skipped ? `${skipped} items came without a SharePoint id and were left as they were` : null, content.failed ? `${content.failed} workbook(s) could not be read` : null].filter(Boolean).join('; ')
+    await finish({ status: 'ok', changed, deleted, error: note || null })
+    return json({ ok: true, full, changed, deleted, skipped, linked, content })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     await db.from('sync_state').upsert({ project_id: projectId, last_run_at: new Date().toISOString(), last_status: 'error', last_error: msg })

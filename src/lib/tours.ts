@@ -144,6 +144,7 @@ export const STAFF_TOURS: TourMap = {
   sync: [
     { target: 'sync-status', title: 'Connection', body: 'Whether Tony Next is connected to the SharePoint Talent folder, and when it last read it.' },
     { target: 'page-actions', title: 'Sync now', body: '"Sync now" reads only what changed since the last run. "Full scan" reads the whole folder again and removes what no longer exists.' },
+    { target: 'sync-content', title: 'Content inside the files', body: 'Every run also reads the workbooks that changed (squads, presence, tests, match stats, evaluations, finance, weekly reports) and links plans, reports, photos and documents. "Reconcile content now" reads everything that is still pending; "Re-read all workbooks" starts from scratch.' },
     { target: 'sync-runs', title: 'History', body: 'Every run with what changed, or the reason it failed.' },
   ],
   users: [
