@@ -45,7 +45,7 @@ export default function TrainingPage() {
                 {list.map(p => (
                   <Card key={p.id} className="flex flex-col p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-display text-2xl font-semibold leading-none">{p.number ? `T${p.number}` : 'Session'}</span>
+                      <span className="font-display text-2xl font-semibold leading-none">{p.number ? `T${p.number}` : 'Session'}{(() => { const nm = p.file_id ? files[p.file_id]?.name ?? '' : ''; const twin = list.some(q => q.id !== p.id && q.number === p.number); return /\sM\.[a-z]+$/i.test(nm) ? <span className="ml-2 text-xs font-semibold text-muted">Morning</span> : twin ? <span className="ml-2 text-xs font-semibold text-muted">Afternoon</span> : null })()}</span>
                       {p.microcycle && <Badge>{p.microcycle}</Badge>}
                     </div>
                     {p.day && <div className="mt-1 text-xs text-muted">{new Date(p.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>}
