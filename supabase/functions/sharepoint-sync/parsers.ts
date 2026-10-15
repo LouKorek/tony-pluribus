@@ -237,7 +237,7 @@ export function parseMatchHeader(s: string, season: [number, number] | null) {
     const date = toDate(t, { season })
     if (date) return { number: null, opponent: null, date, goals_for: null, goals_against: null, venue: null }
   }
-  const ord = /^(\d+)\s*(?:st|nd|rd|th)\b/i.exec(t) ?? /^(\d+)\s*(?:vs|v\.)/i.exec(t)
+  const ord = /^(\d+)\s*(?:st|nd|rd|th)\b/i.exec(t) ?? /^(\d+)\s*(?:vs|v\.)/i.exec(t) ?? /^(\d+)\s*-\s*(?!\d)/.exec(t) // "6 - (A) MARINES U20 (2-1)"; "1-2 SINA" is a score
   let number: number | null = ord ? Number(ord[1]) : null
   if (ord) t = t.slice(ord[0].length).trim()
   const score = /\(\s*(\d+)\s*[-:]\s*(\d+)\s*\)/.exec(t) ?? /(?:^|\s)(\d+)\s*[-:]\s*(\d+)(?=\s|$)/.exec(t)
