@@ -36,17 +36,26 @@ export default function SyncCenterPage() {
 
   async function run(opts: { full?: boolean; content?: boolean }) {
     setBusy(true); setMsg(null); setResult(null)
-    const { data, error } = await supabase.functions.invoke('sharepoint-sync', { body: opts })
-    let text = (data as { error?: string; message?: string } | null)?.error
-    if (error) { try { const j = await (error as { context?: Response }).context?.json(); text = j?.message ?? j?.error } catch { /* */ } text ??= error.message }
+    // a content run reads a few workbooks per call (the sync worker has little CPU) and is called again while files are pending
+    const total: ContentResult = { read: 0, failed: 0, rows: 0, pending: 0, files: [] }
+    let changed = 0, deleted = 0, full = false, text: string | undefined
+    for (let i = 0; i < 80; i++) {
+      const { data, error } = await supabase.functions.invoke('sharepoint-sync', { body: i === 0 ? opts : { content: true } })
+      text = (data as { error?: string; message?: string } | null)?.error
+      if (error) { try { const j = await (error as { context?: Response }).context?.json(); text = j?.message ?? j?.error } catch { /* */ } text ??= error.message }
+      if (text) break
+      const d = data as { changed: number; deleted: number; full: boolean; content?: ContentResult }
+      changed += d.changed; deleted += d.deleted; full ||= d.full
+      const c = d.content
+      if (c) { total.read += c.read; total.failed += c.failed; total.rows += c.rows; total.pending = c.pending; total.files.push(...c.files); setResult({ ...total, files: [...total.files] }) }
+      setMsg({ tone: 'info', text: `Reading the files… ${total.read} workbook${total.read === 1 ? '' : 's'} read, ${c?.pending ?? 0} pending.` })
+      if (!opts.content || !c || c.pending === 0 || (c.read === 0 && c.failed === 0)) break
+    }
     setBusy(false)
     if (text) setMsg({ tone: text === 'not_configured' || /^Waiting/.test(text) ? 'info' : 'bad', text: /not_configured|secret is not set/i.test(text) ? 'The Microsoft secret is not set yet. Once the owner pastes MS_CLIENT_SECRET into Supabase, run the sync again.' : text })
     else {
-      const d = data as { changed: number; deleted: number; full: boolean; content?: ContentResult }
-      const c = d.content
-      const tail = c ? ` Content: ${c.read} workbook${c.read === 1 ? '' : 's'} read (${c.rows.toLocaleString()} rows)${c.failed ? `, ${c.failed} failed` : ''}${c.pending ? `, ${c.pending} still pending — run "Reconcile content now" again` : ''}.` : ''
-      setMsg({ tone: c?.failed ? 'info' : 'good', text: `${d.full ? 'Full scan done' : 'Up to date'}: ${d.changed} new or changed, ${d.deleted} removed.${tail}` })
-      if (c) setResult(c)
+      const tail = ` Content: ${total.read} workbook${total.read === 1 ? '' : 's'} read (${total.rows.toLocaleString()} rows)${total.failed ? `, ${total.failed} failed` : ''}${total.pending ? `, ${total.pending} still pending (they are read by the next runs)` : ''}.`
+      setMsg({ tone: total.failed ? 'info' : 'good', text: `${full ? 'Full scan done' : 'Up to date'}: ${changed} new or changed, ${deleted} removed.${tail}` })
     }
     load()
   }

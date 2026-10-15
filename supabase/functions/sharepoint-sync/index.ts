@@ -97,7 +97,7 @@ Deno.serve(async req => {
 
   const full = body.full === true || !state?.delta_link
   // never two runs at the same time
-  const { data: busy } = await db.from('sync_runs').select('id').eq('project_id', projectId).eq('status', 'running').gt('started_at', new Date(Date.now() - 10 * 60_000).toISOString()).limit(1)
+  const { data: busy } = await db.from('sync_runs').select('id').eq('project_id', projectId).eq('status', 'running').gt('started_at', new Date(Date.now() - 4 * 60_000).toISOString()).limit(1)
   if (busy?.length) return json({ error: 'A sync is already running. Try again in a minute.' }, 409)
   const { data: run } = await db.from('sync_runs').insert({ project_id: projectId, full_scan: full, triggered_by: userId, scheduled }).select('id, started_at').single()
   const finish = async (patch: Record<string, unknown>) => {
@@ -168,15 +168,16 @@ Deno.serve(async req => {
     if (linkErr) throw new Error(`link: ${linkErr.message}`)
 
     // 5. content: workbooks that changed since they were last read (squads, presence, tests, stats, evaluations, finance, weekly reports)
-    const budgetMs = body.content === true ? 110_000 : 45_000
-    const limit = body.content === true ? 60 : 12
+    // a worker has little CPU: a few workbooks per call, each one committed on its own; the Sync Center calls again while work is pending
+    const budgetMs = body.content === true ? 20_000 : 10_000
+    const limit = body.content === true ? 6 : 3
     const started = Date.now()
     const content = { read: 0, failed: 0, rows: 0, pending: 0, files: [] as { path: string; rows?: number; error?: string; notes?: string[] }[] }
     const { data: pending, error: pendErr } = await db.rpc('talent_content_pending', { p_project: projectId, p_limit: limit })
     if (pendErr) throw new Error(`pending: ${pendErr.message}`)
     const queue = (pending ?? []) as { id: string; item_id: string; path: string; kind: string }[]
     for (const f of queue) {
-      if (Date.now() - started > budgetMs) { content.pending++; continue }
+      if (Date.now() - started > budgetMs) break
       try {
         const r = await fetch(`${GRAPH}/drives/${driveId}/items/${f.item_id}/content`, { headers: { authorization: `Bearer ${tok.access_token}` } })
         if (!r.ok) throw new Error(`download ${r.status}`)
@@ -193,6 +194,8 @@ Deno.serve(async req => {
     }
     // membership and photos may depend on players the workbooks just created
     if (content.read) await db.rpc('link_talent_content', { p_project: projectId })
+    const { data: left } = await db.rpc('talent_content_pending', { p_project: projectId, p_limit: 1000 })
+    content.pending = Array.isArray(left) ? left.length : 0
 
     const note = [skipped ? `${skipped} items came without a SharePoint id and were left as they were` : null, content.failed ? `${content.failed} workbook(s) could not be read` : null].filter(Boolean).join('; ')
     await finish({ status: 'ok', changed, deleted, error: note || null })

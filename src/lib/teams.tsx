@@ -9,7 +9,7 @@ export interface TeamPlayer { id: string; team_id: string; player_id: string; po
 export interface TeamDay { id: string; team_id: string; day: string; seq: number; kind: 'training' | 'match' | 'test' | 'meeting' | 'video' | 'rest'; minutes: number | null; label: string | null }
 export interface Mark { day_id: string; player_id: string; minutes: number | null; code: string | null }
 export interface Measurement { id: string; player_id: string; team_id: string | null; taken_on: string | null; metric: Metric; value: number; note: string | null }
-export type Metric = 'sprint_10m' | 'sprint_20m' | 'weight_kg' | 'height_cm' | 'foot_cm' | 'cj_cm' | 'yoyo_m' | 'other'
+export type Metric = 'sprint_10m' | 'sprint_20m' | 'sprint_30m' | 'weight_kg' | 'height_cm' | 'foot_cm' | 'shoe_size' | 'hand_size' | 'cj_cm' | 'yoyo_m' | 'other'
 export interface Match { id: string; team_id: string; number: number | null; played_on: string | null; competition: string; opponent: string; venue: 'home' | 'away' | 'neutral' | null; goals_for: number | null; goals_against: number | null; notes: string | null; report_file_id: string | null }
 export interface MatchPlayer { match_id: string; player_id: string; minutes: number | null; goals: number; assists: number; yellow: number; red: number; started: boolean | null }
 export interface TrainingPlan { id: string; team_id: string; number: number | null; day: string | null; month: string | null; microcycle: string | null; objective: string | null; notes: string | null; file_id: string | null }
@@ -21,7 +21,7 @@ export const CODE_LABEL: Record<string, string> = {
   A: 'Absent', I: 'Injured', JA: 'Justified absence', M: 'Match', SM: 'School match', S: 'Suspended', SI: 'Sick', PT: 'Physical tests', TM: 'Team meeting', '*': 'Video analysis',
 }
 export const METRIC_LABEL: Record<Metric, [string, string]> = {
-  sprint_10m: ['Sprint 10 m', 's'], sprint_20m: ['Sprint 20 m', 's'], weight_kg: ['Weight', 'kg'], height_cm: ['Height', 'cm'], foot_cm: ['Foot length', 'cm'],
+  sprint_10m: ['Sprint 10 m', 's'], sprint_20m: ['Sprint 20 m', 's'], sprint_30m: ['Sprint 30 m', 's'], weight_kg: ['Weight', 'kg'], height_cm: ['Height', 'cm'], foot_cm: ['Foot length', 'cm'], shoe_size: ['Foot size', 'EU'], hand_size: ['Hand size', ''],
   cj_cm: ['Counter jump', 'cm'], yoyo_m: ['Yo-yo test', 'm'], other: ['Other', ''],
 }
 export const GRADE_LABEL: Record<string, [string, string]> = {

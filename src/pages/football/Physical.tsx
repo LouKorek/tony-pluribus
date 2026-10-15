@@ -6,9 +6,9 @@ import { METRIC_LABEL, TeamBar, pname, useRoster, useTeamSeason, useTeams, type 
 import { Alert, Button, Card, Empty, Field, Input, Modal, PageHeader, Segmented, Spinner, cx } from '../../components/ui'
 
 const GROUPS: Record<string, { label: string; metrics: Metric[]; lowerIsBetter?: boolean }> = {
-  speed: { label: 'Speed', metrics: ['sprint_10m', 'sprint_20m'], lowerIsBetter: true },
+  speed: { label: 'Speed', metrics: ['sprint_10m', 'sprint_20m', 'sprint_30m'], lowerIsBetter: true },
   body: { label: 'Weight and height', metrics: ['weight_kg', 'height_cm'] },
-  foot: { label: 'Foot', metrics: ['foot_cm'] },
+  foot: { label: 'Foot and hand', metrics: ['shoe_size', 'hand_size', 'foot_cm'] },
   power: { label: 'Jump and endurance', metrics: ['cj_cm', 'yoyo_m'] },
 }
 const fmtDay = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
