@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
-import { LANGUAGE_NAMES, usePointsName, type ProjectSettings } from '../../lib/brand'
-import { readLang, writeLang } from '../../lib/lang'
+import { LANGUAGE_NAMES, useGeo, usePointsName, type ProjectSettings } from '../../lib/brand'
+import { readLang, useDeviceLang, writeLang } from '../../lib/lang'
+import { fmtDate, fmtRange } from '../../lib/scouting'
 
 // English is the master text. The Kinyarwanda column is a first draft and needs a review by a native speaker.
 const S = {
@@ -403,6 +404,33 @@ export function useCoachPointsName() {
   if (custom) return pn
   const many = t('pointsMany')
   return { one: t('pointsOne'), many, short: many, Many: many.charAt(0).toUpperCase() + many.slice(1) }
+}
+/** The project's two geographic levels; the Rwandan defaults (Province, District) in Kinyarwanda when the portal is in it. */
+export function useCoachGeo() {
+  const geo = useGeo()
+  const { lang } = useT()
+  if (lang !== 'rw') return geo
+  const region = geo.region === 'Province' ? 'Intara' : geo.region, district = geo.district === 'District' ? 'Akarere' : geo.district
+  return { region, district, regions: region === 'Intara' ? 'Intara' : geo.regions, districts: district === 'Akarere' ? 'Uturere' : geo.districts }
+}
+const RW_MONTHS = ['Mutarama', 'Gashyantare', 'Werurwe', 'Mata', 'Gicurasi', 'Kamena', 'Nyakanga', 'Kanama', 'Nzeri', 'Ukwakira', 'Ugushyingo', 'Ukuboza']
+const RW_DAYS = ['Cyumweru', 'Mbere', 'Kabiri', 'Gatatu', 'Kane', 'Gatanu', 'Gatandatu']
+const toDate = (d: string) => new Date(d + (d.length === 10 ? 'T00:00:00' : ''))
+/** Dates in the portal's language: English as the staff screens, Kinyarwanda month and day names otherwise. */
+export function useFmt() {
+  const rw = useDeviceLang() === 'rw'
+  const date = (d: string | null | undefined, withYear = true) => {
+    if (!d) return '—'
+    if (!rw) return fmtDate(d, withYear)
+    const x = toDate(d)
+    return `${x.getDate()} ${RW_MONTHS[x.getMonth()]}${withYear ? ' ' + x.getFullYear() : ''}`
+  }
+  const range = (a: string | null, b: string | null) => !rw ? fmtRange(a, b) : !a ? 'Itariki izashyirwaho' : !b || a === b ? date(a) : `${date(a, false)} – ${date(b)}`
+  /** short month for the date tiles ("Oct" / "Ukw") */
+  const month = (d: string) => rw ? RW_MONTHS[toDate(d).getMonth()].slice(0, 3) : toDate(d).toLocaleDateString('en-GB', { month: 'short' })
+  /** short weekday + month for the booking tile ("Tue Oct" / "Kabiri Ukw") */
+  const dayMonth = (d: string) => rw ? `${RW_DAYS[toDate(d).getDay()]} ${month(d)}` : toDate(d).toLocaleDateString('en-GB', { weekday: 'short', month: 'short' })
+  return { date, range, month, dayMonth }
 }
 /** Every portal string with its English and Kinyarwanda base text, for the Settings editor. */
 export const BASE_STRINGS = S

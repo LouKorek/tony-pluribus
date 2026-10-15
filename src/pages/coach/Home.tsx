@@ -1,8 +1,7 @@
 import { CalendarCheck, CalendarDays, Camera, ChevronRight, ClipboardList, MapPin, Package, Swords, Trophy, UserPlus } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
-import { fmtDate } from '../../lib/scouting'
 import { Card, cx } from '../../components/ui'
-import { STAGE_T, useCoachPointsName, useLocal, useT } from './i18n'
+import { STAGE_T, useCoachPointsName, useFmt, useLocal, useT } from './i18n'
 import { pendingInvites, useCoach } from './data'
 import { MiniStat, Section, fmtTime, name, useGo } from './shared'
 import { eligibleFor } from './Schedule'
@@ -15,6 +14,7 @@ export default function HomeScreen() {
   const { academy, squad, standing, camps, schedule, sessions, matches, notifs, groups, preview, progress } = useCoach()
   const nav = useGo()
   const pn = useCoachPointsName()
+  const F = useFmt()
   const L = useLocal()
   const invites = pendingInvites(squad)
   const campsWithRoom = camps.filter(c => eligibleFor(c, squad, groups).some(e => !e.already)).length
@@ -30,8 +30,8 @@ export default function HomeScreen() {
     ?? schedule.filter(c => c.starts_on && c.starts_on >= today && c.my_players > 0).sort((a, b) => a.starts_on!.localeCompare(b.starts_on!))[0]
 
   const actions: { key: string; icon: typeof Trophy; iconCls: string; title: string; sub?: string; to: string }[] = []
-  for (const { player, item } of invites) actions.push({ key: item.id, icon: Trophy, iconCls: 'bg-royal-soft text-royal', title: `${name(player)} · ${pick(STAGE_T[item.stage])}`, sub: `${t('replyInvite')}${item.rsvp_deadline ? ` · ${t('replyBy')} ${fmtDate(item.rsvp_deadline, false)}` : ''}`, to: '/schedule' })
-  for (const c of toConfirm) actions.push({ key: 'b' + c.id, icon: CalendarCheck, iconCls: 'bg-ink text-neon', title: t('confirmYourDay'), sub: `${c.name} · ${fmtDate(c.booking!.day_date!, false)}${c.booking!.report_time || c.booking!.start_time ? ` · ${fmtTime(c.booking!.report_time ?? c.booking!.start_time)}` : ''}`, to: '/schedule' })
+  for (const { player, item } of invites) actions.push({ key: item.id, icon: Trophy, iconCls: 'bg-royal-soft text-royal', title: `${name(player)} · ${pick(STAGE_T[item.stage])}`, sub: `${t('replyInvite')}${item.rsvp_deadline ? ` · ${t('replyBy')} ${F.date(item.rsvp_deadline, false)}` : ''}`, to: '/schedule' })
+  for (const c of toConfirm) actions.push({ key: 'b' + c.id, icon: CalendarCheck, iconCls: 'bg-ink text-neon', title: t('confirmYourDay'), sub: `${c.name} · ${F.date(c.booking!.day_date!, false)}${c.booking!.report_time || c.booking!.start_time ? ` · ${fmtTime(c.booking!.report_time ?? c.booking!.start_time)}` : ''}`, to: '/schedule' })
   if (campsWithRoom > 0) actions.push({ key: 'open', icon: CalendarDays, iconCls: 'bg-neon text-ink', title: `${t('openCampsCta')}: ${campsWithRoom}`, to: '/schedule' })
   if (squad.length === 0) actions.push({ key: 'add', icon: UserPlus, iconCls: 'bg-ink text-neon', title: t('addPlayer'), sub: t('emptySquadHint'), to: '/team?add=1' })
   if (squad.length > 0 && !loggedThisWeek && !preview) actions.push({ key: 'log', icon: ClipboardList, iconCls: 'bg-grass-soft text-grass', title: t('logThisWeek'), sub: t('noSessionsHint'), to: '/team?tab=training' })
@@ -57,7 +57,7 @@ export default function HomeScreen() {
         <MiniStat label={t('sessions30')} value={sessions30} onClick={() => nav('/team?tab=training')} />
         <MiniStat label={t('selected')} value={standing?.selected ?? 0} accent sub={`${standing?.submitted ?? 0} ${t('submittedN')}`} />
         <MiniStat label={t('nextCamp')} value={next?.booking?.day_date ? new Date(next.booking.day_date + 'T00:00:00').getDate() : next?.starts_on ? new Date(next.starts_on + 'T00:00:00').getDate() : '—'}
-          sub={next ? `${next.booking?.day_date ? new Date(next.booking.day_date + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' }) + ' · ' : next.starts_on ? new Date(next.starts_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' }) + ' · ' : ''}${next.name}` : t('noOpenCamps')} onClick={() => nav('/schedule')} />
+          sub={next ? `${next.booking?.day_date ? F.month(next.booking.day_date) + ' · ' : next.starts_on ? F.month(next.starts_on) + ' · ' : ''}${next.name}` : t('noOpenCamps')} onClick={() => nav('/schedule')} />
       </div>
 
       <Section title={t('actionNeeded')}>

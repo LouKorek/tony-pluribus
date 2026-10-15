@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { CalendarDays, Check, Clock, MapPin, Plus, Undo2, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { fmtDate, fmtRange } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Empty, Field, Input, Modal, Textarea, cx } from '../../components/ui'
-import { STAGE_T, STATUS_T, useT } from './i18n'
+import { STAGE_T, STATUS_T, useFmt, useT } from './i18n'
 import { groupOf, openInvites, useCoach, type Booking, type JourneyItem, type OpenCamp, type ScheduleCamp, type SquadPlayer } from './data'
 import { JourneyBadge, ScreenTitle, Section, fmtTime, name } from './shared'
 
@@ -72,11 +71,12 @@ export default function ScheduleScreen() {
 }
 
 function TimelineRow({ camp, past }: { camp: ScheduleCamp; past?: boolean }) {
+  const F = useFmt()
   const { t, pick } = useT()
   return (
     <div className={cx('flex items-center gap-3 px-4 py-3', past && 'opacity-70')}>
       <div className="w-12 shrink-0 text-center">
-        {camp.starts_on ? <><div className="font-display text-xl font-semibold leading-none">{new Date(camp.starts_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{new Date(camp.starts_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })}</div></> : <Clock size={18} className="mx-auto text-faint" />}
+        {camp.starts_on ? <><div className="font-display text-xl font-semibold leading-none">{new Date(camp.starts_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{F.month(camp.starts_on)}</div></> : <Clock size={18} className="mx-auto text-faint" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate font-semibold">{camp.name}</div>
@@ -90,6 +90,7 @@ function TimelineRow({ camp, past }: { camp: ScheduleCamp; past?: boolean }) {
 const statusTone: Record<Booking['status'], 'warn' | 'good' | 'info' | 'neutral'> = { proposed: 'warn', confirmed: 'good', change_requested: 'info', declined: 'neutral', arrived: 'good' }
 
 function BookingCard({ camp }: { camp: ScheduleCamp }) {
+  const F = useFmt()
   const { t, pick } = useT()
   const { reload, preview } = useCoach()
   const b = camp.booking!
@@ -111,7 +112,7 @@ function BookingCard({ camp }: { camp: ScheduleCamp }) {
       <div className="flex items-start gap-4 p-4">
         <div className="shrink-0 rounded-xl bg-ink px-3 py-2 text-center text-white">
           <div className="font-display text-3xl font-semibold leading-none">{new Date(b.day_date! + 'T00:00:00').getDate()}</div>
-          <div className="text-[10px] font-semibold uppercase text-neon">{new Date(b.day_date! + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', month: 'short' })}</div>
+          <div className="text-[10px] font-semibold uppercase text-neon">{F.dayMonth(b.day_date!)}</div>
         </div>
         <div className="min-w-0 flex-1">
           <div className="label-caps text-[11px] text-royal">{pick(STAGE_T[camp.stage])}</div>
@@ -152,6 +153,7 @@ function BookingCard({ camp }: { camp: ScheduleCamp }) {
 }
 
 function CampCard({ camp, onSubmit }: { camp: OpenCamp; onSubmit: () => void }) {
+  const F = useFmt()
   const { t, pick } = useT()
   const { squad, reload, preview, schedule } = useCoach()
   const [err, setErr] = useState<string | null>(null)
@@ -172,7 +174,7 @@ function CampCard({ camp, onSubmit }: { camp: OpenCamp; onSubmit: () => void }) 
             {camp.own_district && <div className="mb-1"><Badge tone="neon">{t('yourDistrict')}</Badge></div>}
             <div className="font-display text-xl font-semibold leading-tight">{camp.name}</div>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted">
-              <span className="flex items-center gap-1"><CalendarDays size={14} />{camp.starts_on ? fmtRange(camp.starts_on, camp.ends_on) : t('dateTbc')}</span>
+              <span className="flex items-center gap-1"><CalendarDays size={14} />{camp.starts_on ? F.range(camp.starts_on, camp.ends_on) : t('dateTbc')}</span>
               {(camp.venue || camp.district) && <span className="flex items-center gap-1"><MapPin size={14} />{camp.venue || camp.district}</span>}
             </div>
             {!!camp.age_groups?.length && <div className="mt-2 flex gap-1">{camp.age_groups.map(g => <Badge key={g} tone="dark">{g}</Badge>)}</div>}
@@ -246,6 +248,7 @@ function SubmitModal({ camp, onClose }: { camp: OpenCamp; onClose: () => void })
 }
 
 function InviteCard({ player, item }: { player: SquadPlayer; item: JourneyItem }) {
+  const F = useFmt()
   const { t, pick } = useT()
   const { reload, preview } = useCoach()
   const [mode, setMode] = useState<'view' | 'decline'>('view')
@@ -269,10 +272,10 @@ function InviteCard({ player, item }: { player: SquadPlayer; item: JourneyItem }
           <div className="text-lg font-semibold leading-tight">{name(player)}</div>
           <div className="mt-0.5 text-sm text-muted">{item.camp}</div>
           <div className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
-            <span className="flex items-center gap-1"><CalendarDays size={14} />{item.starts_on ? fmtRange(item.starts_on, item.ends_on) : t('dateTbc')}</span>
+            <span className="flex items-center gap-1"><CalendarDays size={14} />{item.starts_on ? F.range(item.starts_on, item.ends_on) : t('dateTbc')}</span>
             {item.venue && <span className="flex items-center gap-1"><MapPin size={14} />{item.venue}</span>}
           </div>
-          {item.rsvp_deadline && item.status === 'invited' && <div className="mt-1 text-sm font-semibold text-royal">{t('replyBy')} {fmtDate(item.rsvp_deadline)}</div>}
+          {item.rsvp_deadline && item.status === 'invited' && <div className="mt-1 text-sm font-semibold text-royal">{t('replyBy')} {F.date(item.rsvp_deadline)}</div>}
         </div>
         {(item.status !== 'invited' || preview) && <JourneyBadge item={item} />}
       </div>

@@ -4,14 +4,13 @@ import { Bell, CalendarDays, ChevronRight, CircleHelp, Home as HomeIcon, LogOut,
 import { InstallButton } from '../../lib/install'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
-import { fmtDate } from '../../lib/scouting'
 import { notifTarget, notifText, useNotifications } from '../../lib/notifications'
 import { PrefsMatrix, PushCard } from '../../components/NotificationPrefs'
 import { SyncButton } from '../../components/SyncStatus'
 import { ThemeButton } from '../../lib/theme'
 import { Alert, Button, Card, Empty, Spinner, cx } from '../../components/ui'
 import { Brand } from '../../layouts/AppShell'
-import { LangProvider, OUTBOX_RW, useT } from './i18n'
+import { LangProvider, OUTBOX_RW, useFmt, useT } from './i18n'
 import { TourProvider, useTour } from '../../lib/tour'
 import { COACH_TOURS } from './tours'
 import { CoachDataProvider, pendingInvites, useCoach } from './data'
@@ -187,6 +186,7 @@ function UpdatesScreen() {
 export function NotifRow({ n, fresh }: { n: ReturnType<typeof useCoach>['notifs'][number]; fresh?: boolean }) {
   const nav = useGo()
   const { lang } = useT()
+  const F = useFmt()
   const { markRead } = useNotifications()
   const text = notifText(n, lang)
   const target = notifTarget(n, true)
@@ -198,7 +198,7 @@ export function NotifRow({ n, fresh }: { n: ReturnType<typeof useCoach>['notifs'
       <span className="min-w-0 flex-1">
         <span className="block font-semibold">{text.title}</span>
         {text.body && <span className="block whitespace-pre-line text-sm text-muted">{text.body}</span>}
-        <span className="mt-0.5 block text-xs text-faint">{fmtDate(n.created_at.slice(0, 10))}</span>
+        <span className="mt-0.5 block text-xs text-faint">{F.date(n.created_at.slice(0, 10))}</span>
       </span>
       {target && <ChevronRight size={18} className="mt-1 shrink-0 text-faint" />}
     </button>

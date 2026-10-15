@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Award, CalendarCheck, Camera, CheckCheck, ChevronDown, ChevronUp, ClipboardList, Clock, Crown, Eye, Flame, Goal, Hand, IdCard, Lock, Medal, Package, ShieldCheck, Shirt, Sparkles, Star, Swords, Tent, Trophy, UserPlus, Users, UsersRound, type LucideIcon } from 'lucide-react'
-import { fmtDate } from '../../lib/scouting'
 import { Card, Empty, cx } from '../../components/ui'
-import { useCoachPointsName, useLocal, useT } from './i18n'
+import { useCoachGeo, useCoachPointsName, useFmt, useLocal, useT } from './i18n'
 import { useCoach, type BadgeInfo, type Rule } from './data'
-import { useGeo } from '../../lib/brand'
 import { ScreenTitle, Section } from './shared'
 
 const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users, camera: Camera, flame: Flame, star: Star, trophy: Trophy, medal: Medal, crown: Crown, clock: Clock, award: Award, 'id-card': IdCard, 'shield-check': ShieldCheck, shirt: Shirt, 'users-round': UsersRound, package: Package, 'clipboard-list': ClipboardList, sparkles: Sparkles, hand: Hand, 'check-check': CheckCheck, swords: Swords, goal: Goal, tent: Tent, eye: Eye, 'calendar-check': CalendarCheck }
@@ -12,9 +10,10 @@ const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users,
 export default function ProgressScreen() {
   const { t } = useT()
   const { progress, academy } = useCoach()
-  const geo = useGeo()
+  const geo = useCoachGeo()
   const pn = useCoachPointsName()
   const L = useLocal()
+  const F = useFmt()
   const [allHistory, setAllHistory] = useState(false)
   const [allRules, setAllRules] = useState(false)
   if (!progress) return <Card><Empty icon={<Trophy size={20} />} title={t('progress')}>{t('noProgressYet')}</Empty></Card>
@@ -86,7 +85,7 @@ export default function ProgressScreen() {
                   <span className="block truncate text-sm font-semibold">{L(e).label}</span>
                   {e.note && <span className="block truncate text-xs text-muted">{e.note}</span>}
                 </span>
-                <span className="shrink-0 text-xs text-faint">{fmtDate(e.at.slice(0, 10), false)}</span>
+                <span className="shrink-0 text-xs text-faint">{F.date(e.at.slice(0, 10), false)}</span>
               </div>
             ))}
             {history.length > 6 && (
@@ -126,7 +125,7 @@ export default function ProgressScreen() {
                   {([['reliability', t('reliability')], ['player_quality', t('playerQuality')], ['engagement', t('engagement')], ['cooperation', t('cooperation')]] as const).map(([k, l]) => r[k] != null && <span key={k}>{l}: <b className="text-text">{'★'.repeat(r[k]!)}</b></span>)}
                 </div>
                 {r.comment && <p className="mt-1.5 whitespace-pre-line text-sm">{r.comment}</p>}
-                <div className="mt-1 text-xs text-faint">{fmtDate(r.at.slice(0, 10), false)}</div>
+                <div className="mt-1 text-xs text-faint">{F.date(r.at.slice(0, 10), false)}</div>
               </div>
             ))}
           </Card>
@@ -146,6 +145,7 @@ function families(badges: BadgeInfo[]) {
 function FamilyTile({ badges }: { badges: BadgeInfo[] }) {
   const { t } = useT()
   const L = useLocal()
+  const F = useFmt()
   const earned = badges.filter(b => b.earned_at)
   const top = earned[earned.length - 1]
   const next = badges.find(b => !b.earned_at)
@@ -164,7 +164,7 @@ function FamilyTile({ badges }: { badges: BadgeInfo[] }) {
         <span className="flex gap-0.5">{badges.map(b => <span key={b.code} className={cx('h-1.5 w-3 rounded-full', b.earned_at ? 'bg-neon' : on ? 'bg-white/25' : 'bg-black/10')} />)}</span>
       )}
       {on && next ? <span className="text-[10px] leading-tight text-white/60">{t('nextBadge')}: {L(next).label}</span>
-        : on ? <span className="text-[10px] text-white/60">{fmtDate(top.earned_at!.slice(0, 10), false)}</span>
+        : on ? <span className="text-[10px] text-white/60">{F.date(top.earned_at!.slice(0, 10), false)}</span>
         : <span className="text-[10px] leading-tight text-faint">{L(badges[0]).description}</span>}
     </div>
   )

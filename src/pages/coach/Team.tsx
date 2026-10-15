@@ -4,9 +4,9 @@ import { Camera, CalendarCheck, ImageOff, MapPin, Package, Pencil, Plus, Printer
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { Bolts, Logo, usePartner, useTagline } from '../../lib/brand'
-import { fmtDate, fmtRange, POSITIONS } from '../../lib/scouting'
+import { POSITIONS } from '../../lib/scouting'
 import { Alert, Badge, Button, Card, Drawer, Empty, Field, Input, Modal, SearchInput, Select, Textarea, cx, printArea } from '../../components/ui'
-import { STAGE_T, useT } from './i18n'
+import { STAGE_T, useFmt, useT } from './i18n'
 import { FOCUS, MATCH_KINDS, STAFF_ROLES, groupOf, uploadPhoto, useCoach, type Equipment, type Focus, type JourneyItem, type LogItem, type Match, type MatchKind, type MyAcademy, type Session, type SquadPlayer, type StaffMember, type StaffRole } from './data'
 import { Avatar, JourneyBadge, PendingDot, ScreenTitle, SubTabs, lastItem, name } from './shared'
 import { EQUIPMENT_GROUPS, customCode, equipmentName, isCustom } from '../../lib/equipment'
@@ -217,6 +217,7 @@ function PlayerForm({ player, onClose }: { player: SquadPlayer | null; onClose: 
 const KINDS: [LogItem['kind'], string][] = [['note', 'noteKindNote'], ['match', 'noteKindMatch'], ['absent', 'noteKindAbsent'], ['injury', 'noteKindInjury']]
 
 function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null; onClose: () => void; onEdit: (p: SquadPlayer) => void }) {
+  const F = useFmt()
   const { t, pick } = useT()
   const { groups, reload, preview, photoUrl } = useCoach()
   const [confirm, setConfirm] = useState(false)
@@ -276,7 +277,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
             <li key={j.id} className="relative mb-5 pl-5 last:mb-0">
               <span className={cx('absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-card',
                 j.decision === 'selected' ? 'bg-good' : j.decision === 'see_again' ? 'bg-warn' : j.decision ? 'bg-faint' : 'bg-ink')} />
-              <div className="label-caps text-[11px] text-muted">{pick(STAGE_T[j.stage])} · {j.starts_on ? fmtRange(j.starts_on, j.ends_on) : t('dateTbc')}</div>
+              <div className="label-caps text-[11px] text-muted">{pick(STAGE_T[j.stage])} · {j.starts_on ? F.range(j.starts_on, j.ends_on) : t('dateTbc')}</div>
               <div className="font-semibold">{j.camp}</div>
               {j.venue && <div className="text-sm text-muted">{j.venue}</div>}
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -313,7 +314,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
           {player.log.map(l => (
             <li key={l.id} className="flex items-start gap-2 px-3 py-2 text-sm">
               <Badge tone={l.kind === 'match' ? 'info' : l.kind === 'absent' || l.kind === 'injury' ? 'warn' : 'neutral'}>{t(KINDS.find(k => k[0] === l.kind)?.[1] as 'noteKindNote' ?? 'noteKindNote')}</Badge>
-              <span className="min-w-0 flex-1"><span className="block">{l.text}</span><span className="text-xs text-faint">{fmtDate(l.at.slice(0, 10))}</span></span>
+              <span className="min-w-0 flex-1"><span className="block">{l.text}</span><span className="text-xs text-faint">{F.date(l.at.slice(0, 10))}</span></span>
               {!preview && <button onClick={() => delNote(l.id)} className="rounded p-1 text-faint hover:text-danger" aria-label={t('deleteNote')}><Trash2 size={13} /></button>}
             </li>
           ))}
@@ -322,12 +323,12 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
 
       <h3 className="label-caps mb-2 mt-7 text-muted">{t('details')}</h3>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-        <dt className="text-muted">{t('birthDate')}</dt><dd>{player.birth_date ? fmtDate(player.birth_date) : '—'}</dd>
+        <dt className="text-muted">{t('birthDate')}</dt><dd>{player.birth_date ? F.date(player.birth_date) : '—'}</dd>
         <dt className="text-muted">{t('foot')}</dt><dd>{player.preferred_foot ? t(player.preferred_foot) : '—'}</dd>
         <dt className="text-muted">{t('school')}</dt><dd>{player.school || '—'}</dd>
         <dt className="text-muted">{t('sector')}</dt><dd>{player.sector || '—'}</dd>
         <dt className="text-muted">{t('joinedYear')}</dt><dd>{player.joined_year ?? '—'}</dd>
-        <dt className="text-muted">{t('measured')}</dt><dd>{player.measured_on ? fmtDate(player.measured_on) : '—'}</dd>
+        <dt className="text-muted">{t('measured')}</dt><dd>{player.measured_on ? F.date(player.measured_on) : '—'}</dd>
         <dt className="text-muted">{t('guardianName')}</dt><dd>{player.guardian_name || '—'}</dd>
         <dt className="text-muted">{t('guardianPhone')}</dt><dd>{player.guardian_phone ? <a className="text-royal" href={`tel:${player.guardian_phone}`}>{player.guardian_phone}</a> : '—'}</dd>
         <dt className="text-muted">{t('notes')}</dt><dd className="whitespace-pre-wrap">{player.coach_notes || '—'}</dd>
@@ -339,6 +340,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
 }
 
 export function Certificate({ player, item, onClose }: { player: SquadPlayer; item: JourneyItem; onClose: () => void }) {
+  const F = useFmt()
   const { t, pick } = useT()
   const { academy } = useCoach()
   const { project } = useAuth()
@@ -368,7 +370,7 @@ export function Certificate({ player, item, onClose }: { player: SquadPlayer; it
         <div className="relative mt-3 text-[15px] text-white/75">{academy?.name}{academy?.district ? ` · ${academy.district}` : ''}</div>
         <div className="relative mt-8 border-t border-white/15 pt-5 text-[15px] leading-relaxed text-white/85">
           {t('certBefore') ? t('certBefore') + ' ' : ''}<b className="text-neon">{t('certSelectedWord')}</b> {t('certAfter')} {stage.toLowerCase()}
-          <div className="font-semibold text-white">{item.camp}{item.starts_on ? ` · ${fmtRange(item.starts_on, item.ends_on)}` : ''}</div>
+          <div className="font-semibold text-white">{item.camp}{item.starts_on ? ` · ${F.range(item.starts_on, item.ends_on)}` : ''}</div>
         </div>
         <div className="relative mt-8 flex items-end justify-between gap-4 text-xs text-white/50">
           <span>{tagline}{partner ? <><br />{t('certPartner')} {partner.name}</> : <><br />{programme}</>}</span>
@@ -386,6 +388,7 @@ const KIND_T: Record<MatchKind, 'kInternal' | 'kFriendly' | 'kLeague' | 'kCup' |
 const ROLE_T: Record<StaffRole, 'rHeadCoach' | 'rAssistant' | 'rGkCoach' | 'rFitness' | 'rPhysio' | 'rManager' | 'rVolunteer' | 'rOther'> = { head_coach: 'rHeadCoach', assistant: 'rAssistant', gk_coach: 'rGkCoach', fitness: 'rFitness', physio: 'rPhysio', manager: 'rManager', volunteer: 'rVolunteer', other: 'rOther' }
 
 function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
+  const F = useFmt()
   const { t } = useT()
   const { sessions, squad, preview, reload } = useCoach()
   const active = squad.filter(p => p.squad_status === 'active').length
@@ -397,7 +400,7 @@ function TrainingPanel({ onEdit }: { onEdit: (s: Session) => void }) {
     <Card className="divide-y divide-line" data-tour="sessions">
       {sessions.map(s => (
         <div key={s.id} className="flex items-center gap-3 px-4 py-3">
-          <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(s.held_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{new Date(s.held_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })}</div></div>
+          <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(s.held_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{F.month(s.held_on)}</div></div>
           <button className="min-w-0 flex-1 text-left" onClick={() => !preview && onEdit(s)} disabled={preview}>
             <div className="flex items-center gap-1.5"><span className="truncate font-semibold">{topicLabel(s) || t('training')}{s.duration_min ? <span className="font-normal text-muted"> · {s.duration_min} min</span> : ''}{s.intensity === 'hard' ? <span className="font-normal text-danger"> · {t('intHard')}</span> : s.intensity === 'light' ? <span className="font-normal text-muted"> · {t('intLight')}</span> : ''}</span>{s.pending && <PendingDot />}</div>
             <div className="text-sm text-muted">{s.present}/{active} {t('present')}{s.notes ? ` · ${s.notes}` : ''}</div>
@@ -476,6 +479,7 @@ function SessionForm({ session, onClose }: { session: Session | null; onClose: (
 /* ───────────────────────── Matches ───────────────────────── */
 
 function MatchesPanel({ onEdit }: { onEdit: (m: Match) => void }) {
+  const F = useFmt()
   const { t } = useT()
   const { matches, squad, reload, preview } = useCoach()
   const [del, setDel] = useState<string | null>(null)
@@ -489,7 +493,7 @@ function MatchesPanel({ onEdit }: { onEdit: (m: Match) => void }) {
         const scorers = m.players.filter(x => x.goals > 0).map(x => `${byId.get(x.player_id)?.first_name ?? '?'} ${x.goals > 1 ? `×${x.goals}` : ''}`.trim())
         return (
           <div key={m.id} className="flex items-center gap-3 px-4 py-3">
-            <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(m.played_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{new Date(m.played_on + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })}</div></div>
+            <div className="w-12 shrink-0 text-center"><div className="font-display text-xl font-semibold leading-none">{new Date(m.played_on + 'T00:00:00').getDate()}</div><div className="text-[10px] font-semibold uppercase text-muted">{F.month(m.played_on)}</div></div>
             <button className="min-w-0 flex-1 text-left" onClick={() => !preview && onEdit(m)} disabled={preview}>
               <div className="flex items-center gap-1.5"><span className="truncate font-semibold">{m.opponent || t(KIND_T[m.kind])}</span><Badge tone={m.kind === 'internal' ? 'neutral' : m.kind === 'friendly' ? 'info' : 'neon'}>{t(KIND_T[m.kind])}</Badge>{m.pending && <PendingDot />}</div>
               <div className="truncate text-sm text-muted">{[m.age_group, m.venue ? t(m.venue === 'home' ? 'vHome' : m.venue === 'away' ? 'vAway' : 'vNeutral') : null, `${m.players.length} ${t('players').toLowerCase()}`, scorers.length ? scorers.join(', ') : null].filter(Boolean).join(' · ')}</div>
@@ -651,6 +655,7 @@ function StaffForm({ member, onClose }: { member: StaffMember | null; onClose: (
 }
 
 function EquipmentCard() {
+  const F = useFmt()
   const { t, lang } = useT()
   const { academy, reload, preview } = useCoach()
   const base = useMemo(() => academy?.equipment ?? [], [academy])
@@ -689,7 +694,7 @@ function EquipmentCard() {
     <Card className="p-4" data-tour="academy-equipment">
       <div className="flex items-start justify-between gap-3">
         <div><div className="flex items-center gap-1.5 font-semibold"><Package size={16} />{t('equipmentTitle')}</div><p className="mt-0.5 text-sm text-muted">{t('equipmentHint')}</p>
-          <p className="mt-0.5 text-xs text-faint">{academy?.equipment_updated_at ? `${t('lastCounted')}: ${fmtDate(academy.equipment_updated_at.slice(0, 10), false)} · ` : ''}{have} {t('eqHave')}{need > 0 ? ` · ${need} ${t('eqNeeded')}` : ''}</p></div>
+          <p className="mt-0.5 text-xs text-faint">{academy?.equipment_updated_at ? `${t('lastCounted')}: ${F.date(academy.equipment_updated_at.slice(0, 10), false)} · ` : ''}{have} {t('eqHave')}{need > 0 ? ` · ${need} ${t('eqNeeded')}` : ''}</p></div>
         {!preview && <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row"><Button size="sm" onClick={() => setPicking(true)}><Plus size={14} />{t('addEquipment')}</Button><Button size="sm" variant="primary" loading={busy} disabled={!dirty} onClick={save}>{t('saveEquipment')}</Button></div>}
       </div>
       {msg && <div className="mt-2"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
