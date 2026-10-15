@@ -7,6 +7,8 @@ import { useAuth } from './auth'
 
 export interface Notif {
   id: string; type: string | null; title: string; body: string | null; link: string | null; data: Record<string, unknown>
+  /** the same text in Kinyarwanda, when the type has a template (coach notifications) */
+  title_rw: string | null; body_rw: string | null
   count: number; read_at: string | null; seen_at: string | null; created_at: string
 }
 interface NotifCtx {
@@ -28,7 +30,7 @@ export function NotificationsProvider({ children, enabled = true }: { children: 
 
   const refresh = useCallback(async () => {
     if (!active) { setList([]); setLoading(false); return }
-    const { data } = await supabase.from('notifications').select('id, type, title, body, link, data, count, read_at, seen_at, created_at')
+    const { data } = await supabase.from('notifications').select('id, type, title, body, title_rw, body_rw, link, data, count, read_at, seen_at, created_at')
       .order('created_at', { ascending: false }).limit(100)
     setList((data as Notif[]) ?? []); setLoading(false)
   }, [active])
@@ -91,6 +93,10 @@ export function notifTarget(n: Notif, coach: boolean): string | null {
 }
 
 export const CATEGORY_LABEL: Record<string, string> = { camps: 'Camps', players: 'Players', account: 'Account', points: 'Points', staff: 'Staff', system: 'System' }
+export const CATEGORY_LABEL_RW: Record<string, string> = { camps: 'Amakambi', players: 'Abakinnyi', account: 'Konti', points: 'Amanota', staff: 'Abakozi', system: 'Sisitemu' }
+/** The title and body of a notification in the given language (Kinyarwanda when the row carries it). */
+export const notifText = (n: Pick<Notif, 'title' | 'body' | 'title_rw' | 'body_rw'>, lang: string) =>
+  lang === 'rw' && n.title_rw ? { title: n.title_rw, body: n.body_rw } : { title: n.title, body: n.body }
 
 export function fmtWhen(iso: string) {
   const d = new Date(iso), now = new Date()

@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Award, CalendarCheck, Camera, CheckCheck, ChevronDown, ChevronUp, ClipboardList, Clock, Crown, Eye, Flame, Goal, Hand, IdCard, Lock, Medal, Package, ShieldCheck, Shirt, Sparkles, Star, Swords, Tent, Trophy, UserPlus, Users, UsersRound, type LucideIcon } from 'lucide-react'
 import { fmtDate } from '../../lib/scouting'
 import { Card, Empty, cx } from '../../components/ui'
-import { useT } from './i18n'
+import { useCoachPointsName, useLocal, useT } from './i18n'
 import { useCoach, type BadgeInfo, type Rule } from './data'
-import { useGeo, usePointsName } from '../../lib/brand'
+import { useGeo } from '../../lib/brand'
 import { ScreenTitle, Section } from './shared'
 
 const ICONS: Record<string, LucideIcon> = { 'user-plus': UserPlus, users: Users, camera: Camera, flame: Flame, star: Star, trophy: Trophy, medal: Medal, crown: Crown, clock: Clock, award: Award, 'id-card': IdCard, 'shield-check': ShieldCheck, shirt: Shirt, 'users-round': UsersRound, package: Package, 'clipboard-list': ClipboardList, sparkles: Sparkles, hand: Hand, 'check-check': CheckCheck, swords: Swords, goal: Goal, tent: Tent, eye: Eye, 'calendar-check': CalendarCheck }
@@ -13,7 +13,8 @@ export default function ProgressScreen() {
   const { t } = useT()
   const { progress, academy } = useCoach()
   const geo = useGeo()
-  const pn = usePointsName()
+  const pn = useCoachPointsName()
+  const L = useLocal()
   const [allHistory, setAllHistory] = useState(false)
   const [allRules, setAllRules] = useState(false)
   if (!progress) return <Card><Empty icon={<Trophy size={20} />} title={t('progress')}>{t('noProgressYet')}</Empty></Card>
@@ -33,7 +34,7 @@ export default function ProgressScreen() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <div className="label-caps text-[11px] text-neon">{t('level')}</div>
-            <div className="mt-1 font-display text-[40px] font-semibold leading-none">{level.label}</div>
+            <div className="mt-1 font-display text-[40px] font-semibold leading-none">{L(level).label}</div>
           </div>
           <div className="text-right">
             <div className="font-display text-[40px] font-semibold leading-none text-neon">{points}</div>
@@ -42,8 +43,8 @@ export default function ProgressScreen() {
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-neon transition-all" style={{ width: `${pct}%` }} /></div>
         <div className="mt-2 flex justify-between text-xs text-white/60">
-          <span>{level.label} · {level.min_points}</span>
-          <span>{next ? `${next.min_points - points} ${pn.many} ${t('toNext')} ${next.label}` : t('topLevel')}</span>
+          <span>{L(level).label} · {level.min_points}</span>
+          <span>{next ? `${next.min_points - points} ${pn.many} ${t('toNext')} ${L(next).label}` : t('topLevel')}</span>
         </div>
       </Card>
 
@@ -82,7 +83,7 @@ export default function ProgressScreen() {
               <div key={e.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span className={cx('w-14 shrink-0 font-display text-lg font-semibold', e.points >= 0 ? 'text-grass' : 'text-danger')}>{e.points >= 0 ? '+' : ''}{e.points}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{e.label}</span>
+                  <span className="block truncate text-sm font-semibold">{L(e).label}</span>
                   {e.note && <span className="block truncate text-xs text-muted">{e.note}</span>}
                 </span>
                 <span className="shrink-0 text-xs text-faint">{fmtDate(e.at.slice(0, 10), false)}</span>
@@ -144,39 +145,41 @@ function families(badges: BadgeInfo[]) {
 
 function FamilyTile({ badges }: { badges: BadgeInfo[] }) {
   const { t } = useT()
+  const L = useLocal()
   const earned = badges.filter(b => b.earned_at)
   const top = earned[earned.length - 1]
   const next = badges.find(b => !b.earned_at)
   const show = top ?? badges[0]
   const Icon = ICONS[show.icon] ?? Award
   const on = !!top
-  const title = `${badges.map(b => `${b.earned_at ? '✓' : '○'} ${b.label} – ${b.description}`).join('\n')}`
+  const title = `${badges.map(b => `${b.earned_at ? '✓' : '○'} ${L(b).label} – ${L(b).description}`).join('\n')}`
   return (
     <div title={title} className={cx('flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center', on ? 'border-ink bg-ink text-white' : 'border-line bg-card text-faint')}>
       <span className={cx('relative flex h-11 w-11 items-center justify-center rounded-full', on ? 'bg-neon text-ink' : 'bg-paper')}>
         <Icon size={20} />
         {!on && <Lock size={11} className="absolute -bottom-0.5 -right-0.5 rounded-full bg-card p-0.5 text-faint" />}
       </span>
-      <span className={cx('text-[12px] font-semibold leading-tight', on ? 'text-white' : 'text-muted')}>{show.label}</span>
+      <span className={cx('text-[12px] font-semibold leading-tight', on ? 'text-white' : 'text-muted')}>{L(show).label}</span>
       {badges.length > 1 && (
         <span className="flex gap-0.5">{badges.map(b => <span key={b.code} className={cx('h-1.5 w-3 rounded-full', b.earned_at ? 'bg-neon' : on ? 'bg-white/25' : 'bg-black/10')} />)}</span>
       )}
-      {on && next ? <span className="text-[10px] leading-tight text-white/60">{t('nextBadge')}: {next.label}</span>
+      {on && next ? <span className="text-[10px] leading-tight text-white/60">{t('nextBadge')}: {L(next).label}</span>
         : on ? <span className="text-[10px] text-white/60">{fmtDate(top.earned_at!.slice(0, 10), false)}</span>
-        : <span className="text-[10px] leading-tight text-faint">{badges[0].description}</span>}
+        : <span className="text-[10px] leading-tight text-faint">{L(badges[0]).description}</span>}
     </div>
   )
 }
 
 function RuleRow({ r }: { r: Rule }) {
   const { t } = useT()
+  const L = useLocal()
   const cap = !r.cap ? '' : r.cap_period === 'once' ? ` · ${t('onceOnly')}` : ` · ${t('upTo')} ${r.cap} ${r.cap_period === 'day' ? t('perDay') : r.cap_period === 'week' ? t('perWeek') : t('perSeason')}`
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
       <span className="w-14 shrink-0 font-display text-lg font-semibold text-grass">+{r.points}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold">{r.label}</span>
-        <span className="block text-xs text-muted">{r.description}{cap}</span>
+        <span className="block text-sm font-semibold">{L(r).label}</span>
+        <span className="block text-xs text-muted">{L(r).description}{cap}</span>
       </span>
     </div>
   )

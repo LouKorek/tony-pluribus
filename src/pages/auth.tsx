@@ -5,8 +5,73 @@ import { supabase, usernameToEmail, USERNAME_RE, errMsg, ROLE_LABEL, type Role }
 import { useAuth } from '../lib/auth'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 import { APP_NAME, Bolts, Logo } from '../lib/brand'
+import { useDeviceLang, writeLang } from '../lib/lang'
+
+// The sign-in pages are the first thing a coach sees: English and Kinyarwanda, chosen with the toggle (the coach portal keeps the choice).
+const A = {
+  signIn: ['Sign in', 'Injira'],
+  signInHint: ['Use the username and password you were given.', "Koresha izina ry'ukoresha n'ijambobanga wahawe."],
+  username: ['Username', "Izina ry'ukoresha"],
+  password: ['Password', 'Ijambobanga'],
+  badLogin: ['Username or password is incorrect.', "Izina ry'ukoresha cyangwa ijambobanga si byo."],
+  coachQ: ['Academy coach?', "Uri umutoza w'ishuri?"],
+  coachHint: ['Create your account, and a Tony admin will approve it.', 'Fungura konti yawe, umuyobozi wa Tony azayemeza.'],
+  createCoach: ['Create a coach account →', "Fungura konti y'umutoza →"],
+  coachAccount: ['Coach account', "Konti y'umutoza"],
+  coachAccountHint: ['For academy coaches of {p}. An admin approves every new account before it can see any data.', "Ku batoza b'amashuri ya {p}. Umuyobozi yemeza buri konti nshya mbere y'uko ibona amakuru."],
+  fullName: ['Full name', 'Amazina yombi'],
+  phone: ['Phone', 'Telefone'],
+  academy: ['Academy', 'Ishuri'],
+  academyListHint: ['The academy list is being prepared. Type your academy and district below.', "Urutonde rw'amashuri ruracyategurwa. Andika ishuri ryawe n'akarere hepfo."],
+  chooseAcademy: ['Choose your academy', 'Hitamo ishuri ryawe'],
+  notListed: ['Not listed', 'Ntiriri ku rutonde'],
+  academyNotListed: ['Academy not listed? Name and district', "Ishuri ntiriri ku rutonde? Izina n'akarere"],
+  academyExample: ['e.g. Musanze Youth FTC, Musanze', 'urugero: Musanze Youth FTC, Musanze'],
+  repeat: ['Repeat', 'Subiramo'],
+  createAccount: ['Create account', 'Fungura konti'],
+  haveAccount: ['Already have an account?', 'Usanzwe ufite konti?'],
+  other: ['Other', 'Ibindi'],
+  errName: ['Enter your full name.', 'Andika amazina yawe yombi.'],
+  errUsername: ['Username: 3–32 characters, letters, digits, dots, dashes or underscores.', "Izina ry'ukoresha: inyuguti 3–32 (inyuguti, imibare, utudomo, utunyerera cyangwa akarongo ko hasi)."],
+  errPhone: ['Enter a phone number so Tony can reach you.', 'Andika nimero ya telefone kugira ngo Tony abashe kukugeraho.'],
+  errAcademy: ['Choose your academy, or type its name if it is not listed.', 'Hitamo ishuri ryawe, cyangwa wandike izina ryaryo niba ritari ku rutonde.'],
+  errPassword: ['Password: at least 8 characters.', 'Ijambobanga: nibura inyuguti 8.'],
+  errMatch: ['The two passwords do not match.', 'Amagambobanga yombi ntahura.'],
+  errTaken: ['That username is taken. Try another.', "Iryo zina ry'ukoresha ryarafashwe. Gerageza irindi."],
+  linkNotFound: ['Link not found', 'Ihuza ntiribonetse'],
+  linkNotFoundHint: ['This join link does not belong to an active Tony project.', 'Iri huza ryo kwinjira ntiriri mu mushinga wa Tony ukora.'],
+  goSignIn: ['Go to sign in', 'Jya kwinjira'],
+  locked: ['Account locked', 'Konti yafunzwe'],
+  lockedHint: ['An admin has locked this account. Contact Tony if you think this is a mistake.', 'Umuyobozi yafunze iyi konti. Vugisha Tony niba utekereza ko ari ikosa.'],
+  waiting: ['Waiting for approval', 'Itegereje kwemezwa'],
+  waitingHint: ['Your account was created. A Tony admin will check it and link it to your academy.', "Konti yawe yafunguwe. Umuyobozi wa Tony azayigenzura ayihuze n'ishuri ryawe."],
+  onceApproved: ['Once approved, sign in again and you will see your academy portal.', "Imaze kwemezwa, ongera winjire uzabona irembo ry'ishuri ryawe."],
+  signOut: ['Sign out', 'Sohoka'],
+  oneMoment: ['One moment…', 'Tegereza gato…'],
+  linkUsed: ['This link was already used', 'Iri huza ryamaze gukoreshwa'],
+  linkUsedHint: ['Or it is not a valid invite link. If you already set your password, sign in. Otherwise ask your admin for a new link.', 'Cyangwa si ihuza ryo gutumira ryemewe. Niba wamaze gushyiraho ijambobanga, injira. Bitabaye ibyo, saba umuyobozi wawe irindi huza.'],
+  linkExpired: ['This link has expired', 'Iri huza ryarangiye'],
+  linkExpiredHint: ['Invite links work for 7 days. Ask your admin to send you a new one.', 'Amahuza yo gutumira akora iminsi 7. Saba umuyobozi wawe akoherereze irindi.'],
+  welcome: ['Welcome, {p}', 'Murakaza neza, {p}'],
+  welcomeHint: ['You have been invited to {p}. Choose a password and you are in.', 'Watumiwe muri {p}. Hitamo ijambobanga maze winjire.'],
+  yourPassword: ['Your password', 'Ijambobanga ryawe'],
+  yourPasswordHint: ['At least 8 characters. Only you know it.', 'Nibura inyuguti 8. Ni wowe wenyine urizi.'],
+  repeatPassword: ['Repeat the password', 'Subiramo ijambobanga'],
+  setPassword: ['Set password and sign in', 'Shyiraho ijambobanga maze winjire'],
+  usernameIs: ['Your username is', "Izina ryawe ry'ukoresha ni"],
+  useNextTime: ['You will use it with this password to sign in next time.', "Uzarikoresha n'iri jambobanga ubutaha winjira."],
+  atLeast8: ['Use at least 8 characters.', 'Koresha nibura inyuguti 8.'],
+  coach: ['Coach', 'Umutoza'],
+} as const
+type AKey = keyof typeof A
+function useA() {
+  const lang = useDeviceLang()
+  const i = lang === 'rw' ? 1 : 0
+  return { lang, t: (k: AKey, p?: string) => A[k][i].replace('{p}', p ?? '') }
+}
 
 function AuthFrame({ title, subtitle, children }: { title: string; subtitle?: ReactNode; children: ReactNode }) {
+  const { lang } = useA()
   return (
     <div className="grid min-h-full lg:grid-cols-[1.05fr_1fr]">
       <div className="relative hidden overflow-hidden bg-ink p-12 text-white lg:flex lg:flex-col">
@@ -25,6 +90,14 @@ function AuthFrame({ title, subtitle, children }: { title: string; subtitle?: Re
             <Logo variant="wordmark" color="neon" className="h-[18px]" />
             <span className="ml-auto font-display uppercase text-[11px] font-semibold tracking-[.2em] text-white/50">{APP_NAME}</span>
           </div>
+          <div className="mb-4 flex justify-end">
+            <div className="flex rounded-md bg-ink/8 p-0.5 text-[12px] font-bold" role="group" aria-label="Language · Ururimi">
+              {(['en', 'rw'] as const).map(l => (
+                <button key={l} type="button" onClick={() => writeLang(l)} aria-pressed={lang === l} title={l === 'en' ? 'English' : 'Kinyarwanda'}
+                  className={lang === l ? 'rounded bg-ink px-2 py-1 uppercase text-neon' : 'rounded px-2 py-1 uppercase text-muted hover:text-text'}>{l}</button>
+              ))}
+            </div>
+          </div>
           <h1 className="font-display text-4xl font-semibold leading-none tracking-tight">{title}</h1>
           {subtitle && <p className="mt-2 text-[15px] text-muted">{subtitle}</p>}
           <div className="mt-7">{children}</div>
@@ -41,6 +114,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
   const [needsSetup, setNeedsSetup] = useState(false)
   const nav = useNavigate()
+  const { t } = useA()
 
   useEffect(() => { supabase.rpc('owner_exists').then(({ data }) => setNeedsSetup(data === false)) }, [])
 
@@ -48,12 +122,12 @@ export function LoginPage() {
     e.preventDefault(); setErr(null); setBusy(true)
     const { error } = await supabase.auth.signInWithPassword({ email: usernameToEmail(username), password })
     setBusy(false)
-    if (error) setErr(error.message === 'Invalid login credentials' ? 'Username or password is incorrect.' : error.message)
+    if (error) setErr(error.message === 'Invalid login credentials' ? t('badLogin') : error.message)
     else nav('/')
   }
 
   return (
-    <AuthFrame title="Sign in" subtitle="Use the username and password you were given.">
+    <AuthFrame title={t('signIn')} subtitle={t('signInHint')}>
       {needsSetup && (
         <div className="mb-6 rounded-xl border border-ink bg-neon p-4 text-ink">
           <div className="flex items-center gap-2 font-semibold"><ShieldCheck size={17} /> First-time setup</div>
@@ -62,15 +136,15 @@ export function LoginPage() {
         </div>
       )}
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Username"><Input autoFocus autoComplete="username" autoCapitalize="none" value={username} onChange={e => setUsername(e.target.value)} required /></Field>
-        <Field label="Password"><Input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required /></Field>
+        <Field label={t('username')}><Input autoFocus autoComplete="username" autoCapitalize="none" value={username} onChange={e => setUsername(e.target.value)} required /></Field>
+        <Field label={t('password')}><Input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required /></Field>
         {err && <Alert>{err}</Alert>}
-        <Button variant="primary" className="w-full" loading={busy} type="submit">Sign in</Button>
+        <Button variant="primary" className="w-full" loading={busy} type="submit">{t('signIn')}</Button>
       </form>
       <div className="mt-8 rounded-xl border border-line bg-card p-4 text-sm">
-        <div className="font-semibold">Academy coach?</div>
-        <p className="mt-0.5 text-muted">Create your account, and a Tony admin will approve it.</p>
-        <Link to="/signup" className="mt-2 inline-block font-semibold text-royal hover:underline">Create a coach account →</Link>
+        <div className="font-semibold">{t('coachQ')}</div>
+        <p className="mt-0.5 text-muted">{t('coachHint')}</p>
+        <Link to="/signup" className="mt-2 inline-block font-semibold text-royal hover:underline">{t('createCoach')}</Link>
       </div>
     </AuthFrame>
   )
@@ -130,6 +204,7 @@ export function SignupPage() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const nav = useNavigate()
+  const { t } = useA()
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
 
   useEffect(() => {
@@ -137,20 +212,20 @@ export function SignupPage() {
     else supabase.rpc('signup_options').then(({ data }) => { setProj(null); setOpts((data as Opt[]) ?? []) })
   }, [slug])
 
-  const grouped = opts.reduce<Record<string, Opt[]>>((acc, o) => { const k = [o.region, o.district].filter(Boolean).join(' · ') || 'Other'; (acc[k] ||= []).push(o); return acc }, {})
+  const grouped = opts.reduce<Record<string, Opt[]>>((acc, o) => { const k = [o.region, o.district].filter(Boolean).join(' · ') || t('other'); (acc[k] ||= []).push(o); return acc }, {})
 
   async function submit(e: FormEvent) {
     e.preventDefault(); setErr(null)
     const u = f.username.trim().toLowerCase()
-    if (!f.full_name.trim()) return setErr('Enter your full name.')
-    if (!USERNAME_RE.test(u)) return setErr('Username: 3–32 characters, letters, digits, dots, dashes or underscores.')
-    if (!f.phone.trim()) return setErr('Enter a phone number so Tony can reach you.')
-    if (!f.academy_id && !f.requested_academy.trim()) return setErr('Choose your academy, or type its name if it is not listed.')
-    if (f.password.length < 8) return setErr('Password: at least 8 characters.')
-    if (f.password !== f.confirm) return setErr('The two passwords do not match.')
+    if (!f.full_name.trim()) return setErr(t('errName'))
+    if (!USERNAME_RE.test(u)) return setErr(t('errUsername'))
+    if (!f.phone.trim()) return setErr(t('errPhone'))
+    if (!f.academy_id && !f.requested_academy.trim()) return setErr(t('errAcademy'))
+    if (f.password.length < 8) return setErr(t('errPassword'))
+    if (f.password !== f.confirm) return setErr(t('errMatch'))
     setBusy(true)
     const { data: free } = await supabase.rpc('username_available', { p_username: u })
-    if (free === false) { setBusy(false); return setErr('That username is taken. Try another.') }
+    if (free === false) { setBusy(false); return setErr(t('errTaken')) }
     const { error } = await supabase.auth.signUp({
       email: usernameToEmail(u), password: f.password,
       options: { data: { username: u, full_name: f.full_name.trim(), phone: f.phone.trim(), academy_id: f.academy_id || '', requested_academy: f.academy_id ? '' : f.requested_academy.trim(), project_id: proj?.id ?? '' } },
@@ -161,50 +236,51 @@ export function SignupPage() {
   }
 
   if (slug && proj === null) return (
-    <AuthFrame title="Link not found" subtitle="This join link does not belong to an active Tony project.">
-      <Link to="/login" className="font-semibold text-royal hover:underline">Go to sign in</Link>
+    <AuthFrame title={t('linkNotFound')} subtitle={t('linkNotFoundHint')}>
+      <Link to="/login" className="font-semibold text-royal hover:underline">{t('goSignIn')}</Link>
     </AuthFrame>
   )
   return (
-    <AuthFrame title="Coach account" subtitle={`For academy coaches of ${proj?.name ?? 'Tony'}${proj?.country ? ` (${proj.country})` : ''}. An admin approves every new account before it can see any data.`}>
+    <AuthFrame title={t('coachAccount')} subtitle={t('coachAccountHint', `${proj?.name ?? 'Tony'}${proj?.country ? ` (${proj.country})` : ''}`)}>
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Full name" required><Input value={f.full_name} onChange={set('full_name')} autoComplete="name" /></Field>
+        <Field label={t('fullName')} required><Input value={f.full_name} onChange={set('full_name')} autoComplete="name" /></Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Username" required><Input value={f.username} onChange={set('username')} autoCapitalize="none" autoComplete="username" /></Field>
-          <Field label="Phone" required><Input value={f.phone} onChange={set('phone')} type="tel" placeholder="07…" autoComplete="tel" /></Field>
+          <Field label={t('username')} required><Input value={f.username} onChange={set('username')} autoCapitalize="none" autoComplete="username" /></Field>
+          <Field label={t('phone')} required><Input value={f.phone} onChange={set('phone')} type="tel" placeholder="07…" autoComplete="tel" /></Field>
         </div>
-        <Field label="Academy" required hint={opts.length ? undefined : 'The academy list is being prepared. Type your academy and district below.'}>
+        <Field label={t('academy')} required hint={opts.length ? undefined : t('academyListHint')}>
           <Select value={f.academy_id} onChange={set('academy_id')}>
-            <option value="">{opts.length ? 'Choose your academy' : 'Not listed'}</option>
+            <option value="">{opts.length ? t('chooseAcademy') : t('notListed')}</option>
             {Object.entries(grouped).map(([g, list]) => (
               <optgroup key={g} label={g}>{list.map(o => <option key={o.academy_id} value={o.academy_id}>{o.academy}</option>)}</optgroup>
             ))}
           </Select>
         </Field>
         {!f.academy_id && (
-          <Field label="Academy not listed? Name and district" hint="e.g. Musanze Youth FTC, Musanze">
+          <Field label={t('academyNotListed')} hint={t('academyExample')}>
             <Input value={f.requested_academy} onChange={set('requested_academy')} />
           </Field>
         )}
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Password" required><Input type="password" autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
-          <Field label="Repeat" required><Input type="password" autoComplete="new-password" value={f.confirm} onChange={set('confirm')} /></Field>
+          <Field label={t('password')} required><Input type="password" autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
+          <Field label={t('repeat')} required><Input type="password" autoComplete="new-password" value={f.confirm} onChange={set('confirm')} /></Field>
         </div>
         {err && <Alert>{err}</Alert>}
-        <Button variant="primary" className="w-full" loading={busy} type="submit">Create account</Button>
+        <Button variant="primary" className="w-full" loading={busy} type="submit">{t('createAccount')}</Button>
       </form>
-      <p className="mt-6 text-sm text-muted">Already have an account? <Link to="/login" className="font-semibold text-royal hover:underline">Sign in</Link></p>
+      <p className="mt-6 text-sm text-muted">{t('haveAccount')} <Link to="/login" className="font-semibold text-royal hover:underline">{t('signIn')}</Link></p>
     </AuthFrame>
   )
 }
 
 export function PendingPage() {
   const { profile, signOut } = useAuth()
+  const { t } = useA()
   const locked = profile?.status === 'locked'
   return (
     <AuthFrame
-      title={locked ? 'Account locked' : 'Waiting for approval'}
-      subtitle={locked ? 'An admin has locked this account. Contact Tony if you think this is a mistake.' : 'Your account was created. A Tony admin will check it and link it to your academy.'}
+      title={locked ? t('locked') : t('waiting')}
+      subtitle={locked ? t('lockedHint') : t('waitingHint')}
     >
       <div className="rounded-xl border border-line bg-card p-5">
         <div className="flex items-center gap-3">
@@ -214,9 +290,9 @@ export function PendingPage() {
             <div className="text-sm text-muted">@{profile?.username}{profile?.requested_academy ? ` · ${profile.requested_academy}` : ''}</div>
           </div>
         </div>
-        <p className="mt-4 text-sm text-muted">Once approved, sign in again and you will see your academy portal.</p>
+        <p className="mt-4 text-sm text-muted">{t('onceApproved')}</p>
       </div>
-      <Button className="mt-5 w-full" onClick={signOut}>Sign out</Button>
+      <Button className="mt-5 w-full" onClick={signOut}>{t('signOut')}</Button>
     </AuthFrame>
   )
 }
@@ -233,13 +309,14 @@ export function WelcomePage() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const nav = useNavigate()
+  const { t, lang } = useA()
 
   useEffect(() => { supabase.rpc('invite_info', { p_token: token ?? '' }).then(({ data }) => setInfo((data as InviteInfo) ?? null)) }, [token])
 
   async function submit(e: FormEvent) {
     e.preventDefault(); setErr(null)
-    if (password.length < 8) return setErr('Use at least 8 characters.')
-    if (password !== confirm) return setErr('The two passwords do not match.')
+    if (password.length < 8) return setErr(t('atLeast8'))
+    if (password !== confirm) return setErr(t('errMatch'))
     setBusy(true)
     const { data, error } = await supabase.rpc('accept_invite', { p_token: token ?? '', p_password: password })
     if (error) { setBusy(false); return setErr(errMsg(error)) }
@@ -250,34 +327,35 @@ export function WelcomePage() {
     nav('/')
   }
 
-  if (info === undefined) return <AuthFrame title="One moment…"><span /></AuthFrame>
+  if (info === undefined) return <AuthFrame title={t('oneMoment')}><span /></AuthFrame>
   if (info === null) return (
-    <AuthFrame title="This link was already used" subtitle="Or it is not a valid invite link. If you already set your password, sign in. Otherwise ask your admin for a new link.">
-      <Link to="/login" className="inline-flex h-10 items-center rounded-lg bg-ink px-4 text-sm font-semibold text-neon">Sign in</Link>
+    <AuthFrame title={t('linkUsed')} subtitle={t('linkUsedHint')}>
+      <Link to="/login" className="inline-flex h-10 items-center rounded-lg bg-ink px-4 text-sm font-semibold text-neon">{t('signIn')}</Link>
     </AuthFrame>
   )
   if (info.expired) return (
-    <AuthFrame title="This link has expired" subtitle="Invite links work for 7 days. Ask your admin to send you a new one.">
-      <Link to="/login" className="font-semibold text-royal hover:underline">Go to sign in</Link>
+    <AuthFrame title={t('linkExpired')} subtitle={t('linkExpiredHint')}>
+      <Link to="/login" className="font-semibold text-royal hover:underline">{t('goSignIn')}</Link>
     </AuthFrame>
   )
   const first = (info.full_name || info.username).split(' ')[0]
+  const role = info.role === 'coach' && lang === 'rw' ? t('coach') : ROLE_LABEL[info.role as Role] ?? info.role
   return (
-    <AuthFrame title={`Welcome, ${first}`} subtitle={`You have been invited to ${APP_NAME}, ${info.project}${info.academy ? ` · ${info.academy}` : ''}. Choose a password and you are in.`}>
+    <AuthFrame title={t('welcome', first)} subtitle={t('welcomeHint', `${APP_NAME}, ${info.project}${info.academy ? ` · ${info.academy}` : ''}`)}>
       <div className="mb-5 flex items-center gap-3 rounded-xl border border-line bg-card p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-neon"><UserCheck size={18} /></div>
         <div className="min-w-0">
           <div className="font-semibold">{info.full_name || info.username}</div>
-          <div className="text-sm text-muted">@{info.username} · {ROLE_LABEL[info.role as Role] ?? info.role}</div>
+          <div className="text-sm text-muted">@{info.username} · {role}</div>
         </div>
       </div>
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Your password" required hint="At least 8 characters. Only you know it."><Input type="password" autoComplete="new-password" autoFocus value={password} onChange={e => setPassword(e.target.value)} /></Field>
-        <Field label="Repeat the password" required><Input type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></Field>
+        <Field label={t('yourPassword')} required hint={t('yourPasswordHint')}><Input type="password" autoComplete="new-password" autoFocus value={password} onChange={e => setPassword(e.target.value)} /></Field>
+        <Field label={t('repeatPassword')} required><Input type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></Field>
         {err && <Alert>{err}</Alert>}
-        <Button variant="primary" className="w-full" loading={busy} type="submit">Set password and sign in</Button>
+        <Button variant="primary" className="w-full" loading={busy} type="submit">{t('setPassword')}</Button>
       </form>
-      <p className="mt-6 text-xs text-muted">Your username is <b className="text-text">{info.username}</b>. You will use it with this password to sign in next time.</p>
+      <p className="mt-6 text-xs text-muted">{t('usernameIs')} <b className="text-text">{info.username}</b>. {t('useNextTime')}</p>
     </AuthFrame>
   )
 }

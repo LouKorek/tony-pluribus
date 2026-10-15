@@ -64,27 +64,48 @@ const headersOf = (h: HeadersInit | undefined): Record<string, string> => {
 const isNetworkError = (e: unknown) => e instanceof TypeError || (e as Error)?.name === 'AbortError' && !state.online
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16) }))
 
-/** A short human label for the outbox list. */
+/** A code for the outbox list: "kind|argument". The panel turns it into text in the user's language (see outboxText). */
 function labelFor(method: string, path: string, body: string | null): string {
   if (isRpc(path)) {
     const n = rpcName(path)
     const a = (() => { try { return body ? JSON.parse(body) : {} } catch { return {} } })()
     switch (n) {
-      case 'coach_save_player': return `Player: ${a?.p?.first_name ?? ''} ${a?.p?.last_name ?? ''}`.trim()
-      case 'coach_save_session': return `Training session ${a?.p?.held_on ?? ''}`.trim()
-      case 'coach_save_academy': return 'Academy profile'
-      case 'coach_log_player': return 'Player note'
-      case 'coach_submit': return 'Players submitted to a camp'
-      case 'coach_rsvp': return 'Invitation answer'
-      case 'coach_answer_booking': return 'Camp day answer'
-      case 'coach_remove_player': return 'Player removed'
-      case 'tour_seen': case 'track': case 'touch_last_seen': return ''
-      default: return n.replace(/_/g, ' ')
+      case 'coach_save_player': return `player|${`${a?.p?.first_name ?? ''} ${a?.p?.last_name ?? ''}`.trim()}`
+      case 'coach_save_session': return `session|${a?.p?.held_on ?? ''}`
+      case 'coach_save_match': return `match|${a?.p?.played_on ?? ''}`
+      case 'coach_save_academy': return 'academy'
+      case 'coach_save_staff': return 'staff'
+      case 'coach_delete_staff': return 'staffRemoved'
+      case 'coach_save_equipment': return 'equipment'
+      case 'coach_log_player': return 'note'
+      case 'coach_delete_log': return 'noteRemoved'
+      case 'coach_submit': return 'submit'
+      case 'coach_rsvp': return 'rsvp'
+      case 'coach_answer_booking': return 'booking'
+      case 'coach_remove_player': return 'playerRemoved'
+      case 'coach_withdraw': return 'withdraw'
+      case 'coach_delete_session': return 'sessionRemoved'
+      case 'coach_delete_match': return 'matchRemoved'
+      case 'tour_seen': case 'track': case 'touch_last_seen': case 'set_lang': return ''
+      default: return `rpc|${n.replace(/_/g, ' ')}`
     }
   }
   const table = path.split('/rest/v1/')[1]?.split('?')[0] ?? ''
-  const verb = method === 'POST' ? 'Added' : method === 'DELETE' ? 'Removed' : 'Changed'
-  return `${verb}: ${table.replace(/_/g, ' ')}`
+  const verb = method === 'POST' ? 'added' : method === 'DELETE' ? 'removed' : 'changed'
+  return `${verb}|${table.replace(/_/g, ' ')}`
+}
+
+export const OUTBOX_EN: Record<string, string> = {
+  player: 'Player: {a}', session: 'Training session {a}', match: 'Match {a}', academy: 'Academy profile', staff: 'Staff member', staffRemoved: 'Staff member removed',
+  equipment: 'Equipment count', note: 'Player note', noteRemoved: 'Player note removed', submit: 'Players submitted to a camp', rsvp: 'Invitation answer', booking: 'Camp day answer',
+  playerRemoved: 'Player removed', withdraw: 'Player withdrawn from a camp', sessionRemoved: 'Training session removed', matchRemoved: 'Match removed', rpc: '{a}', added: 'Added: {a}', removed: 'Removed: {a}', changed: 'Changed: {a}',
+  'upload.player': 'Player photo', 'upload.academy': 'Academy photo',
+}
+/** The text of an outbox row from its code, with the given dictionary (falls back to English). */
+export function outboxText(label: string, dict: Record<string, string> = OUTBOX_EN): string {
+  const [k, a = ''] = label.split('|')
+  const tpl = dict[k] ?? OUTBOX_EN[k] ?? label
+  return tpl.replace('{a}', a).trim()
 }
 
 /* ───────────── the fetch ───────────── */

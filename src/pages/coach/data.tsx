@@ -47,14 +47,14 @@ export interface StaffMember { id: string; name: string; role: StaffRole; phone:
 export interface Equipment { item: string; label: string | null; good: number; worn: number; needed: number; quantity: number; condition: 'good' | 'worn' | 'missing'; notes: string | null; updated_at: string | null }
 export interface Standing { submitted: number; selected: number; rank: number | null; academies: number; region: string | null }
 export type ProgrammeStatus = 'registered' | 'observed' | 'partner' | 'official'
-export interface Level { code: string; label: string; min_points: number; next?: { code: string; label: string; min_points: number } | null }
-export interface BadgeInfo { code: string; label: string; description: string; icon: string; family: string | null; tier: number; earned_at: string | null }
-export interface Rule { code: string; points: number; label: string; description: string; cap: number | null; cap_period: 'day' | 'week' | 'season' | 'once' | null }
-export interface PointEvent { id: string; at: string; rule: string; points: number; label: string; note: string | null }
+export interface Level { code: string; label: string; label_rw?: string | null; min_points: number; next?: { code: string; label: string; label_rw?: string | null; min_points: number } | null }
+export interface BadgeInfo { code: string; label: string; label_rw?: string | null; description: string; description_rw?: string | null; icon: string; family: string | null; tier: number; earned_at: string | null }
+export interface Rule { code: string; points: number; label: string; label_rw?: string | null; description: string; description_rw?: string | null; cap: number | null; cap_period: 'day' | 'week' | 'season' | 'once' | null }
+export interface PointEvent { id: string; at: string; rule: string; points: number; label: string; label_rw?: string | null; note: string | null }
 export interface BoardRow { academy_id: string; name: string; district: string | null; region: string | null; points: number; rank: number; mine: boolean }
 export interface Review { id: string; at: string; reliability: number | null; player_quality: number | null; engagement: number | null; cooperation: number | null; comment: string | null }
 export interface Progress {
-  points: number; season_points: number; level: Level; levels: { code: string; label: string; min_points: number }[]
+  points: number; season_points: number; level: Level; levels: { code: string; label: string; label_rw?: string | null; min_points: number }[]
   badges: BadgeInfo[]; rules: Rule[]; history: PointEvent[]
   rank: { district: string | null; province: string | null; national: string | null }; province_board: BoardRow[]; reviews: Review[]
 }
@@ -182,7 +182,7 @@ export async function shrinkPhoto(file: File, max = 900): Promise<Blob> {
 export async function uploadPhoto(academyId: string, file: File, kind: 'player' | 'academy', id: string): Promise<string> {
   const blob = await shrinkPhoto(file)
   const path = `${academyId}/${kind}-${id}-${Date.now()}.jpg`
-  const queue = () => queueUpload(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, blob, 'image/jpeg', kind === 'player' ? 'Player photo' : 'Academy photo', { apikey: SUPABASE_KEY })
+  const queue = () => queueUpload(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, blob, 'image/jpeg', kind === 'player' ? 'upload.player' : 'upload.academy', { apikey: SUPABASE_KEY })
   if (!syncState().online) { await queue(); return path }
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: true })
   if (error) {

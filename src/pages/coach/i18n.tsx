@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
-import { LANGUAGE_NAMES, type ProjectSettings } from '../../lib/brand'
+import { LANGUAGE_NAMES, usePointsName, type ProjectSettings } from '../../lib/brand'
+import { readLang, writeLang } from '../../lib/lang'
 
 // English is the master text. The Kinyarwanda column is a first draft and needs a review by a native speaker.
 const S = {
@@ -324,9 +325,29 @@ const S = {
   retry: ['Try again', 'Ongera ugerageze'],
   outboxTitle: ['Changes waiting', 'Impinduka zitegereje'],
   seeProgress: ['See your progress', 'Reba iterambere ryawe'],
+  installApp: ['Install the app', 'Shyiramo porogaramu'],
+  deleteNote: ['Delete', 'Siba'],
+  certTitle: ['Certificate of selection', 'Icyemezo cyo gutoranywa'],
+  certBefore: ['has been', ''],
+  certSelectedWord: ['selected', 'yatoranyijwe'],
+  certAfter: ['at the', 'mu'],
+  certPartner: ['in partnership with', "ku bufatanye na"],
+  certShareText: ['has been selected at the', 'yatoranyijwe mu'],
+  prefCustom: ['custom', 'wabihinduye'],
+  loading: ['Loading…', 'Birimo gutangira…'],
+  pointsOne: ['point', 'inota'],
+  pointsMany: ['points', 'amanota'],
 } as const
 
 export type Key = keyof typeof S
+
+/** The outbox rows (changes waiting to be sent) in Kinyarwanda; keys as in OUTBOX_EN (src/lib/offline.ts). */
+export const OUTBOX_RW: Record<string, string> = {
+  player: 'Umukinnyi: {a}', session: 'Umwitozo {a}', match: 'Umukino {a}', academy: "Umwirondoro w'ishuri", staff: 'Umukozi', staffRemoved: 'Umukozi yakuwemo',
+  equipment: "Ibaruramari ry'ibikoresho", note: "Inyandiko y'umukinnyi", noteRemoved: "Inyandiko y'umukinnyi yakuwemo", submit: 'Abakinnyi boherejwe mu ikambi', rsvp: "Igisubizo cy'ubutumire", booking: "Igisubizo cy'umunsi w'ikambi",
+  playerRemoved: 'Umukinnyi yakuwemo', withdraw: 'Umukinnyi yakuwe mu ikambi', sessionRemoved: 'Umwitozo wakuwemo', matchRemoved: 'Umukino wakuwemo', rpc: '{a}', added: 'Byongewemo: {a}', removed: 'Byakuwemo: {a}', changed: 'Byahinduwe: {a}',
+  'upload.player': "Ifoto y'umukinnyi", 'upload.academy': "Ifoto y'ishuri",
+}
 /** 'en', 'rw', or any code the project configures; unknown codes fall back to English plus the project's own strings. */
 export type Lang = string
 
@@ -344,12 +365,9 @@ export const STAGE_T: Record<string, [string, string]> = {
 interface LangCtx { lang: Lang; setLang: (l: Lang) => void; t: (k: Key) => string; pick: (pair: readonly [string, string] | undefined) => string; languages: { code: string; label: string }[] }
 const Ctx = createContext<LangCtx | null>(null)
 
-function readLang(): Lang {
-  try { return localStorage.getItem('tonynext.lang') || 'en' } catch { return 'en' }
-}
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const { project } = useAuth()
+  const { project, profile } = useAuth()
   const codes = ((project?.settings as ProjectSettings | undefined)?.languages ?? ['en', 'rw']).filter(Boolean)
   const languages = (codes.length ? codes : ['en']).map(c => ({ code: c, label: LANGUAGE_NAMES[c] ?? c.toUpperCase() }))
   const [lang, set] = useState<Lang>(readLang)
@@ -357,11 +375,34 @@ export function LangProvider({ children }: { children: ReactNode }) {
   // the project's own wording per language (Settings › Portal languages); cached for offline like every read
   useEffect(() => { supabase.rpc('portal_strings').then(({ data }) => setOver((data as Record<string, Record<string, string>>) ?? {})) }, [project?.id])
   const active = languages.some(l => l.code === lang) ? lang : languages[0].code
-  const setLang = (l: Lang) => { set(l); try { localStorage.setItem('tonynext.lang', l) } catch { /* private mode */ } }
+  const setLang = (l: Lang) => { set(l); writeLang(l) }
+  // the server keeps the coach's language so push notifications arrive in it
+  useEffect(() => {
+    if (!profile || profile.role !== 'coach' || profile.status !== 'active') return
+    if ((profile as { lang?: string }).lang !== active) supabase.rpc('set_lang', { p_lang: active }).then(() => {})
+  }, [active, profile])
   const i = active === 'rw' ? 1 : 0
   const t = (k: Key) => over[active]?.[k] ?? S[k][i]
   const value: LangCtx = { lang: active, setLang, t, pick: p => (p ? p[i] : ''), languages }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+}
+/** A record with an English text and, maybe, a Kinyarwanda one (labels from the database): the one for the active language. */
+export function useLocal() {
+  const { lang } = useT()
+  return <T extends { label: string; label_rw?: string | null; description?: string | null; description_rw?: string | null }>(x: T | null | undefined) => ({
+    label: x ? (lang === 'rw' && x.label_rw) || x.label : '',
+    description: x ? (lang === 'rw' && x.description_rw) || x.description || '' : '',
+  })
+}
+/** What the project calls its points, in the portal's language when the project has no name of its own. */
+export function useCoachPointsName() {
+  const pn = usePointsName()
+  const { project } = useAuth()
+  const { t } = useT()
+  const custom = !!(project?.settings as ProjectSettings | undefined)?.points_name?.many?.trim()
+  if (custom) return pn
+  const many = t('pointsMany')
+  return { one: t('pointsOne'), many, short: many, Many: many.charAt(0).toUpperCase() + many.slice(1) }
 }
 /** Every portal string with its English and Kinyarwanda base text, for the Settings editor. */
 export const BASE_STRINGS = S

@@ -5,13 +5,13 @@ import { InstallButton } from '../../lib/install'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { fmtDate } from '../../lib/scouting'
-import { notifTarget, useNotifications } from '../../lib/notifications'
+import { notifTarget, notifText, useNotifications } from '../../lib/notifications'
 import { PrefsMatrix, PushCard } from '../../components/NotificationPrefs'
 import { SyncButton } from '../../components/SyncStatus'
 import { ThemeButton } from '../../lib/theme'
 import { Alert, Button, Card, Empty, Spinner, cx } from '../../components/ui'
 import { Brand } from '../../layouts/AppShell'
-import { LangProvider, useT } from './i18n'
+import { LangProvider, OUTBOX_RW, useT } from './i18n'
 import { TourProvider, useTour } from '../../lib/tour'
 import { COACH_TOURS } from './tours'
 import { CoachDataProvider, pendingInvites, useCoach } from './data'
@@ -113,8 +113,8 @@ function Shell({ children }: { children: ReactNode }) {
                 ))}
               </div>
             )}
-            {!preview && <SyncButton labels={{ offline: t('offline'), offlineHint: t('offlineHint'), savedCopy: t('savedCopy'), pending: t('pendingChanges'), failed: t('failedChanges'), sendNow: t('sendNow'), syncing: t('syncing'), allSent: t('allSent'), discard: t('discard'), retry: t('retry'), title: t('outboxTitle') }} />}
-            <InstallButton variant="icon" label="Install the app" />
+            {!preview && <SyncButton labels={{ offline: t('offline'), offlineHint: t('offlineHint'), savedCopy: t('savedCopy'), pending: t('pendingChanges'), failed: t('failedChanges'), sendNow: t('sendNow'), syncing: t('syncing'), allSent: t('allSent'), discard: t('discard'), retry: t('retry'), title: t('outboxTitle'), items: lang === 'rw' ? OUTBOX_RW : undefined }} />}
+            <InstallButton variant="icon" label={t('installApp')} />
             <ThemeButton labels={[t('nightMode'), t('dayMode')]} />
             <CoachHelp />
             {!preview && <NavLink to="/updates" className="relative rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label={t('updates')}>
@@ -159,7 +159,7 @@ function Shell({ children }: { children: ReactNode }) {
 /* ───────────────────────── Updates ───────────────────────── */
 
 function UpdatesScreen() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const { notifs, markRead } = useCoach()
   const { markSeen } = useNotifications()
   const [settings, setSettings] = useState(false)
@@ -172,7 +172,7 @@ function UpdatesScreen() {
       {settings && (
         <div className="mb-6 space-y-4">
           <PushCard t={{ title: t('pushTitle'), on: t('pushOn'), off: t('pushOff'), enable: t('pushEnable'), disable: t('pushDisable'), unsupported: t('pushUnsupported'), blocked: t('pushBlocked') }} />
-          <PrefsMatrix mode="user" labels={{ inApp: t('inApp'), push: t('pushCol'), reset: t('resetPrefs'), hint: t('prefsHint') }} />
+          <PrefsMatrix mode="user" lang={lang} labels={{ inApp: t('inApp'), push: t('pushCol'), reset: t('resetPrefs'), hint: t('prefsHint'), custom: t('prefCustom'), loading: t('loading') }} />
         </div>
       )}
       {notifs.length === 0 ? (
@@ -186,7 +186,9 @@ function UpdatesScreen() {
 
 export function NotifRow({ n, fresh }: { n: ReturnType<typeof useCoach>['notifs'][number]; fresh?: boolean }) {
   const nav = useGo()
+  const { lang } = useT()
   const { markRead } = useNotifications()
+  const text = notifText(n, lang)
   const target = notifTarget(n, true)
   const go = () => { markRead(n.id); if (target) nav(target) }
   const isNew = fresh ?? !n.read_at
@@ -194,8 +196,8 @@ export function NotifRow({ n, fresh }: { n: ReturnType<typeof useCoach>['notifs'
     <button onClick={go} className={cx('flex w-full gap-3 px-4 py-3 text-left', target ? 'hover:bg-paper' : 'cursor-default')}>
       <span className={cx('mt-1.5 h-2 w-2 shrink-0 rounded-full', isNew ? 'bg-royal' : 'bg-transparent')} />
       <span className="min-w-0 flex-1">
-        <span className="block font-semibold">{n.title}</span>
-        {n.body && <span className="block whitespace-pre-line text-sm text-muted">{n.body}</span>}
+        <span className="block font-semibold">{text.title}</span>
+        {text.body && <span className="block whitespace-pre-line text-sm text-muted">{text.body}</span>}
         <span className="mt-0.5 block text-xs text-faint">{fmtDate(n.created_at.slice(0, 10))}</span>
       </span>
       {target && <ChevronRight size={18} className="mt-1 shrink-0 text-faint" />}

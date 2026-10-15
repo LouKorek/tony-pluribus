@@ -25,6 +25,8 @@ export interface Profile {
   phone: string | null
   role: Role
   status: Status
+  /** the language the coach uses in the portal ('en', 'rw'); staff screens are English */
+  lang?: string
   org_id: string | null
   project_id: string | null
   academy_id: string | null

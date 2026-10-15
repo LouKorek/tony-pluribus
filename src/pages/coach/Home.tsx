@@ -2,8 +2,7 @@ import { CalendarCheck, CalendarDays, Camera, ChevronRight, ClipboardList, MapPi
 import { useAuth } from '../../lib/auth'
 import { fmtDate } from '../../lib/scouting'
 import { Card, cx } from '../../components/ui'
-import { usePointsName } from '../../lib/brand'
-import { STAGE_T, useT } from './i18n'
+import { STAGE_T, useCoachPointsName, useLocal, useT } from './i18n'
 import { pendingInvites, useCoach } from './data'
 import { MiniStat, Section, fmtTime, name, useGo } from './shared'
 import { eligibleFor } from './Schedule'
@@ -15,7 +14,8 @@ export default function HomeScreen() {
   const { t, pick } = useT()
   const { academy, squad, standing, camps, schedule, sessions, matches, notifs, groups, preview, progress } = useCoach()
   const nav = useGo()
-  const pn = usePointsName()
+  const pn = useCoachPointsName()
+  const L = useLocal()
   const invites = pendingInvites(squad)
   const campsWithRoom = camps.filter(c => eligibleFor(c, squad, groups).some(e => !e.already)).length
   const first = preview ? 'coach' : (profile?.full_name || profile?.username || '').split(' ')[0]
@@ -80,12 +80,12 @@ export default function HomeScreen() {
         <button onClick={() => nav('/progress')} data-tour="coach-progress" className="mt-7 flex w-full items-center gap-4 rounded-xl border border-ink bg-ink p-4 text-left text-white hover:border-neon">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neon text-ink"><Trophy size={22} /></span>
           <span className="min-w-0 flex-1">
-            <span className="label-caps block text-[11px] text-neon">{t('yourLevel')} · {progress.level.label}</span>
+            <span className="label-caps block text-[11px] text-neon">{t('yourLevel')} · {L(progress.level).label}</span>
             <span className="mt-0.5 block font-display text-[26px] font-semibold leading-none">{progress.points} <span className="text-base font-medium text-white/60">{pn.many}</span></span>
             <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-white/15">
               <span className={cx('block h-full rounded-full bg-neon')} style={{ width: `${progress.level.next ? Math.min(100, Math.round(((progress.points - progress.level.min_points) / (progress.level.next.min_points - progress.level.min_points)) * 100)) : 100}%` }} />
             </span>
-            <span className="mt-1 block text-xs text-white/60">{progress.level.next ? `${progress.level.next.min_points - progress.points} ${pn.many} ${t('toNext')} ${progress.level.next.label}` : t('topLevel')}{progress.rank.province ? ` · ${t('rankProvince')} #${progress.rank.province}` : ''}</span>
+            <span className="mt-1 block text-xs text-white/60">{progress.level.next ? `${progress.level.next.min_points - progress.points} ${pn.many} ${t('toNext')} ${L(progress.level.next).label}` : t('topLevel')}{progress.rank.province ? ` · ${t('rankProvince')} #${progress.rank.province}` : ''}</span>
           </span>
           <ChevronRight size={18} className="text-white/60" />
         </button>

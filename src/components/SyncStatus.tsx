@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { CloudOff, CloudUpload, Check, RefreshCw, Trash2, WifiOff } from 'lucide-react'
-import { discardOutbox, flush, outboxList, retryOutbox, subscribeSync, type OutboxRow, type SyncState } from '../lib/offline'
+import { discardOutbox, flush, outboxList, outboxText, retryOutbox, subscribeSync, type OutboxRow, type SyncState } from '../lib/offline'
 import { cx } from './ui'
 
 export interface SyncLabels {
   offline: string; offlineHint: string; savedCopy: string; pending: string; failed: string; sendNow: string; syncing: string; allSent: string; discard: string; retry: string; title: string
+  /** texts of the outbox rows by code (see OUTBOX_EN in offline.ts); English when missing */
+  items?: Record<string, string>
 }
 export const SYNC_EN: SyncLabels = {
   offline: 'Offline', offlineHint: 'No network. Keep working: everything you save is sent when you are back online.', savedCopy: 'Showing the last saved copy',
@@ -67,7 +69,7 @@ export function SyncPanel({ labels, s, tone }: { labels: SyncLabels; s: SyncStat
             <li key={r.id} className="flex items-center gap-2 py-1.5">
               <span className={cx('h-2 w-2 shrink-0 rounded-full', r.error ? 'bg-danger' : 'bg-warn')} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate">{r.label}</span>
+                <span className="block truncate">{outboxText(r.label, labels.items)}</span>
                 {r.error && <span className="block truncate text-xs text-danger">{r.error}</span>}
               </span>
               {r.error && <button onClick={() => retryOutbox(r.id).then(reloadRows)} className="rounded p-1 text-muted hover:text-text" title={labels.retry}><RefreshCw size={13} /></button>}

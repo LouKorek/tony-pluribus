@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { BellRing, RotateCcw, Smartphone } from 'lucide-react'
 import { supabase, errMsg } from '../lib/supabase'
 import { usePush } from '../lib/push'
-import { CATEGORY_LABEL } from '../lib/notifications'
+import { CATEGORY_LABEL, CATEGORY_LABEL_RW } from '../lib/notifications'
 import { Alert, Button, Card, cx } from './ui'
 
-export interface PrefRow { type: string; category: string; label: string; description: string; in_app: boolean; push: boolean; custom: boolean; audience?: string[] }
+export interface PrefRow { type: string; category: string; label: string; description: string; label_rw?: string | null; description_rw?: string | null; in_app: boolean; push: boolean; custom: boolean; audience?: string[] }
 
 /** Switch for one channel of one type. */
 function Toggle({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
@@ -41,7 +41,10 @@ export function PushCard({ t }: { t?: { title: string; on: string; off: string; 
 }
 
 /** The matrix of types × channels, for the user (mode user) or the project defaults (mode project, admins). */
-export function PrefsMatrix({ mode, labels }: { mode: 'user' | 'project'; labels?: { inApp: string; push: string; reset: string; hint: string } }) {
+export function PrefsMatrix({ mode, labels, lang = 'en' }: { mode: 'user' | 'project'; labels?: { inApp: string; push: string; reset: string; hint: string; custom?: string; loading?: string }; lang?: string }) {
+  const rw = lang === 'rw'
+  const name = (r: PrefRow) => (rw && r.label_rw) || r.label
+  const desc = (r: PrefRow) => (rw && r.description_rw) || r.description
   const L = labels ?? { inApp: 'In app', push: 'Push', reset: 'Reset to defaults', hint: mode === 'user' ? 'What you get and where. Push reaches your devices that turned it on.' : 'Defaults for everyone in the project. A person can still change their own.' }
   const [rows, setRows] = useState<PrefRow[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -59,7 +62,7 @@ export function PrefsMatrix({ mode, labels }: { mode: 'user' | 'project'; labels
   }
   async function reset() { if (mode !== 'user') return; await supabase.rpc('reset_notification_prefs'); load() }
 
-  if (!rows) return <p className="text-sm text-muted">Loading…</p>
+  if (!rows) return <p className="text-sm text-muted">{L.loading ?? 'Loading…'}</p>
   const cats = [...new Set(rows.map(r => r.category))]
   return (
     <div>
@@ -74,15 +77,15 @@ export function PrefsMatrix({ mode, labels }: { mode: 'user' | 'project'; labels
         </div>
         {cats.map(c => (
           <div key={c}>
-            <div className="label-caps border-b border-line bg-paper/40 px-4 py-1.5 text-[10px] text-muted">{CATEGORY_LABEL[c] ?? c}</div>
+            <div className="label-caps border-b border-line bg-paper/40 px-4 py-1.5 text-[10px] text-muted">{(rw ? CATEGORY_LABEL_RW[c] : CATEGORY_LABEL[c]) ?? c}</div>
             {rows.filter(r => r.category === c).map(r => (
               <div key={r.type} className="grid grid-cols-[1fr_64px_64px] items-center gap-2 border-b border-line px-4 py-2.5 last:border-0">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">{r.label}{r.custom && mode === 'user' && <span className="ml-1.5 rounded bg-royal-soft px-1 text-[10px] font-semibold text-royal">custom</span>}</div>
-                  <div className="text-xs text-muted">{r.description}</div>
+                  <div className="text-sm font-semibold">{name(r)}{r.custom && mode === 'user' && <span className="ml-1.5 rounded bg-royal-soft px-1 text-[10px] font-semibold text-royal">{L.custom ?? 'custom'}</span>}</div>
+                  <div className="text-xs text-muted">{desc(r)}</div>
                 </div>
-                <div className="flex justify-center"><Toggle on={r.in_app} onChange={v => set(r, 'in_app', v)} label={`${r.label} in app`} /></div>
-                <div className="flex justify-center"><Toggle on={r.push} onChange={v => set(r, 'push', v)} label={`${r.label} push`} /></div>
+                <div className="flex justify-center"><Toggle on={r.in_app} onChange={v => set(r, 'in_app', v)} label={`${name(r)} · ${L.inApp}`} /></div>
+                <div className="flex justify-center"><Toggle on={r.push} onChange={v => set(r, 'push', v)} label={`${name(r)} · ${L.push}`} /></div>
               </div>
             ))}
           </div>

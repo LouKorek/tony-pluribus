@@ -314,7 +314,7 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
             <li key={l.id} className="flex items-start gap-2 px-3 py-2 text-sm">
               <Badge tone={l.kind === 'match' ? 'info' : l.kind === 'absent' || l.kind === 'injury' ? 'warn' : 'neutral'}>{t(KINDS.find(k => k[0] === l.kind)?.[1] as 'noteKindNote' ?? 'noteKindNote')}</Badge>
               <span className="min-w-0 flex-1"><span className="block">{l.text}</span><span className="text-xs text-faint">{fmtDate(l.at.slice(0, 10))}</span></span>
-              {!preview && <button onClick={() => delNote(l.id)} className="rounded p-1 text-faint hover:text-danger" aria-label="Delete"><Trash2 size={13} /></button>}
+              {!preview && <button onClick={() => delNote(l.id)} className="rounded p-1 text-faint hover:text-danger" aria-label={t('deleteNote')}><Trash2 size={13} /></button>}
             </li>
           ))}
         </ul>
@@ -339,13 +339,14 @@ function PlayerDrawer({ player, onClose, onEdit }: { player: SquadPlayer | null;
 }
 
 export function Certificate({ player, item, onClose }: { player: SquadPlayer; item: JourneyItem; onClose: () => void }) {
-  const { t } = useT()
+  const { t, pick } = useT()
   const { academy } = useCoach()
   const { project } = useAuth()
   const partner = usePartner('certificates')
   const tagline = useTagline()
   const programme = project?.name ?? 'Tony'
-  const text = `${name(player)} (${academy?.name ?? ''}) has been selected at the ${STAGE_T[item.stage][0]}: ${item.camp}. ${programme}${partner ? ' × ' + partner.name : ''}.`
+  const stage = pick(STAGE_T[item.stage])
+  const text = `${name(player)} (${academy?.name ?? ''}) ${t('certShareText')} ${stage}: ${item.camp}. ${programme}${partner ? ' × ' + partner.name : ''}.`
   const canShare = typeof navigator !== 'undefined' && !!navigator.share
   return (
     <Modal open onClose={onClose} title={t('certificate')} wide
@@ -362,15 +363,15 @@ export function Certificate({ player, item, onClose }: { player: SquadPlayer; it
           </div>
           <div className="label-caps text-[11px] text-white/50">{programme}</div>
         </div>
-        <div className="relative mt-10 label-caps text-neon">Certificate of selection</div>
+        <div className="relative mt-10 label-caps text-neon">{t('certTitle')}</div>
         <div className="relative mt-2 font-display text-[44px] font-semibold leading-[.95] sm:text-[56px]">{name(player)}</div>
         <div className="relative mt-3 text-[15px] text-white/75">{academy?.name}{academy?.district ? ` · ${academy.district}` : ''}</div>
         <div className="relative mt-8 border-t border-white/15 pt-5 text-[15px] leading-relaxed text-white/85">
-          has been <b className="text-neon">selected</b> at the {STAGE_T[item.stage][0].toLowerCase()}
+          {t('certBefore') ? t('certBefore') + ' ' : ''}<b className="text-neon">{t('certSelectedWord')}</b> {t('certAfter')} {stage.toLowerCase()}
           <div className="font-semibold text-white">{item.camp}{item.starts_on ? ` · ${fmtRange(item.starts_on, item.ends_on)}` : ''}</div>
         </div>
         <div className="relative mt-8 flex items-end justify-between gap-4 text-xs text-white/50">
-          <span>{tagline}{partner ? <><br />in partnership with {partner.name}</> : <><br />{programme}</>}</span>
+          <span>{tagline}{partner ? <><br />{t('certPartner')} {partner.name}</> : <><br />{programme}</>}</span>
           <Logo variant="emblem" color="neon" className="h-10 opacity-90" />
         </div>
       </div>
