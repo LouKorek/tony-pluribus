@@ -110,6 +110,7 @@ export function parsePresence(wb: XLSX.WorkBook, path: string): Parsed {
     // every calendar day has a column; a day with two sessions has two ("15   M" = morning, "15" = afternoon)
     const cols: { col: number; d: number; morning: boolean; filled: number; matches: number }[] = []
     const dayLike = (c: Cell) => c != null && (c instanceof Date || (typeof c === 'number' ? c >= 1 && c <= 31 : /^\d{1,2}\s*[A-Za-z]?\s*$/.test(String(c))))
+    const lastDay = new Date(Date.UTC(y, mi + 1, 0)).getUTCDate() // a 31-day template may carry cells past the end of the month
     let startCol = 1 // the day columns start where three day-like cells follow each other (totals columns come before them)
     for (let c = 1; c < rows[hdr].length; c++) if (dayLike(rows[hdr][c]) && dayLike(rows[hdr][c + 1]) && dayLike(rows[hdr][c + 2])) { startCol = c; break }
     rows[hdr].forEach((c, col) => {
@@ -118,7 +119,7 @@ export function parsePresence(wb: XLSX.WorkBook, path: string): Parsed {
       if (c instanceof Date) d = c.getUTCDate()
       else if (typeof c === 'number' && c >= 1 && c <= 31) d = c
       else { const m = /^(\d{1,2})\s*([A-Za-z]*)\s*$/.exec(String(c)); if (m) { d = Number(m[1]); morning = /^m/i.test(m[2]) } }
-      if (d != null) cols.push({ col, d, morning, filled: 0, matches: 0 })
+      if (d != null && d <= lastDay) cols.push({ col, d, morning, filled: 0, matches: 0 })
     })
     const raw: { name: string; cells: { col: number; v: string }[] }[] = []
     for (const r of rows.slice(hdr + 1)) {
