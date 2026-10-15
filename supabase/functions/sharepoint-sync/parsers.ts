@@ -227,17 +227,47 @@ export const parseSpeed = (wb: XLSX.WorkBook, path: string) => parseMeasures(wb,
 export const parseWeight = (wb: XLSX.WorkBook, path: string) => parseMeasures(wb, path, 'weight')
 
 // ───────── Match Control - Stats ─────────
+/** one match header: "50 VS L'AVENIR FA U13 (16-0)", "12TH SEPTEMBER", "VS HOPE FTC(5-2)", "1-2 SINA GERARD D2 (H) 9H20" */
+export function parseMatchHeader(s: string, season: [number, number] | null) {
+  let t = s.replace(/\s+/g, ' ').trim()
+  // "12TH SEPTEMBER": a day, not a match number
+  const dayMonth = /^(\d{1,2})\s*(?:st|nd|rd|th)?\s+([A-Za-z]+)/i.exec(t)
+  if (dayMonth && monthIndex(dayMonth[2]) != null) {
+    const date = toDate(t, { season })
+    if (date) return { number: null, opponent: null, date, goals_for: null, goals_against: null, venue: null }
+  }
+  const ord = /^(\d+)\s*(?:st|nd|rd|th)\b/i.exec(t) ?? /^(\d+)\s*(?:vs|v\.)/i.exec(t)
+  let number: number | null = ord ? Number(ord[1]) : null
+  if (ord) t = t.slice(ord[0].length).trim()
+  const score = /\(\s*(\d+)\s*[-:]\s*(\d+)\s*\)/.exec(t) ?? /(?:^|\s)(\d+)\s*[-:]\s*(\d+)(?=\s|$)/.exec(t)
+  if (score) t = t.replace(score[0], ' ')
+  const venue = /\((H|A)\)/i.exec(t)?.[1]
+  t = t.replace(/\((H|A)\)/ig, ' ').replace(/\b\d{1,2}H\d{0,2}\b/ig, ' ')
+  const date = toDate(t, { season })
+  let opponent: string | null = null
+  const vs = /(?:^|\s)(?:vs|v\.)\s*(.+)$/i.exec(t)
+  if (vs) opponent = vs[1]
+  else if (!date) opponent = t
+  if (opponent) opponent = opponent.replace(/\s+U\s*-?\d{2}\s*$/i, '').replace(/\s+/g, ' ').trim() || null
+  if (opponent && /^(total|goals|assists)/i.test(opponent)) opponent = null
+  return { number, opponent, date, goals_for: score ? Number(score[1]) : null, goals_against: score ? Number(score[2]) : null, venue: venue ? (venue.toUpperCase() === 'H' ? 'home' : 'away') : null }
+}
+
 export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
   const season = seasonOf(path)
   const comp = /\/Matches\/([^/]+)\//i.exec(path)?.[1]
   const competition = comp ? comp[0].toUpperCase() + comp.slice(1).toLowerCase() : 'Friendly'
-  const matches: { number: number | null; opponent: string | null; date: string | null; goals_for: number | null; goals_against: number | null }[] = []
+  const matches: Record<string, unknown>[] = []
   const rowsOut: { name: string; stats: { m: number; goals: number; assists: number; yc: number; rc: number }[] }[] = []
   const notes: string[] = []
   let n = 0
-  for (const name of wb.SheetNames) {
+  // the sheet of this team: the one named after its age group when there are several (a copy of last season may sit beside it)
+  const age = /\bU\s*-?(\d{2})\b/i.exec(path)?.[1]
+  const candidates = wb.SheetNames.filter(nm => sheetRows(wb, nm).length >= 3)
+  const chosen = (age && candidates.find(nm => new RegExp('U\\s*-?' + age, 'i').test(nm))) ?? candidates[0]
+  if (candidates.length > 1) notes.push(`${candidates.length} sheets, read "${chosen}"`)
+  for (const name of chosen ? [chosen] : []) {
     const rows = sheetRows(wb, name)
-    if (rows.length < 3) continue
     // header row: match titles; the row under it names Goals / Assists / YC / RC per match
     let hdr = -1
     for (let i = 0; i < Math.min(rows.length, 5); i++) if (rows[i + 1]?.filter(c => typeof c === 'string' && /goal|assist|yc|yellow|rc|red/i.test(c)).length >= 4) { hdr = i; break }
@@ -247,20 +277,13 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
     let current = -1
     rows[hdr].forEach((c, col) => {
       if (c != null && c !== '' && col > 0 && !/^total/i.test(str(c))) {
-        const s = str(c)
-        const numM = /^(\d+)\s*(?:st|nd|rd|th)?\s*(?:vs|v\.?|-)/i.exec(s)
-        const opp = /(?:vs|v\.)\s*(.+?)\s*$/i.exec(s)?.[1] ?? null
-        const date = c instanceof Date ? toDate(c) : toDate(s, { season })
+        const h = c instanceof Date ? { number: null, opponent: null, date: toDate(c), goals_for: null, goals_against: null, venue: null } : parseMatchHeader(str(c), season)
         // a header is a match if it names an opponent or a date (totals columns have neither)
-        if (numM || opp || date) {
-          const score = /\(\s*(\d+)\s*[-:]\s*(\d+)\s*\)/.exec(s) // "(16-0)" written after the opponent
-          const opponent = opp ? opp.replace(/\(\s*\d+\s*[-:]\s*\d+\s*\)/g, ' ').replace(/\s+U\s*-?\d{2}\s*$/i, '').replace(/\s+/g, ' ').trim() : null
+        if (h.opponent || h.date) {
           // a header with neither a number nor a date is identified by its place in the file (the columns run in match order)
-          const number = numM ? Number(numM[1]) : date ? null : matches.length + 1
-          matches.push({ number, opponent: opponent || null, date, goals_for: score ? Number(score[1]) : null, goals_against: score ? Number(score[2]) : null })
+          matches.push({ ...h, number: h.number ?? (h.date ? null : matches.length + 1) })
           current = matches.length - 1
-        }
-        else current = -1
+        } else current = -1
       }
       if (current < 0 || col === 0) return
       const s = str(sub[col]).toLowerCase()
@@ -277,7 +300,6 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
       const stats = [...by.values()]
       rowsOut.push({ name: str(r[0]), stats }); n += stats.length
     }
-    break // one sheet carries the season
   }
   return { payload: { competition, matches, rows: rowsOut }, rows: n, notes }
 }
