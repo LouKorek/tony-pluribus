@@ -73,10 +73,11 @@ export function isPlayerName(c: Cell) {
   if (typeof c !== 'string') return false
   const s = c.trim()
   if (s.length < 4 || /[=:]/.test(s) || /\d/.test(s.replace(/\(.*\)/, '')) ) return false
-  if (/^(total|legend|nr\b|name|player|surname|squad|coach|staff|goalkeeper|defender|midfielder|forward|bench|date|position|number|session|training|match)/i.test(s)) return false
+  if (/^(total|legend|nr\b|name|player|surname|squad|coach|staff|goalkeeper|defender|midfielder|forward|bench|date|position|number|session|training|match|weight|height|foot|hand|district|goals?|assists?|yc|rc|type|sub|balance|month|week|day)\b/i.test(s)) return false
   if (CODES.has(s.toUpperCase())) return false
   const words = s.replace(/\(.*?\)/g, ' ').trim().split(/\s+/).filter(Boolean)
-  return words.length >= 2 || s.includes('(')
+  // "SURNAME GIVEN NAMES (POS)", or a single given name as the older files write it ("Baraka")
+  return words.length >= 2 || s.includes('(') || (words.length === 1 && /^[A-Za-z\u00C0-\u024F'-]{3,}$/.test(words[0]) && !/^[A-Z]{2,4}$/.test(words[0]) && !MONTH_RE.test(words[0]))
 }
 
 // ───────── Presence Control ─────────
