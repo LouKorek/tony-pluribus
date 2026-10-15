@@ -72,7 +72,7 @@ const CODES = new Set(['A', 'I', 'JA', 'NT', 'M', 'NS', 'SM', 'SE', 'SC', 'S', '
 export function isPlayerName(c: Cell) {
   if (typeof c !== 'string') return false
   const s = c.trim()
-  if (s.length < 4 || /[=:]/.test(s) || /\d/.test(s.replace(/\(.*\)/, '')) ) return false
+  if (s.length < 3 || /[=:]/.test(s) || /\d/.test(s.replace(/\(.*\)/, '')) ) return false
   if (/^(total|legend|nr\b|name|player|surname|squad|coach|staff|goalkeeper|defender|midfielder|forward|bench|date|position|number|session|training|match|weight|height|foot|hand|district|goals?|assists?|yc|rc|type|sub|balance|month|week|day)\b/i.test(s)) return false
   if (CODES.has(s.toUpperCase())) return false
   const words = s.replace(/\(.*?\)/g, ' ').trim().split(/\s+/).filter(Boolean)
