@@ -18,5 +18,5 @@ begin
 end $$;
 -- matches that carried the wrong competition name are read and linked again
 update public.matches m set competition = public.talent_competition(f.path) from public.talent_files f where f.id = m.report_file_id and m.competition <> public.talent_competition(f.path);
-delete from public.matches where report_file_id is null and exists (select 1 from public.talent_content c join public.talent_files f on f.id = c.file_id where c.kind = 'matchstats' and public.talent_team_for(f.path) = matches.team_id);
+delete from public.matches where report_file_id is null and exists (select 1 from public.talent_content c join public.talent_files f on f.id = c.file_id where c.kind = 'matchstats' and public.talent_team_for(f.path) = matches.team_id and public.talent_competition(f.path) = matches.competition);
 update public.talent_content set parsed_modified_at = null, attempts = 0, error = null where kind = 'matchstats';
