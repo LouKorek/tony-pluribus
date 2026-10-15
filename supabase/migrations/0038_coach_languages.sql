@@ -438,3 +438,7 @@ with x as (
   select id, (public.notif_rw(type, user_id, data)).* from public.notifications
    where title_rw is null and type in ('account.approved', 'points.earned', 'level.up'))
 update public.notifications n set title_rw = x.o_title, body_rw = x.o_body from x where x.id = n.id and x.o_title is not null;
+
+update public.notification_types set label_rw = 'Incamake ya buri cyumweru', description_rw = 'Incamake y''icyumweru, buri wa mbere.' where code = 'digest.weekly';
+-- points notifications from before this migration were grouped without a running total: their English text stays
+update public.notifications set title_rw = null, body_rw = null where type = 'points.earned' and not (data ? 'total');
