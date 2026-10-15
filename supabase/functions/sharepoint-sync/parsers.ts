@@ -242,6 +242,7 @@ export function parseMatchHeader(s: string, season: [number, number] | null) {
   if (ord) t = t.slice(ord[0].length).trim()
   const score = /\(\s*(\d+)\s*[-:]\s*(\d+)\s*\)/.exec(t) ?? /(?:^|\s)(\d+)\s*[-:]\s*(\d+)(?=\s|$)/.exec(t)
   if (score) t = t.replace(score[0], ' ')
+  t = t.replace(/\(\s*\d+\s*[-:]\s*\d+\s*\)/g, ' ').replace(/\s*\/\s*$/, '') // a second score (penalties) and a stray slash
   const venue = /\((H|A)\)/i.exec(t)?.[1]
   t = t.replace(/\((H|A)\)/ig, ' ').replace(/\b\d{1,2}H\d{0,2}\b/ig, ' ')
   const date = toDate(t, { season })
@@ -277,7 +278,12 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
     const sub = rows[hdr + 1]
     const cols: { m: number; col: number; k: 'goals' | 'assists' | 'yc' | 'rc' }[] = []
     let current = -1
+    // a block of leftover columns after a wide gap (two empty match groups) is a template remnant, not this competition
+    let gap = 0, stop = false
     rows[hdr].forEach((c, col) => {
+      if (stop) return
+      if (col > 0 && (c == null || c === '')) { if (/goal|assist|yc|yellow|rc|red/i.test(str(sub[col]))) gap++ } else gap = 0
+      if (gap >= 8 && matches.length) { stop = true; return }
       if (c != null && c !== '' && col > 0 && !/^total/i.test(str(c))) {
         const h = c instanceof Date ? { number: null, opponent: null, date: toDate(c), goals_for: null, goals_against: null, venue: null } : parseMatchHeader(str(c), season)
         // a header is a match if it names an opponent or a date (totals columns have neither)
