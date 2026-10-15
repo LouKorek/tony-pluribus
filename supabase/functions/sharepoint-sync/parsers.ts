@@ -254,7 +254,9 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
         if (numM || opp || date) {
           const score = /\(\s*(\d+)\s*[-:]\s*(\d+)\s*\)/.exec(s) // "(16-0)" written after the opponent
           const opponent = opp ? opp.replace(/\(\s*\d+\s*[-:]\s*\d+\s*\)/g, ' ').replace(/\s+U\s*-?\d{2}\s*$/i, '').replace(/\s+/g, ' ').trim() : null
-          matches.push({ number: numM ? Number(numM[1]) : null, opponent: opponent || null, date, goals_for: score ? Number(score[1]) : null, goals_against: score ? Number(score[2]) : null })
+          // a header with neither a number nor a date is identified by its place in the file (the columns run in match order)
+          const number = numM ? Number(numM[1]) : date ? null : matches.length + 1
+          matches.push({ number, opponent: opponent || null, date, goals_for: score ? Number(score[1]) : null, goals_against: score ? Number(score[2]) : null })
           current = matches.length - 1
         }
         else current = -1
@@ -359,7 +361,7 @@ export function parseFinance(wb: XLSX.WorkBook, path: string): Parsed {
       out.push({ date, out: o ?? 0, in: i ?? 0, description: str(cDesc >= 0 ? r[cDesc] : null) || null, type: str(cType >= 0 ? r[cType] : null) || null,
         subtype: str(cSub >= 0 ? r[cSub] : null) || null, payee: str(cName >= 0 ? r[cName] : null) || null, invoice: inv || null, balance: num(cBal >= 0 ? r[cBal] : null) })
     }
-    if (out.length) { sheets.push({ name, rows: out }); n += out.length }
+    if (out.length) { sheets.push({ name: name.trim(), rows: out }); n += out.length }
     if (fixed) notes.push(`${name.trim()}: ${fixed} date(s) moved into the month of the sheet`)
   }
   if (!sheets.length) notes.push('no dated rows found')
