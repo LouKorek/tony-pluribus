@@ -265,9 +265,10 @@ export function parseMatchStats(wb: XLSX.WorkBook, path: string): Parsed {
   // the sheet of this team: the one named after its age group when there are several (a copy of last season may sit beside it)
   const age = /\bU\s*-?(\d{2})\b/i.exec(path)?.[1]
   const candidates = wb.SheetNames.filter(nm => sheetRows(wb, nm).length >= 3)
-  const chosen = (age && candidates.find(nm => new RegExp('U\\s*-?' + age, 'i').test(nm))) ?? candidates[0]
-  if (candidates.length > 1) notes.push(`${candidates.length} sheets, read "${chosen}"`)
-  for (const name of chosen ? [chosen] : []) {
+  const own = age ? candidates.find(nm => new RegExp('U\\s*-?' + age, 'i').test(nm)) : undefined
+  const sheets = own ? [own] : candidates // a competition played in stages has one sheet per stage: all of them, in order
+  if (candidates.length > 1) notes.push(`${candidates.length} sheets, read ${sheets.map(x => '"' + x + '"').join(', ')}`)
+  for (const name of sheets) {
     const rows = sheetRows(wb, name)
     // header row: match titles; the row under it names Goals / Assists / YC / RC per match
     let hdr = -1
